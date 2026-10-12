@@ -583,7 +583,7 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
