@@ -719,7 +719,7 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
