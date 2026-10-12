@@ -97,19 +97,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
     // Start Entrance Animation
     _entranceController.forward();
 
-    // Auto Navigate after sequence finishes based on Onboarding & Auth State
+    // Auto Navigate after sequence finishes based on Auth State
     _entranceController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Future.delayed(const Duration(milliseconds: 600), () async {
           if (!mounted) return;
           final prefs = await SharedPreferences.getInstance();
-          final isOnboardingCompleted = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
           final authToken = prefs.getString(StorageKeys.authToken);
 
           if (!mounted) return;
-          if (!isOnboardingCompleted) {
-            context.go(RoutePaths.onboarding);
-          } else if (authToken != null && authToken.isNotEmpty) {
+          if (authToken != null && authToken.isNotEmpty) {
             context.go(RoutePaths.home);
           } else {
             context.go(RoutePaths.login);
