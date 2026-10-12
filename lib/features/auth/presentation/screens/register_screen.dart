@@ -245,7 +245,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
               // 7. Select Gender Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedGender,
+                initialValue: _selectedGender,
                 decoration: InputDecoration(
                   hintText: 'Select Gender',
                   hintStyle: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF9E9BBD)),
