@@ -16,46 +16,46 @@ class OurCoursesSection extends StatelessWidget {
 
   static const List<Map<String, dynamic>> ourCourses = [
     {
-      'id': 'oc_1',
-      'title': 'Breathwork For Emotional Release',
-      'price': '₹ 8,999',
-      'originalPrice': '₹ 12,000',
-      'duration': '15 Days',
+      'id': 'c_1',
+      'title': 'Certified Bach Flower Therapy & Healing Course',
+      'price': '₹ 2,499',
+      'originalPrice': '₹ 3,500',
+      'duration': '24 Hours',
       'rating': '4.9',
-      'category': 'Healing & Meditation',
+      'category': 'Bach Flower',
       'badge': 'BESTSELLER',
       'image': AssetPaths.ancientHealing,
     },
     {
-      'id': 'oc_2',
-      'title': 'Ancient Healing Mastery',
-      'price': '₹ 5,500',
-      'originalPrice': '₹ 8,000',
-      'duration': '7 Days',
+      'id': 'c_2',
+      'title': 'Ayurvedic Lifestyle & Drugless Upchar Diploma',
+      'price': '₹ 3,999',
+      'originalPrice': '₹ 5,000',
+      'duration': '32 Hours',
       'rating': '4.8',
-      'category': 'Mastery Series',
+      'category': 'Ayurvedic Upchar',
       'badge': 'POPULAR',
       'image': AssetPaths.bachFlower,
     },
     {
-      'id': 'oc_3',
-      'title': 'Vastu Shastra Masterclass',
+      'id': 'c_6',
+      'title': 'Advanced Vastu Shastra Certification',
       'price': '₹ 4,999',
       'originalPrice': '₹ 7,500',
-      'duration': '10 Days',
+      'duration': '40 Hours',
       'rating': '5.0',
-      'category': 'Vastu & Architecture',
+      'category': 'Vastu',
       'badge': 'PREMIUM',
       'image': AssetPaths.vastu,
     },
     {
-      'id': 'oc_4',
-      'title': 'Bach Flower Remedies Diploma',
-      'price': '₹ 3,499',
-      'originalPrice': '₹ 5,000',
-      'duration': '14 Days',
+      'id': 'c_3',
+      'title': 'Mind & Life Coaching Masterclass',
+      'price': '₹ 2,999',
+      'originalPrice': '₹ 4,500',
+      'duration': '20 Hours',
       'rating': '4.7',
-      'category': 'Herbal Medicine',
+      'category': 'Counselling',
       'badge': 'CERTIFIED',
       'image': AssetPaths.beeBeyondImage1,
     },
@@ -217,13 +217,16 @@ class _OurCourseCardState extends State<_OurCourseCard> {
         ],
       ),
       padding: const EdgeInsets.all(3.5),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => widget.onCourseTap(id),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Thumbnail Poster
@@ -493,7 +496,8 @@ class _OurCourseCardState extends State<_OurCourseCard> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildCourseImage(String imageUrl) {
