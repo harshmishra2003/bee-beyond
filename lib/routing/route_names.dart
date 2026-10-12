@@ -28,6 +28,8 @@ class RouteNames {
   static const String checkout = 'checkout';
   static const String orders = 'orders';
   static const String orderDetail = 'orderDetail';
+  static const String receipts = 'receipts';
+  static const String receiptPreview = 'receiptPreview';
 
   static const String notifications = 'notifications';
   static const String search = 'search';
