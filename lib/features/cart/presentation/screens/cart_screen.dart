@@ -23,6 +23,16 @@ class CartScreen extends ConsumerWidget {
         title: const Text('Shopping Cart', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0.5,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 24),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(RoutePaths.home);
+            }
+          },
+        ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         actions: [
           if (cartState.value?.isNotEmpty ?? false)
