@@ -480,20 +480,4 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
       ),
     );
   }
-
-  Widget _buildFallbackBackground() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFFF9FBE7), // Light Warm Yellowish Green
-            Color(0xFFFFFFFF), // Pure White
-            Color(0xFFF3E5F5), // Light Purple / Pink
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-    );
-  }
 }
