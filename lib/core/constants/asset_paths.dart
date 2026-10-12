@@ -1,6 +1,6 @@
 class AssetPaths {
-  static const String logo = 'assets/images/logo.png';
-  static const String beeBeyondImage1 = 'assets/images/bee beeyond.png';
+  static const String logo = 'assets/images/bee beeyond2.png';
+  static const String beeBeyondImage1 = 'assets/images/bee beeyond2.png';
   static const String beeBeyondImage2 = 'assets/images/bee beeyond2.png';
   static const String vastu = 'assets/images/vastu.png';
   static const String ancientHealing = 'assets/images/Ancient Healing Mastery.png';
@@ -19,4 +19,3 @@ class AssetPaths {
   static const String lottieSuccess = 'assets/lottie/success.json';
   static const String lottieEmpty = 'assets/lottie/empty.json';
 }
-
