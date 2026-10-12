@@ -120,7 +120,7 @@ class EnrollmentReceiptScreen extends StatelessWidget {
                         ),
                         child: ClipOval(
                           child: profilePic != null
-                              ? Image.asset(profilePic, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, color: AppColors.primary, size: 32))
+                              ? Image.asset(profilePic, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: AppColors.primary, size: 32))
                               : const Icon(Icons.person, color: AppColors.primary, size: 32),
                         ),
                       ),
@@ -162,7 +162,7 @@ class EnrollmentReceiptScreen extends StatelessWidget {
                         width: 38,
                         height: 38,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.verified, color: AppColors.primary),
+                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.verified, color: AppColors.primary),
                       ),
                       const SizedBox(width: 10),
                       const Expanded(
