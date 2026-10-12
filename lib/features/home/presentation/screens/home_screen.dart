@@ -357,7 +357,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // JOINED COURSE Section with Purple Header & Shining View All Button
               JoinedCoursesSection(
                 onViewAllTap: () => context.push(RoutePaths.courses),
-                onLearnTap: (courseId) => context.push(RoutePaths.courses),
+                onLearnTap: (courseId) => context.push('${RoutePaths.courseDetail}?id=$courseId'),
                 onJoinGroupTap: (courseId) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Joined WhatsApp Study Group Successfully!')),
@@ -369,7 +369,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // OUR COURSES Section with Purple Header & Shining View All Button
               OurCoursesSection(
                 onViewAllTap: () => context.push(RoutePaths.courses),
-                onCourseTap: (courseId) => context.push(RoutePaths.courses),
+                onCourseTap: (courseId) => context.push('${RoutePaths.courseDetail}?id=$courseId'),
               ),
               const SizedBox(height: 90),
             ],
