@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/asset_paths.dart';
+import '../../../../core/services/receipt_pdf_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -13,34 +15,42 @@ class EnrollmentReceiptScreen extends StatelessWidget {
 
   const EnrollmentReceiptScreen({super.key, required this.data});
 
-  void _downloadReceipt(BuildContext context, String receiptId) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Downloading Receipt $receiptId.pdf to Local Storage...'),
-        backgroundColor: AppColors.primary,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  ReceiptEntity _buildReceiptEntity() {
+    final enrollmentId = data['enrollmentId'] ?? 'ENR-2025-9981';
+    final studentName = data['studentName'] ?? 'Student Name';
+    final courseTitle = data['courseTitle'] ?? 'Wellness Course';
+    final coursePrice = (data['coursePrice'] as double?) ?? 2499.0;
+    final email = data['email'] ?? 'student@gmail.com';
+    final phone = data['phone'] ?? '+91 9876543210';
+    final address = data['address'] ?? 'Mumbai, India';
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Receipt $receiptId.pdf saved to Downloads folder!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    });
+    return ReceiptEntity(
+      receiptId: enrollmentId,
+      orderId: enrollmentId,
+      title: courseTitle,
+      type: 'COURSE',
+      customerName: studentName,
+      customerPhone: phone,
+      customerEmail: email,
+      deliveryAddress: address,
+      items: [
+        ReceiptItem(name: courseTitle, quantity: 1, unitPrice: coursePrice),
+      ],
+      subtotal: coursePrice,
+      gstRate: 0.18,
+      deliveryFee: 0.0,
+      discount: 0.0,
+      paymentMethod: 'UPI / Online Portal',
+      date: DateTime.now(),
+    );
   }
 
-  void _shareReceipt(BuildContext context, String receiptId) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Sharing Receipt $receiptId...'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
+  void _downloadReceipt(BuildContext context) {
+    ReceiptPdfService.downloadAndSaveReceiptPdf(context, _buildReceiptEntity());
+  }
+
+  void _shareReceipt(BuildContext context) {
+    ReceiptPdfService.shareReceipt(context, _buildReceiptEntity());
   }
 
   @override
@@ -68,12 +78,12 @@ class EnrollmentReceiptScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.download_rounded, color: AppColors.primary),
-            onPressed: () => _downloadReceipt(context, enrollmentId),
+            onPressed: () => _downloadReceipt(context),
             tooltip: 'Download PDF',
           ),
           IconButton(
             icon: const Icon(Icons.share_rounded, color: AppColors.primary),
-            onPressed: () => _shareReceipt(context, enrollmentId),
+            onPressed: () => _shareReceipt(context),
             tooltip: 'Share Receipt',
           ),
         ],
@@ -291,7 +301,7 @@ class EnrollmentReceiptScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _downloadReceipt(context, enrollmentId),
+                    onPressed: () => _downloadReceipt(context),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
                       side: const BorderSide(color: AppColors.primary, width: 1.5),
