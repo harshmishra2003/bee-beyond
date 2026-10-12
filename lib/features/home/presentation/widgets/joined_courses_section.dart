@@ -19,42 +19,42 @@ class JoinedCoursesSection extends StatelessWidget {
 
   static const List<Map<String, dynamic>> joinedCourses = [
     {
-      'id': 'jc_1',
-      'title': 'Breathwork For Emotional Release',
-      'duration': '15 Days',
-      'modules': '120+ Modules',
+      'id': 'c_1',
+      'title': 'Certified Bach Flower Therapy & Healing Course',
+      'duration': '24 Hours',
+      'modules': '12 Modules',
       'progress': 0.75,
       'progressText': '75% Done',
       'rating': '4.9',
       'students': '2.4k',
       'image': AssetPaths.ancientHealing,
-      'category': 'Healing & Meditation',
+      'category': 'Bach Flower',
       'badge': 'ONLINE CERTIFIED',
     },
     {
-      'id': 'jc_2',
-      'title': 'Bach Flower Therapy Masterclass',
-      'duration': '15 Days',
-      'modules': '85+ Modules',
+      'id': 'c_2',
+      'title': 'Ayurvedic Lifestyle & Drugless Upchar Diploma',
+      'duration': '32 Hours',
+      'modules': '16 Modules',
       'progress': 0.45,
       'progressText': '45% Done',
       'rating': '4.8',
       'students': '1.8k',
       'image': AssetPaths.bachFlower,
-      'category': 'Herbal Therapy',
+      'category': 'Ayurvedic Upchar',
       'badge': 'POPULAR COURSE',
     },
     {
-      'id': 'jc_3',
-      'title': 'Vastu & Energy Healing Diploma',
-      'duration': '30 Days',
-      'modules': '150+ Modules',
+      'id': 'c_6',
+      'title': 'Advanced Vastu Shastra Certification',
+      'duration': '40 Hours',
+      'modules': '20 Modules',
       'progress': 0.90,
       'progressText': '90% Done',
       'rating': '5.0',
       'students': '3.1k',
       'image': AssetPaths.vastu,
-      'category': 'Vastu & Energy',
+      'category': 'Vastu',
       'badge': 'DIPLOMA COURSE',
     },
   ];
@@ -220,13 +220,16 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
         ],
       ),
       padding: const EdgeInsets.all(3.5),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => widget.onLearnTap(id),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Poster Thumbnail
@@ -580,7 +583,7 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
