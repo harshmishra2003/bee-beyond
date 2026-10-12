@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/sign_out_dialog.dart';
 import '../../../../routing/route_paths.dart';
 
 class HomeDrawer extends StatelessWidget {
@@ -280,7 +281,7 @@ class HomeDrawer extends StatelessWidget {
                   textColor: const Color(0xFFEF4444),
                   onTap: () {
                     Navigator.pop(context);
-                    context.go(RoutePaths.login);
+                    showSignOutConfirmationDialog(context);
                   },
                 ),
               ],
