@@ -175,7 +175,10 @@ class CartScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Subtotal', style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
-                Text(CurrencyUtils.formatINR(subtotal), style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+                _AnimatedPriceText(
+                  amount: subtotal,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -183,7 +186,10 @@ class CartScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Taxes & Fees (3%)', style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
-                Text(CurrencyUtils.formatINR(taxAmount), style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+                _AnimatedPriceText(
+                  amount: taxAmount,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             const Padding(
@@ -194,7 +200,14 @@ class CartScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Total Payable', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w900)),
-                Text(CurrencyUtils.formatINR(totalPayable), style: const TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.w900)),
+                _AnimatedPriceText(
+                  amount: totalPayable,
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -221,6 +234,32 @@ class CartScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// SMOOTH INTERPOLATING ANIMATED PRICE TEXT WIDGET
+class _AnimatedPriceText extends StatelessWidget {
+  final double amount;
+  final TextStyle style;
+
+  const _AnimatedPriceText({
+    required this.amount,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: amount),
+      duration: const Duration(milliseconds: 550),
+      curve: Curves.easeOutCubic,
+      builder: (context, animatedValue, child) {
+        return Text(
+          CurrencyUtils.formatINR(animatedValue),
+          style: style,
+        );
+      },
     );
   }
 }
