@@ -586,7 +586,8 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildCourseImage(String imageUrl) {
