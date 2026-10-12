@@ -31,10 +31,12 @@ class RoutePaths {
   static const String video = '/library/video';
   static const String material = '/library/material';
 
-  // Orders & Checkout
+  // Orders & Checkout & Receipts
   static const String checkout = '/checkout';
   static const String orders = '/orders';
   static const String orderDetail = '/orders/detail';
+  static const String receipts = '/receipts';
+  static const String receiptPreview = '/receipts/preview';
 
   // Notifications
   static const String notifications = '/notifications';
