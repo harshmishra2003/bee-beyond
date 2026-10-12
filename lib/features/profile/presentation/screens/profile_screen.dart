@@ -24,6 +24,16 @@ class ProfileScreen extends ConsumerWidget {
               pinned: true,
               backgroundColor: AppColors.primary,
               elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(RoutePaths.home);
+                  }
+                },
+              ),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, color: Colors.white),
