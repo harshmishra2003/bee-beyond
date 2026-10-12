@@ -100,8 +100,22 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         courseId: 'c_1',
         title: 'Certified Bach Flower Therapy & Healing Course',
         imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80',
-        progressPercentage: 65.0,
+        progressPercentage: 75.0,
         joinedDate: DateTime.now().subtract(const Duration(days: 15)),
+      ),
+      JoinedCourseEntity(
+        courseId: 'c_2',
+        title: 'Ayurvedic Lifestyle & Drugless Upchar Diploma',
+        imageUrl: 'https://images.unsplash.com/photo-1512290900676-26c2bfb26465?auto=format&fit=crop&w=600&q=80',
+        progressPercentage: 45.0,
+        joinedDate: DateTime.now().subtract(const Duration(days: 8)),
+      ),
+      JoinedCourseEntity(
+        courseId: 'c_6',
+        title: 'Advanced Vastu Shastra Certification',
+        imageUrl: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=600&q=80',
+        progressPercentage: 100.0,
+        joinedDate: DateTime.now().subtract(const Duration(days: 30)),
       ),
     ];
   }
