@@ -362,56 +362,61 @@ class CourseDetailScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: courseAsync.maybeWhen(
         data: (course) => SafeArea(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x1F4B489B),
-                  blurRadius: 16,
-                  offset: Offset(0, -4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Registration Fee',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x1F4B489B),
+                      blurRadius: 16,
+                      offset: Offset(0, -4),
                     ),
-                    Text(
-                      CurrencyUtils.formatINR(course.price),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w900,
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Registration Fee',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          CurrencyUtils.formatINR(course.price),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: ThreeDButton(
+                        text: 'Enroll Now →',
+                        fontSize: 14.5,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        onPressed: () {
+                          context.push('${RoutePaths.courseEnrollment}?id=${course.id}');
+                        },
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: ThreeDButton(
-                    text: 'Enroll Now →',
-                    fontSize: 14.5,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                    onPressed: () {
-                      context.push('${RoutePaths.courseEnrollment}?id=${course.id}');
-                    },
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         orElse: () => const SizedBox.shrink(),
