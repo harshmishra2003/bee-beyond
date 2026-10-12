@@ -106,7 +106,7 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       scrollDirection: Axis.horizontal,
                       itemCount: categories.length + 1,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (context, index) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           return _buildFilterChip(
@@ -147,7 +147,7 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       scrollDirection: Axis.horizontal,
                       itemCount: subCategories.length + 1,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (context, index) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           return _buildFilterChip(
