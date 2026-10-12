@@ -62,22 +62,28 @@ class _ThreeDButtonState extends State<ThreeDButton> {
                   ),
                 ],
         ),
-        alignment: Alignment.center,
-        child: Text(
-          widget.text,
-          style: TextStyle(
-            color: widget.textColor,
-            fontSize: widget.fontSize,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.5,
-            shadows: const [
-              Shadow(
-                offset: Offset(0, 1),
-                blurRadius: 2,
-                color: Colors.black38,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: widget.textColor,
+                fontSize: widget.fontSize,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                shadows: const [
+                  Shadow(
+                    offset: Offset(0, 1),
+                    blurRadius: 2,
+                    color: Colors.black38,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
