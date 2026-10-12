@@ -175,7 +175,6 @@ class _JoinedCourseCard extends StatefulWidget {
 }
 
 class _JoinedCourseCardState extends State<_JoinedCourseCard> {
-  bool _isJoined = false;
   bool _isJoining = false;
   bool _isLearnPressed = false;
 
@@ -517,14 +516,15 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
                             if (mounted) {
                               setState(() {
                                 _isJoining = false;
-                                _isJoined = true;
                               });
 
-                              await WhatsAppService.joinWhatsAppGroup(
-                                context: context,
-                                courseId: id,
-                                courseTitle: title,
-                              );
+                              if (context.mounted) {
+                                await WhatsAppService.joinWhatsAppGroup(
+                                  context: context,
+                                  courseId: id,
+                                  courseTitle: title,
+                                );
+                              }
 
                               widget.onJoinGroupTap(id);
                             }
