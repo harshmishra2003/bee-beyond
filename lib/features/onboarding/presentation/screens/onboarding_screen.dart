@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_paths.dart';
