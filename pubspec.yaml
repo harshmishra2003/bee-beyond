@@ -1,0 +1,50 @@
+name: bee_beeyond
+description: "Bee Beyond - Ayurvedic, Wellness & E-Learning Platform"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Navigation & Routing
+  go_router: ^14.2.0
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+
+  # Network & API
+  dio: ^5.4.3+1
+
+  # Local Storage & Security
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.2.3
+
+  # UI Utilities & Styling
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+  google_fonts: ^6.2.1
+
+  # Helper Utilities
+  url_launcher: ^6.3.0
+  intl: ^0.19.0
+  logger: ^2.3.0
+  equatable: ^2.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/lottie/
