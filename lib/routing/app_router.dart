@@ -23,6 +23,7 @@ import '../features/notifications/presentation/screens/notifications_screen.dart
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/orders/presentation/screens/order_detail_screen.dart';
 import '../features/orders/presentation/screens/orders_list_screen.dart';
+import '../features/orders/presentation/screens/receipts_list_screen.dart';
 import '../features/products/presentation/screens/product_detail_screen.dart';
 import '../features/products/presentation/screens/products_list_screen.dart';
 import '../features/profile/presentation/screens/change_password_screen.dart';
@@ -184,6 +185,11 @@ class AppRouter {
         path: RoutePaths.orders,
         name: RouteNames.orders,
         builder: (context, state) => const OrdersListScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.receipts,
+        name: RouteNames.receipts,
+        builder: (context, state) => const ReceiptsListScreen(),
       ),
       GoRoute(
         path: RoutePaths.orderDetail,
