@@ -7,7 +7,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
-import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
 import '../providers/course_provider.dart';
 
@@ -83,6 +82,7 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
 
   late CountryPhoneRule _selectedCountry;
   late CountryPhoneRule _selectedAltCountry;
+  bool _isSubmitting = false;
 
   final List<String> _genderOptions = ['Male', 'Female', 'Other'];
   final List<String> _qualificationOptions = [
@@ -236,8 +236,21 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
   }
 
   // Submit Enrollment
-  void _submitEnrollment(dynamic course) {
+  Future<void> _submitEnrollment(dynamic course) async {
     if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      // Simulate server processing & animation
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSubmitting = false;
+      });
+
       // Create Enrollment Data
       final studentName = '${_firstNameController.text.trim()} ${_middleNameController.text.trim()} ${_lastNameController.text.trim()}'.replaceAll('  ', ' ');
       final enrollmentId = 'ENR-2025-${(1000 + (widget.courseId.hashCode % 8999)).abs()}';
@@ -503,9 +516,35 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
 
                 Row(
                   children: [
-                    Expanded(child: _buildTextField(controller: _cityController, label: 'City *', hint: 'e.g. Mumbai', validator: (v) => v == null || v.trim().isEmpty ? 'City is required' : null)),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _openStatePicker,
+                        child: AbsorbPointer(
+                          child: _buildTextField(
+                            controller: _stateController,
+                            label: 'State / UT *',
+                            hint: 'Select State',
+                            suffixIcon: Icons.keyboard_arrow_down_rounded,
+                            validator: (v) => v == null || v.trim().isEmpty ? 'State is required' : null,
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(width: 10),
-                    Expanded(child: _buildTextField(controller: _stateController, label: 'State *', hint: 'e.g. Maharashtra', validator: (v) => v == null || v.trim().isEmpty ? 'State is required' : null)),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _openCityPicker,
+                        child: AbsorbPointer(
+                          child: _buildTextField(
+                            controller: _cityController,
+                            label: 'City / Town *',
+                            hint: 'Select City',
+                            suffixIcon: Icons.keyboard_arrow_down_rounded,
+                            validator: (v) => v == null || v.trim().isEmpty ? 'City is required' : null,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -529,23 +568,89 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
 
                 _buildTextField(controller: _extraActivityController, label: 'Extra Curricular Activities / Hobbies (Optional)', hint: 'Yoga, Music, Reading, etc.'),
 
-                const SizedBox(height: 28),
-
-                // 3D Submit Enrollment Button
-                ThreeDButton(
-                  text: 'Submit & Complete Registration →',
-                  fontSize: 15,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  onPressed: () => _submitEnrollment(course),
-                ),
-
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
               ],
             ),
           ),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
+      ),
+      bottomNavigationBar: courseAsync.maybeWhen(
+        data: (course) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x1F4B489B),
+                      blurRadius: 16,
+                      offset: Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOutBack,
+                    width: _isSubmitting ? 54 : MediaQuery.of(context).size.width - 40,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: _isSubmitting ? null : AppColors.primaryGradient,
+                      color: _isSubmitting ? AppColors.primary : null,
+                      borderRadius: BorderRadius.circular(_isSubmitting ? 27 : 16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withAlpha(76),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(_isSubmitting ? 27 : 16),
+                        onTap: _isSubmitting ? null : () => _submitEnrollment(course),
+                        child: Center(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    key: ValueKey('loading'),
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Text(
+                                    'SUBMIT',
+                                    key: ValueKey('text'),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        orElse: () => const SizedBox.shrink(),
       ),
     );
   }
@@ -718,6 +823,461 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
           ],
         ),
       ],
+    );
+  }
+
+  // Open State Picker
+  void _openStatePicker() {
+    _showSearchablePicker(
+      context: context,
+      title: 'State / Union Territory',
+      items: indiaStateCityData.keys.toList(),
+      currentSelected: _stateController.text,
+    ).then((selected) {
+      if (selected != null && selected.isNotEmpty) {
+        setState(() {
+          if (_stateController.text != selected) {
+            _stateController.text = selected;
+            _cityController.clear();
+          }
+        });
+      }
+    });
+  }
+
+  // Open City / Town Picker
+  void _openCityPicker() {
+    final currentState = _stateController.text.trim();
+    if (currentState.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a State / UT first.'),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+      return;
+    }
+
+    final citiesList = indiaStateCityData[currentState] ?? [];
+
+    _showSearchablePicker(
+      context: context,
+      title: 'City / Town in $currentState',
+      items: citiesList,
+      currentSelected: _cityController.text,
+    ).then((selected) {
+      if (selected != null && selected.isNotEmpty) {
+        setState(() {
+          _cityController.text = selected;
+        });
+      }
+    });
+  }
+
+  static Future<String?> _showSearchablePicker({
+    required BuildContext context,
+    required String title,
+    required List<String> items,
+    String? currentSelected,
+  }) async {
+    return await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return _SearchablePickerBottomSheet(
+          title: title,
+          items: items,
+          currentSelected: currentSelected,
+        );
+      },
+    );
+  }
+
+  static const Map<String, List<String>> indiaStateCityData = {
+    'Andhra Pradesh': [
+      'Visakhapatnam', 'Vijayawada', 'Guntur', 'Nellore', 'Kurnool', 'Kakinada',
+      'Tirupati', 'Rajahmundry', 'Kadapa', 'Anantapur', 'Vizianagaram', 'Eluru',
+      'Ongole', 'Nandyal', 'Machilipatnam', 'Adoni', 'Tenali', 'Proddatur',
+      'Chittoor', 'Hindupur', 'Bhimavaram', 'Madanapalle', 'Guntakal', 'Dharmavaram',
+      'Gudivada', 'Narasaraopet', 'Tadipatri', 'Tadepalligudem', 'Chilakaluripet',
+      'Yemmiganur', 'Kadiri', 'Chirala', 'Anakapalle', 'Kavali', 'Palakollu',
+      'Srikakulam', 'Amalapuram', 'Bapatla', 'Narsipatnam', 'Pithapuram', 'Markapur',
+      'Gudur', 'Rayachoti', 'Wanaparthy', 'Parvathipuram', 'Macherla', 'Mangalagiri'
+    ],
+    'Arunachal Pradesh': [
+      'Itanagar', 'Naharlagun', 'Pasighat', 'Namsai', 'Ziro', 'Tawang',
+      'Bomdila', 'Tezu', 'Khonsa', 'Aalo', 'Roing', 'Changlang', 'Dirang',
+      'Seppa', 'Daporijo', 'Yingkiong', 'Basar', 'Longding', 'Hawai'
+    ],
+    'Assam': [
+      'Guwahati', 'Silchar', 'Dibrugarh', 'Jorhat', 'Nagaon', 'Tinsukia',
+      'Tezpur', 'Bongaigaon', 'Dhubri', 'Diphu', 'North Lakhimpur', 'Karimganj',
+      'Sivasagar', 'Goalpara', 'Barpeta', 'Hailakandi', 'Hojai', 'Lumding',
+      'Golaghat', 'Mangaldoi', 'Nalbari', 'Rangia', 'Margherita', 'Kokrajhar',
+      'Lanka', 'Badarpur', 'Silapathar', 'Digboi', 'Dhemaji', 'Biswanath Chariali'
+    ],
+    'Bihar': [
+      'Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Purnia', 'Darbhanga',
+      'Bihar Sharif', 'Arrah', 'Begusarai', 'Katihar', 'Munger', 'Chhapra',
+      'Danapur', 'Bettiah', 'Saharsa', 'Sasaram', 'Hajipur', 'Dehri', 'Siwan',
+      'Motihari', 'Nawada', 'Bagaha', 'Buxar', 'Kishanganj', 'Sitamarhi',
+      'Jamalpur', 'Jehanabad', 'Aurangabad', 'Lakhisarai', 'Nawada', 'Bhabua',
+      'Araria', 'Samastipur', 'Gopalgang', 'Madhubani', 'Supaul', 'Banka',
+      'Jamui', 'Khagaria', 'Forbesganj', 'Mairwa', 'Raxaul'
+    ],
+    'Chhattisgarh': [
+      'Raipur', 'Bhilai', 'Bilaspur', 'Korba', 'Rajnandgaon', 'Raigarh',
+      'Jagdalpur', 'Ambikapur', 'Dhamtari', 'Chirmiri', 'Mahasamund', 'Bhatapara',
+      'Dalli-Rajhara', 'Kawardha', 'Kanker', 'Kondagaon', 'Jashpur Nagar',
+      'Baikunthpur', 'Bemetara', 'Balod', 'Gariaband', 'Mungeli', 'Manendragarh'
+    ],
+    'Goa': [
+      'Panaji', 'Margao', 'Vasco da Gama', 'Mapusa', 'Ponda', 'Bicholim',
+      'Curchorem', 'Cuncolim', 'Valpoi', 'Pernem', 'Quepem', 'Sanguem', 'Canacona'
+    ],
+    'Gujarat': [
+      'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar',
+      'Junagadh', 'Gandhinagar', 'Nadiad', 'Gandhidham', 'Anand', 'Morbi',
+      'Mehsana', 'Bharuch', 'Vapi', 'Navsari', 'Veraval', 'Porbandar', 'Godhra',
+      'Bhuj', 'Ankleshwar', 'Botad', 'Palanpur', 'Patan', 'Dahod', 'Jetpur',
+      'Valsad', 'Kalol', 'Gondal', 'Amreli', 'Deesa', 'Surendranagar', 'Bardoli',
+      'Keshod', 'Wadhwan', 'Mahuva', 'Modasa', 'Somnath', 'Dwarka', 'Vyara'
+    ],
+    'Haryana': [
+      'Gurugram', 'Faridabad', 'Panipat', 'Ambala', 'Yamunanagar', 'Rohtak',
+      'Hisar', 'Karnal', 'Sonipat', 'Panchkula', 'Bhiwani', 'Sirsa',
+      'Bahadurgarh', 'Jind', 'Thanesar', 'Kaithal', 'Rewari', 'Palwal', 'Hansi',
+      'Narnaul', 'Fatehabad', 'Jhajjar', 'Tohana', 'Narwana', 'Mandi Dabwali',
+      'Kalka', 'Charkhi Dadri', 'Shahbad', 'Pehowa', 'Pinjore', 'Gharaunda', 'Gohana'
+    ],
+    'Himachal Pradesh': [
+      'Shimla', 'Mandi', 'Dharamshala', 'Solan', 'Baddi', 'Palampur',
+      'Sundarnagar', 'Bilaspur', 'Chamba', 'Kullu', 'Hamirpur', 'Una', 'Nahan',
+      'Nalagarh', 'Manali', 'Kangra', 'Paonta Sahib', 'Rampur', 'Nurpur', 'Parwanoo'
+    ],
+    'Jharkhand': [
+      'Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro Steel City', 'Deoghar', 'Phusro',
+      'Hazaribagh', 'Giridih', 'Ramgarh', 'Chirkunda', 'Medininagar (Daltonganj)',
+      'Chaibasa', 'Gumla', 'Dumka', 'Sahibganj', 'Pakur', 'Chatra', 'Simdega',
+      'Koderma', 'Khunti', 'Jhumri Telaiya', 'Chakradharpur', 'Lohardaga', 'Ghatshila'
+    ],
+    'Karnataka': [
+      'Bengaluru', 'Mysuru', 'Hubballi-Dharwad', 'Mangaluru', 'Belagavi',
+      'Kalaburagi', 'Davanagere', 'Ballari', 'Vijayapura', 'Shivamogga',
+      'Tumakuru', 'Raichur', 'Bidar', 'Hosapete', 'Gadag-Betageri', 'Hassan',
+      'Udupi', 'Robertsonpet', 'Bhadravati', 'Chitradurga', 'Kolar', 'Mandya',
+      'Chikmagalur', 'Gangavati', 'Bagalkot', 'Ranebennur', 'Chintamani',
+      'Gokak', 'Yadgir', 'Sirsi', 'Karwar', 'Ramanagara', 'Madikeri', 'Channapatna'
+    ],
+    'Kerala': [
+      'Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Kollam', 'Thrissur', 'Kannur',
+      'Alappuzha', 'Kottayam', 'Palakkad', 'Manjeri', 'Thalassery', 'Ponnani',
+      'Vatakara', 'Kanhangad', 'Payyanur', 'Koyilandy', 'Tirur', 'Kasaragod',
+      'Perinthalmanna', 'Changanassery', 'Mattannur', 'Kothamangalam',
+      'Pathanamthitta', 'Idukki', 'Wayanad', 'Muvattupuzha', 'Attingal', 'Kayamkulam'
+    ],
+    'Madhya Pradesh': [
+      'Indore', 'Bhopal', 'Jabalpur', 'Gwalior', 'Ujjain', 'Sagar', 'Dewas',
+      'Satna', 'Ratlam', 'Rewa', 'Katni', 'Singrauli', 'Burhanpur', 'Khandwa',
+      'Bhind', 'Chhindwara', 'Guna', 'Shivpuri', 'Vidisha', 'Chhatarpur',
+      'Damoh', 'Mandsaur', 'Khargone', 'Neemuch', 'Pithampur', 'Narmadapuram',
+      'Sehore', 'Datia', 'Betul', 'Nagda', 'Seoni', 'Hoshangabad', 'Itarsi',
+      'Ashoknagar', 'Mandla', 'Sheopur', 'Balaghat', 'Harda', 'Shahdol'
+    ],
+    'Maharashtra': [
+      'Mumbai', 'Pune', 'Nagpur', 'Thane', 'Pimpri-Chinchwad', 'Nashik',
+      'Kalyan-Dombivli', 'Vasai-Virar', 'Chhatrapati Sambhajinagar (Aurangabad)',
+      'Navi Mumbai', 'Solapur', 'Mira-Bhayandar', 'Bhiwandi', 'Amravati',
+      'Nanded', 'Kolhapur', 'Ulhasnagar', 'Sangli', 'Malegaon', 'Jalgaon',
+      'Akola', 'Latur', 'Dhule', 'Ahmednagar', 'Chandrapur', 'Parbhani',
+      'Ichalkaranji', 'Jalna', 'Ambarnath', 'Bhusawal', 'Panvel', 'Badlapur',
+      'Beed', 'Gondia', 'Satara', 'Yavatmal', 'Achalpur', 'Dharashiv (Osmanabad)',
+      'Nandurbar', 'Wardha', 'Udgir', 'Hinganghat', 'Karad', 'Chiplun',
+      'Ratnagiri', 'Palghar', 'Baramati', 'Phaltan', 'Buldhana', 'Washim',
+      'Gadhchiroli', 'Khamgaon', 'Bhandara', 'Shrirampur', 'Alibag', 'Mahad'
+    ],
+    'Manipur': [
+      'Imphal', 'Thoubal', 'Bishnupur', 'Churachandpur', 'Ukhrul', 'Senapati',
+      'Kakching', 'Jiribam', 'Moreh', 'Tamenglong', 'Chandel', 'Kangpokpi'
+    ],
+    'Meghalaya': [
+      'Shillong', 'Tura', 'Nongstoin', 'Jowai', 'Baghmara', 'Williamnagar',
+      'Resubelpara', 'Mairang', 'Cherrapunji (Sohra)', 'Dawki', 'Nongpoh'
+    ],
+    'Mizoram': [
+      'Aizawl', 'Lunglei', 'Saiha', 'Champhai', 'Kolasib', 'Serchhip',
+      'Lawngtlai', 'Mamit', 'Hnahthial', 'Khawzawl'
+    ],
+    'Nagaland': [
+      'Kohima', 'Dimapur', 'Mokokchung', 'Tuensang', 'Wokha', 'Zunheboto',
+      'Mon', 'Phek', 'Kiphire', 'Longleng', 'Peren', 'Chumoukedima'
+    ],
+    'Odisha': [
+      'Bhubaneswar', 'Cuttack', 'Rourkela', 'Berhampur', 'Sambalpur', 'Puri',
+      'Balasore', 'Bhadrak', 'Baripada', 'Jharsuguda', 'Jeypore', 'Bargarh',
+      'Rayagada', 'Jatani', 'Kendrapara', 'Kendujhar', 'Sunabeda', 'Jagatsinghpur',
+      'Dhenkanal', 'Koraput', 'Paradeep', 'Bolangir', 'Subarnapur', 'Phulbani',
+      'Nabarangpur', 'Bhanjanagar', 'Talcher', 'Angul', 'Nayagarh'
+    ],
+    'Punjab': [
+      'Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda',
+      'SAS Nagar (Mohali)', 'Hoshiarpur', 'Batala', 'Pathankot', 'Moga',
+      'Abohar', 'Khanna', 'Phagwara', 'Muktsar', 'Barnala', 'Rajpura',
+      'Firozpur', 'Kapurthala', 'Sangrur', 'Fazilka', 'Mansa', 'Tarn Taran',
+      'Malerkotla', 'Faridkot', 'Rupnagar', 'Gurdaspur', 'Nawanshahr',
+      'Patti', 'Jagraon', 'Samana', 'Sunam', 'Kotkapura', 'Zirakpur'
+    ],
+    'Rajasthan': [
+      'Jaipur', 'Jodhpur', 'Kota', 'Bikaner', 'Ajmer', 'Udaipur', 'Bhilwara',
+      'Alwar', 'Bharatpur', 'Sikar', 'Pali', 'Sri Ganganagar', 'Jhunjhunu',
+      'Chittorgarh', 'Kishangarh', 'Beawar', 'Hanumangarh', 'Dholpur',
+      'Sawai Madhopur', 'Churu', 'Gangapur City', 'Baran', 'Jalore', 'Nagaur',
+      'Banswara', 'Dungarpur', 'Barmer', 'Jaisalmer', 'Mount Abu', 'Rajsamand',
+      'Tonk', 'Sirohi', 'Pratapgarh', 'Bundi', 'Makrana', 'Nokha', 'Sardarshahar'
+    ],
+    'Sikkim': [
+      'Gangtok', 'Namchi', 'Geyzing', 'Mangan', 'Rangpo', 'Jorethang',
+      'Singtam', 'Soreng', 'Pakyong', 'Naya Bazar'
+    ],
+    'Tamil Nadu': [
+      'Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tiruppur',
+      'Erode', 'Tirunelveli', 'Vellore', 'Thoothukudi', 'Nagercoil', 'Thanjavur',
+      'Dindigul', 'Cuddalore', 'Kanchipuram', 'Tiruvannamalai', 'Kumbakonam',
+      'Rajapalayam', 'Pudukkottai', 'Hosur', 'Ambur', 'Karaikudi', 'Neyveli',
+      'Nagapattinam', 'Viluppuram', 'Paramakudi', 'Tiruchengode', 'Kovilpatti',
+      'Vaniyambadi', 'Pollachi', 'Ooty', 'Tenkasi', 'Mayiladuthurai', 'Karur',
+      'Arakkonam', 'Namakkal', 'Arani', 'Chidambaram', 'Mettupalayam', 'Sivakasi'
+    ],
+    'Telangana': [
+      'Hyderabad', 'Warangal', 'Nizamabad', 'Khammam', 'Karimnagar',
+      'Ramagundam', 'Mahbubnagar', 'Nalgonda', 'Adilabad', 'Suryapet',
+      'Siddipet', 'Miryalaguda', 'Jagtial', 'Nirmal', 'Kamareddy', 'Kothagudem',
+      'Mancherial', 'Wanaparthy', 'Medak', 'Sangareddy', 'Gadwal', 'Vikarabad',
+      'Jangaon', 'Sircilla', 'Tandur', 'Bhongir', 'Palwancha', 'Badangpet'
+    ],
+    'Tripura': [
+      'Agartala', 'Udaipur', 'Dharmanagar', 'Kailashahar', 'Belonia', 'Ambassa',
+      'Khowai', 'Bishalgarh', 'Teliamura', 'Ranirbazar', 'Santirbazar', 'Sabroom'
+    ],
+    'Uttar Pradesh': [
+      'Lucknow', 'Kanpur', 'Ghaziabad', 'Agra', 'Meerut', 'Varanasi',
+      'Prayagraj (Allahabad)', 'Bareilly', 'Aligarh', 'Moradabad', 'Saharanpur',
+      'Gorakhpur', 'Noida', 'Firozabad', 'Jhansi', 'Muzaffarnagar', 'Mathura',
+      'Budaun', 'Rampur', 'Shahjahanpur', 'Farrukhabad', 'Ayodhya', 'Jaunpur',
+      'Lakhimpur', 'Hathras', 'Banda', 'Pilibhit', 'Barabanki', 'Bulandshahr',
+      'Sambhal', 'Amroha', 'Hardoi', 'Fatehpur', 'Raebareli', 'Orai', 'Sitapur',
+      'Bahraich', 'Modinagar', 'Unnao', 'Etawah', 'Deoria', 'Ghazipur', 'Basti',
+      'Azamgarh', 'Sultanpur', 'Ballia', 'Greater Noida', 'Mainpuri', 'Bijnor',
+      'Mirzapur', 'Shamli', 'Kasganj', 'Hapur', 'Kannauj', 'Mau', 'Lalitpur',
+      'Gonda', 'Etah', 'Deoband', 'Chandausi', 'Siddharthnagar', 'Sant Kabir Nagar',
+      'Bhadohi', 'Kushinagar', 'Maharajganj', 'Balrampur', 'Shravasti', 'Chitrakoot'
+    ],
+    'Uttarakhand': [
+      'Dehradun', 'Haridwar', 'Roorkee', 'Haldwani', 'Rudrapur', 'Kashipur',
+      'Rishikesh', 'Pithoragarh', 'Ramnagar', 'Kotdwar', 'Mussoorie', 'Almora',
+      'Tehri', 'Rudraprayag', 'Uttarkashi', 'Chamoli', 'Bageshwar', 'Champawat',
+      'Nainital', 'Vikasnagar', 'Kichha', 'Pauri', 'Sitarganj', 'Lalkuan'
+    ],
+    'West Bengal': [
+      'Kolkata', 'Asansol', 'Siliguri', 'Durgapur', 'Bardhaman', 'Malda',
+      'Baharampur', 'Habra', 'Kharagpur', 'Shantipur', 'Dankuni', 'Dhulian',
+      'Ranaghat', 'Haldia', 'Raiganj', 'Krishnanagar', 'Nabadwip', 'Midnapore',
+      'Jalpaiguri', 'Balurghat', 'Basirhat', 'Bankura', 'Darjeeling', 'Purulia',
+      'Cooch Behar', 'Kalimpong', 'Alipurduar', 'Contai', 'Bolpur', 'Suri',
+      'Rampurhat', 'Jangipur', 'Kanthi', 'Tarakeswar'
+    ],
+    'Delhi (UT)': [
+      'New Delhi', 'North Delhi', 'South Delhi', 'East Delhi', 'West Delhi',
+      'Central Delhi', 'Shahdara', 'Dwarka', 'Rohini', 'Connaught Place',
+      'Karol Bagh', 'Lajpat Nagar', 'Pitampura', 'Vasant Kunj', 'Saket',
+      'Janakpuri', 'Laxmi Nagar', 'Okhla', 'Chandni Chowk', 'Narela',
+      'Najafgarh', 'Chattarpur', 'Mayur Vihar', 'Paschim Vihar', 'Delhi Cantt'
+    ],
+    'Chandigarh (UT)': [
+      'Chandigarh', 'Manimajra', 'Sector 17', 'Sector 35', 'Sector 22',
+      'Sector 43', 'Industrial Area', 'Dhanas', 'Kaimbwala'
+    ],
+    'Puducherry (UT)': [
+      'Puducherry', 'Karaikal', 'Mahe', 'Yanam', 'Ozhukarai', 'Villianur', 'Ariyankuppam'
+    ],
+    'Jammu and Kashmir (UT)': [
+      'Srinagar', 'Jammu', 'Anantnag', 'Baramulla', 'Kathua', 'Udhampur',
+      'Sopore', 'Rajouri', 'Punch', 'Kupwara', 'Pulwama', 'Ganderbal',
+      'Kulgam', 'Budgam', 'Bandipora', 'Samba', 'Reasi', 'Doda', 'Ramban', 'Kishtwar'
+    ],
+    'Ladakh (UT)': [
+      'Leh', 'Kargil', 'Diskit', 'Padum', 'Nubra', 'Nyoma', 'Drass', 'Khaltsi'
+    ],
+    'Andaman & Nicobar Islands (UT)': [
+      'Port Blair', 'Car Nicobar', 'Diglipur', 'Mayabunder', 'Rangat', 'Hut Bay', 'Garacharma'
+    ],
+    'Dadra & Nagar Haveli and Daman & Diu (UT)': [
+      'Daman', 'Diu', 'Silvassa', 'Dadra', 'Naroli', 'Amli'
+    ],
+    'Lakshadweep (UT)': [
+      'Kavaratti', 'Agatti', 'Amini', 'Minicoy', 'Kadmat', 'Andrott', 'Kalpeni'
+    ],
+  };
+}
+
+class _SearchablePickerBottomSheet extends StatefulWidget {
+  final String title;
+  final List<String> items;
+  final String? currentSelected;
+
+  const _SearchablePickerBottomSheet({
+    required this.title,
+    required this.items,
+    this.currentSelected,
+  });
+
+  @override
+  State<_SearchablePickerBottomSheet> createState() => _SearchablePickerBottomSheetState();
+}
+
+class _SearchablePickerBottomSheetState extends State<_SearchablePickerBottomSheet> {
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredItems = widget.items.where((item) {
+      return item.toLowerCase().contains(_searchQuery.trim().toLowerCase());
+    }).toList();
+
+    final showCustomOption = _searchQuery.trim().isNotEmpty &&
+        !filteredItems.any((i) => i.toLowerCase() == _searchQuery.trim().toLowerCase());
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      padding: EdgeInsets.only(
+        top: 16,
+        left: 16,
+        right: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Drag Handle
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Title & Close Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.title,
+                style: AppTextStyles.titleMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Search Box
+          TextField(
+            autofocus: true,
+            onChanged: (val) => setState(() => _searchQuery = val),
+            style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
+              hintText: 'Type to search...',
+              prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded, color: AppColors.textHint, size: 20),
+                      onPressed: () => setState(() => _searchQuery = ''),
+                    )
+                  : null,
+              filled: true,
+              fillColor: const Color(0xFFF7F6FF),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Items List
+          Expanded(
+            child: ListView(
+              children: [
+                // Custom Typed Location Option
+                if (showCustomOption)
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    tileColor: AppColors.primary.withAlpha(15),
+                    leading: const Icon(Icons.add_location_alt_rounded, color: AppColors.primary),
+                    title: Text(
+                      'Use "${_searchQuery.trim()}"',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: const Text('Select as custom town / city', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                    onTap: () => Navigator.pop(context, _searchQuery.trim()),
+                  ),
+
+                ...filteredItems.map((item) {
+                  final isSelected = widget.currentSelected?.toLowerCase() == item.toLowerCase();
+
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    tileColor: isSelected ? AppColors.primary.withAlpha(20) : null,
+                    title: Text(
+                      item,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                      ),
+                    ),
+                    trailing: isSelected
+                        ? const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20)
+                        : null,
+                    onTap: () => Navigator.pop(context, item),
+                  );
+                }),
+
+                if (filteredItems.isEmpty && !showCustomOption)
+                  const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Center(
+                      child: Text('No matching locations found', style: TextStyle(color: AppColors.textHint)),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
