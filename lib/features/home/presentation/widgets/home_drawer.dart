@@ -205,6 +205,15 @@ class HomeDrawer extends StatelessWidget {
                   },
                 ),
                 _DrawerTile(
+                  icon: Icons.receipt_long_rounded,
+                  iconColor: const Color(0xFF7C3AED),
+                  title: 'My Receipts & Invoices',
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push(RoutePaths.receipts);
+                  },
+                ),
+                _DrawerTile(
                   icon: Icons.shopping_cart_rounded,
                   iconColor: const Color(0xFF059669),
                   title: 'Shopping Cart',
