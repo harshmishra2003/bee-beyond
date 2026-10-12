@@ -77,39 +77,52 @@ class ProductDetailScreen extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
       bottomNavigationBar: productAsync.maybeWhen(
-        data: (product) => Container(
-          padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x184B489B),
-                blurRadius: 10,
-                offset: Offset(0, -3),
+        data: (product) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x184B489B),
+                      blurRadius: 10,
+                      offset: Offset(0, -3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ThreeDButton(
+                        text: 'Add to Shopping Cart 🛒',
+                        fontSize: 15,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        onPressed: () {
+                          ref.read(cartManagerProvider.notifier).addToCart(
+                                CartItemEntity(
+                                  id: product.id,
+                                  title: product.title,
+                                  imageUrl: product.imageUrl,
+                                  price: product.price,
+                                  quantity: 1,
+                                ),
+                              );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${product.title} added to cart!'),
+                              backgroundColor: AppColors.primary,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
-          ),
-          child: ThreeDButton(
-            text: 'Add to Shopping Cart 🛒',
-            fontSize: 15,
-            padding: const EdgeInsets.symmetric(vertical: 13),
-            onPressed: () {
-              ref.read(cartManagerProvider.notifier).addToCart(
-                    CartItemEntity(
-                      id: product.id,
-                      title: product.title,
-                      imageUrl: product.imageUrl,
-                      price: product.price,
-                      quantity: 1,
-                    ),
-                  );
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${product.title} added to cart!'),
-                  backgroundColor: AppColors.primary,
-                ),
-              );
-            },
           ),
         ),
         orElse: () => const SizedBox.shrink(),
