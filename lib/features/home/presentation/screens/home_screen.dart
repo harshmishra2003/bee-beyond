@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,6 +24,38 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  Timer? _searchHintTimer;
+  int _currentHintIndex = 0;
+
+  static const List<String> _searchHints = [
+    'Search "Certified Courses"...',
+    'Search "Bach Flower Remedies"...',
+    'Search "Vastu Shastra Consultation"...',
+    'Search "Ayurvedic Lifestyle"...',
+    'Search "Mind & Life Coaching"...',
+    'Search "Healing Oils & Products"...',
+    'Search "Library & Study Materials"...',
+    'Search "Personalized Services"...',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchHintTimer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
+      if (mounted) {
+        setState(() {
+          _currentHintIndex = (_currentHintIndex + 1) % _searchHints.length;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchHintTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -201,49 +234,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // Search Console Bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: AppColors.primary, width: 1.8),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0C4B489B),
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 16),
-                      const Icon(Icons.search_rounded, color: AppColors.textHint, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          readOnly: true,
-                          onTap: () => context.push(RoutePaths.search),
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: AppColors.textPrimary,
-                          ),
-                          decoration: const InputDecoration(
-                            hintText: 'Search Product',
-                            hintStyle: TextStyle(
-                              color: AppColors.textHint,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
+                child: GestureDetector(
+                  onTap: () => context.push(RoutePaths.search),
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: AppColors.primary, width: 1.8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0C4B489B),
+                          blurRadius: 8,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 16),
+                        const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 350),
+                            transitionBuilder: (child, animation) {
+                              return SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 0.4),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: FadeTransition(opacity: animation, child: child),
+                              );
+                            },
+                            child: Align(
+                              key: ValueKey<int>(_currentHintIndex),
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                _searchHints[_currentHintIndex],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textHint,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                            isDense: true,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
