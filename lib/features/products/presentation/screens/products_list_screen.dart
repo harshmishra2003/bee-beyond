@@ -23,7 +23,7 @@ class ProductsListScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            childAspectRatio: 0.62,
+            childAspectRatio: 0.60,
             crossAxisSpacing: 14,
             mainAxisSpacing: 14,
           ),
@@ -53,11 +53,23 @@ class ProductsListScreen extends ConsumerWidget {
                   ),
                 );
               },
+              onBuyNow: () {
+                ref.read(cartManagerProvider.notifier).addToCart(
+                      CartItemEntity(
+                        id: product.id,
+                        title: product.title,
+                        imageUrl: product.imageUrl,
+                        price: product.price,
+                        quantity: 1,
+                      ),
+                    );
+                context.push(RoutePaths.checkout);
+              },
             );
           },
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (err, stack) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.error))),
       ),
     );
   }
