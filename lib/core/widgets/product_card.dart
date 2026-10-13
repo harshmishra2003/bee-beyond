@@ -101,7 +101,7 @@ class ProductCard extends StatelessWidget {
                           backgroundColor: const Color(0xFFF1F5F9),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.all(6),
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          minimumSize: const Size(32, 32),
                         ),
                         icon: const Icon(Icons.add_shopping_cart_rounded, color: AppColors.primary, size: 16),
                         onPressed: onAddToCart,
