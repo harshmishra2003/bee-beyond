@@ -250,26 +250,50 @@ class _OurCourseCardState extends State<_OurCourseCard> {
                   ),
                 ),
 
-                // Top Right Badge
+                // Top Right Badge & Brand Logo Emblem
                 Positioned(
                   top: 5,
                   right: 5,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                          ),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          badge,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 7.5,
+                          ),
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      badge,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 7.5,
+                      const SizedBox(width: 3),
+                      Container(
+                        padding: const EdgeInsets.all(1.5),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(color: Colors.black26, blurRadius: 3),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            AssetPaths.beeBeyondImage2,
+                            width: 17,
+                            height: 17,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
 
