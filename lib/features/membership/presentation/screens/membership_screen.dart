@@ -229,50 +229,8 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // HEADER ANNOUNCEMENT BANNER
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x284B489B), blurRadius: 12, offset: Offset(0, 5)),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Image.asset(
-                    AssetPaths.beeBeyondImage1,
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 40),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'BEE BEYOND HEALING PASSES',
-                          style: TextStyle(color: Colors.amberAccent, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          'Select Your Preferred Plan',
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'Unlock discounts, live webinars & 1-on-1 doctor guidance.',
-                          style: TextStyle(color: Colors.white70, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // ANIMATED & CRISP HEADER ANNOUNCEMENT BANNER
+            const _AnimatedHeaderBanner(),
 
             const SizedBox(height: 20),
 
@@ -481,6 +439,169 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                         stops: const [0.0, 0.35, 0.5, 0.65, 1.0],
                         begin: Alignment(shimmerPos - 1.0, -0.5),
                         end: Alignment(shimmerPos, 0.5),
+                      ).createShader(bounds);
+                    },
+                    blendMode: BlendMode.srcATop,
+                    child: Container(color: Colors.white.withAlpha(1)),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ANIMATED & CRISP HEADER ANNOUNCEMENT BANNER WIDGET
+class _AnimatedHeaderBanner extends StatefulWidget {
+  const _AnimatedHeaderBanner();
+
+  @override
+  State<_AnimatedHeaderBanner> createState() => _AnimatedHeaderBannerState();
+}
+
+class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final animVal = _controller.value;
+
+        return Stack(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.lerp(const Color(0xFF312E81), const Color(0xFF4338CA), animVal)!,
+                    Color.lerp(const Color(0xFF4F46E5), const Color(0xFF1E1B4B), animVal)!,
+                    Color.lerp(const Color(0xFF6366F1), const Color(0xFF3730A3), animVal)!,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amberAccent.withAlpha(100), width: 1.2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x334B489B),
+                    blurRadius: 14,
+                    offset: Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Crisp & Sharp White Avatar Badge for Bee Beyond Emblem Logo
+                  Container(
+                    width: 48,
+                    height: 48,
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        AssetPaths.beeBeyondImage2,
+                        width: 42,
+                        height: 42,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 14),
+
+                  // Header Texts
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'BEE BEYOND HEALING PASSES',
+                              style: TextStyle(
+                                color: Colors.amberAccent,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 12),
+                          ],
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          'Select Your Preferred Plan',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Unlock discounts, live webinars & 1-on-1 doctor guidance.',
+                          style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Animated Light Streak Shine Overlay
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: ShaderMask(
+                    shaderCallback: (bounds) {
+                      final pos = animVal * 2.8 - 0.9;
+                      return LinearGradient(
+                        colors: const [
+                          Colors.transparent,
+                          Colors.white10,
+                          Colors.white38,
+                          Colors.white10,
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.4, 0.5, 0.6, 1.0],
+                        begin: Alignment(pos - 1.0, -0.5),
+                        end: Alignment(pos, 0.5),
                       ).createShader(bounds);
                     },
                     blendMode: BlendMode.srcATop,
