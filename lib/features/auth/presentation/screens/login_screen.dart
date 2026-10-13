@@ -71,7 +71,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return AuthBackgroundWrapper(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(28),
@@ -88,6 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Title
               Text(
@@ -106,14 +107,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Login to continue your journey\ntowards better health and happiness',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w400,
                   color: AppColors.textSecondary,
                   height: 1.35,
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
 
               // Email Field
               _buildCustomTextField(
@@ -159,37 +160,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 10),
 
-              // Remember Me & Forgot Password Row
+              // Remember Me & Forgot Password Row (Flexible & Responsive)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: Checkbox(
-                          value: _rememberMe,
-                          activeColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                          onChanged: (val) {
-                            setState(() {
-                              _rememberMe = val ?? false;
-                            });
-                          },
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: Checkbox(
+                            value: _rememberMe,
+                            activeColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                            onChanged: (val) {
+                              setState(() {
+                                _rememberMe = val ?? false;
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Remember Me',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'Remember Me',
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 4),
                   GestureDetector(
                     onTap: () {
                       context.push(RoutePaths.forgotPassword);
@@ -197,7 +205,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Text(
                       'Forgot Password?',
                       style: GoogleFonts.poppins(
-                        fontSize: 12,
+                        fontSize: 11.5,
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
@@ -214,14 +222,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onTap: _onLogin,
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
               // OR Divider
               Row(
                 children: [
                   const Expanded(child: Divider(color: AppColors.divider)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
                     child: Text(
                       'OR',
                       style: GoogleFonts.poppins(
@@ -235,7 +243,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
               // Google & Apple Social Sign-In Buttons
               Row(
@@ -249,39 +257,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                         side: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                         backgroundColor: const Color(0xFFFAF9FF),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            AssetPaths.googleIcon,
-                            width: 22,
-                            height: 22,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.g_mobiledata,
-                              size: 24,
-                              color: Colors.red,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              AssetPaths.googleIcon,
+                              width: 20,
+                              height: 20,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => const Icon(
+                                Icons.g_mobiledata,
+                                size: 22,
+                                color: Colors.red,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Google',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                            const SizedBox(width: 6),
+                            Text(
+                              'Google',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
 
                   // Apple Sign-In Button
                   Expanded(
@@ -292,75 +303,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                         side: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                         backgroundColor: const Color(0xFFFAF9FF),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            AssetPaths.appleIcon,
-                            width: 22,
-                            height: 22,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.apple,
-                              size: 22,
-                              color: Colors.black,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              AssetPaths.appleIcon,
+                              width: 20,
+                              height: 20,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => const Icon(
+                                Icons.apple,
+                                size: 20,
+                                color: Colors.black,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Apple',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                            const SizedBox(width: 6),
+                            Text(
+                              'Apple',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
 
-              // Sign Up Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Don't have an account? ",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.5,
-                      color: AppColors.textSecondary,
+              // Sign Up Link (Fitted to avoid overflow on narrow screens)
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  GestureDetector(
-                    onTap: () => context.push(RoutePaths.register),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Sign Up ',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.bold,
+                    GestureDetector(
+                      onTap: () => context.push(RoutePaths.register),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Sign Up ',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
                             color: AppColors.primary,
                           ),
-                        ),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 14,
-                          color: AppColors.primary,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -384,15 +401,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 13.5, color: AppColors.textPrimary),
+      style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textPrimary),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: GoogleFonts.poppins(fontSize: 13, color: AppColors.textHint),
-        prefixIcon: Icon(prefixIcon, color: AppColors.primary, size: 20),
+        hintStyle: GoogleFonts.poppins(fontSize: 12.5, color: AppColors.textHint),
+        prefixIcon: Icon(prefixIcon, color: AppColors.primary, size: 19),
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: const Color(0xFFF7F6FF),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
@@ -417,9 +434,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildGradientButton({required String text, required VoidCallback onTap}) {
     return Container(
       width: double.infinity,
-      height: 50,
+      height: 48,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(28),
         gradient: AppColors.primaryGradient,
         boxShadow: const [
           BoxShadow(
@@ -432,7 +449,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(28),
           onTap: onTap,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -440,7 +457,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 text,
                 style: GoogleFonts.poppins(
-                  fontSize: 15,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -449,7 +466,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const Icon(
                 Icons.arrow_forward_rounded,
                 color: Colors.white,
-                size: 18,
+                size: 17,
               ),
             ],
           ),
