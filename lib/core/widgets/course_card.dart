@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../constants/asset_paths.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/currency_utils.dart';
@@ -82,6 +83,33 @@ class CourseCard extends StatelessWidget {
                     child: Text(
                       category,
                       style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                // Top Right Brand Logo Emblem
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        AssetPaths.beeBeyondImage2,
+                        width: 22,
+                        height: 22,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
