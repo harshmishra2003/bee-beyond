@@ -95,7 +95,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: Center(
           child: Image.asset(
             AssetPaths.beeBeyondImage1,
-            height: 38,
+            height: 42,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) => Row(
               mainAxisSize: MainAxisSize.min,
