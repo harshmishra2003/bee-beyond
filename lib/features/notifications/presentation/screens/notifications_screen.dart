@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../routing/route_paths.dart';
 
 class NotificationItem {
   final String id;
@@ -11,7 +9,7 @@ class NotificationItem {
   final String category; // 'courses', 'orders', 'promos', 'community', 'live'
   final String group; // 'Today', 'Yesterday', 'Earlier'
   bool isUnread;
-  final String? route;
+  bool isExpanded;
 
   NotificationItem({
     required this.id,
@@ -21,7 +19,7 @@ class NotificationItem {
     required this.category,
     required this.group,
     this.isUnread = true,
-    this.route,
+    this.isExpanded = false,
   });
 }
 
@@ -40,76 +38,69 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     NotificationItem(
       id: 'n_1',
       title: '🎉 50% Off Flash Sale!',
-      message: 'Get 50% discount on Vastu Shastra Masterclass for the next 24 hours. Use code BEYOND50 at checkout.',
+      message: 'Get 50% discount on Vastu Shastra Masterclass for the next 24 hours. Use promo code BEYOND50 at checkout to claim your limited period wellness offer.',
       time: '10m ago',
       category: 'promos',
       group: 'Today',
       isUnread: true,
-      route: RoutePaths.courses,
     ),
     NotificationItem(
       id: 'n_2',
       title: 'New Module Unlocked! 🎓',
-      message: 'Module 2: Bach Flower Therapy & Emotional Balance is now available in your learning portal.',
+      message: 'Module 2: Bach Flower Therapy & Emotional Balance is now live in your learning portal. Access new video lectures, reading PDFs, and downloadable worksheets.',
       time: '2h ago',
       category: 'courses',
       group: 'Today',
       isUnread: true,
-      route: RoutePaths.joinedCourses,
     ),
     NotificationItem(
       id: 'n_3',
       title: 'Order Dispatched 📦',
-      message: 'Your order #ORD-998241 containing Bach Flower Oil has been dispatched via BlueDart Express.',
+      message: 'Your order #ORD-998241 containing Bach Flower Oil & Essential Drops has been dispatched via BlueDart Express. Tracking ID: BD-998241IN.',
       time: '5h ago',
       category: 'orders',
       group: 'Today',
       isUnread: true,
-      route: RoutePaths.orders,
     ),
 
     // Yesterday
     NotificationItem(
       id: 'n_4',
-      title: 'Live Webinar Starting Soon 🔴',
-      message: 'Live Breathwork & Meditation session starts today at 7:00 PM. Tap to access your live room link.',
+      title: 'Live Session Notice 🔴',
+      message: 'Live Breathwork & Meditation session starts today at 7:00 PM. Please prepare a quiet room and sit comfortably for guided chakra healing.',
       time: '1d ago',
       category: 'live',
       group: 'Yesterday',
       isUnread: false,
-      route: RoutePaths.courses,
     ),
     NotificationItem(
       id: 'n_5',
       title: 'WhatsApp Study Group Invited 💬',
-      message: 'You are invited to join the official Vastu Diplomates WhatsApp Study Group. Connect with peers now!',
+      message: 'You are invited to join the official Vastu Diplomates WhatsApp Study Group. Connect with peers, share queries, and receive daily herbal tips.',
       time: '1d ago',
       category: 'community',
       group: 'Yesterday',
       isUnread: false,
-      route: RoutePaths.joinedCourses,
     ),
 
     // Earlier This Week
     NotificationItem(
       id: 'n_6',
       title: 'Certificate Awarded 🏆',
-      message: 'Congratulations! Your completion certificate for Ancient Healing Mastery is ready for download.',
+      message: 'Congratulations! Your completion certificate for Ancient Healing Mastery is ready for download in your student portal.',
       time: '3d ago',
       category: 'courses',
       group: 'Earlier',
       isUnread: false,
-      route: RoutePaths.joinedCourses,
     ),
     NotificationItem(
       id: 'n_7',
       title: 'Payment Receipt Confirmed 💳',
-      message: 'Payment of ₹8,999 received for Breathwork For Emotional Release. Invoice #INV-2025-082.',
+      message: 'Payment of ₹2,499 received for Breathwork For Emotional Release. Tax invoice #REC-2025-7742 has been generated.',
       time: '4d ago',
       category: 'orders',
       group: 'Earlier',
       isUnread: false,
-      route: RoutePaths.orders,
     ),
   ];
 
@@ -241,13 +232,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
         actions: [
           if (_notifications.isNotEmpty) ...[
-            // Mark all as read button
             IconButton(
               tooltip: 'Mark All Read',
               icon: const Icon(Icons.done_all_rounded, color: Color(0xFF059669), size: 22),
               onPressed: _markAllAsRead,
             ),
-            // Clear all button
             IconButton(
               tooltip: 'Clear All',
               icon: const Icon(Icons.delete_sweep_rounded, color: Color(0xFFEF4444), size: 22),
@@ -334,7 +323,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
 
-          // Notifications List or Empty State
+          // Notifications List
           Expanded(
             child: list.isEmpty
                 ? _buildEmptyState()
@@ -351,7 +340,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Group Title Tag
                           Padding(
                             padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
                             child: Row(
@@ -376,7 +364,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             ),
                           ),
 
-                          // Notification Cards in this Group
                           ...groupItems.map(
                             (item) => Dismissible(
                               key: Key(item.id),
@@ -410,11 +397,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 item: item,
                                 onTap: () {
                                   setState(() {
+                                    item.isExpanded = !item.isExpanded;
                                     item.isUnread = false;
                                   });
-                                  if (item.route != null && item.route!.isNotEmpty) {
-                                    context.push(item.route!);
-                                  }
                                 },
                               ),
                             ),
@@ -531,7 +516,7 @@ class _FilterChip extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF312E81).withValues(alpha: 0.3),
+                    color: const Color(0xFF312E81).withAlpha(76),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -587,19 +572,25 @@ class _NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final styleProps = _getStyleProps(item.category);
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: item.isUnread ? const Color(0xFFEEF2FF) : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: item.isUnread ? const Color(0xFFC7D2FE) : const Color(0xFFE2E8F0),
-          width: item.isUnread ? 1.5 : 1.0,
+          color: item.isExpanded
+              ? AppColors.primary
+              : (item.isUnread ? const Color(0xFFC7D2FE) : const Color(0xFFE2E8F0)),
+          width: item.isExpanded || item.isUnread ? 1.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: item.isUnread ? const Color(0x184338CA) : const Color(0x0A000000),
-            blurRadius: item.isUnread ? 8 : 4,
+            color: item.isExpanded
+                ? AppColors.primary.withAlpha(30)
+                : (item.isUnread ? const Color(0x184338CA) : const Color(0x0A000000)),
+            blurRadius: item.isExpanded || item.isUnread ? 8 : 4,
             offset: const Offset(0, 3),
           ),
         ],
@@ -611,99 +602,156 @@ class _NotificationCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
+            padding: const EdgeInsets.all(14.0),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Category Icon Avatar
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: styleProps.gradient,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: styleProps.primaryColor.withValues(alpha: 0.35),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Icon(styleProps.icon, color: Colors.white, size: 22),
-                ),
-                const SizedBox(width: 12),
-
-                // Content Column
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Notification Title
-                          Expanded(
-                            child: Text(
-                              item.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: const Color(0xFF1E1B4B),
-                                fontSize: 13.5,
-                                fontWeight: item.isUnread ? FontWeight.w900 : FontWeight.w700,
-                              ),
-                            ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category Icon Avatar
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        gradient: styleProps.gradient,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: styleProps.primaryColor.withAlpha(90),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
                           ),
-                          const SizedBox(width: 6),
+                        ],
+                      ),
+                      child: Icon(styleProps.icon, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
 
-                          // Time Stamp
+                    // Content Column
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Notification Title
+                              Expanded(
+                                child: Text(
+                                  item.title,
+                                  maxLines: item.isExpanded ? null : 1,
+                                  overflow: item.isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: const Color(0xFF1E1B4B),
+                                    fontSize: 13.5,
+                                    fontWeight: item.isUnread || item.isExpanded ? FontWeight.w900 : FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+
+                              // Time Stamp & Expand Arrow Icon
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    item.time,
+                                    style: TextStyle(
+                                      color: item.isUnread ? const Color(0xFF4338CA) : const Color(0xFF94A3B8),
+                                      fontSize: 10.5,
+                                      fontWeight: item.isUnread ? FontWeight.w800 : FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    item.isExpanded
+                                        ? Icons.keyboard_arrow_up_rounded
+                                        : Icons.keyboard_arrow_down_rounded,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+
+                          // Notification Message
                           Text(
-                            item.time,
+                            item.message,
+                            maxLines: item.isExpanded ? null : 2,
+                            overflow: item.isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: item.isUnread ? const Color(0xFF4338CA) : const Color(0xFF94A3B8),
-                              fontSize: 10.5,
-                              fontWeight: item.isUnread ? FontWeight.w800 : FontWeight.w500,
+                              color: item.isUnread ? const Color(0xFF334155) : const Color(0xFF64748B),
+                              fontSize: 12.5,
+                              height: 1.35,
+                              fontWeight: item.isUnread ? FontWeight.w500 : FontWeight.w400,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                    ),
 
-                      // Notification Message
-                      Text(
-                        item.message,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: item.isUnread ? const Color(0xFF334155) : const Color(0xFF64748B),
-                          fontSize: 12,
-                          height: 1.3,
-                          fontWeight: item.isUnread ? FontWeight.w500 : FontWeight.w400,
+                    // Unread Dot Indicator
+                    if (item.isUnread) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF6366F1),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF6366F1),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
 
-                // Unread Dot Indicator
-                if (item.isUnread) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    width: 9,
-                    height: 9,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF6366F1),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF6366F1),
-                          blurRadius: 4,
-                          spreadRadius: 1,
+                // EXPANDED METADATA DETAIL FOOTER
+                if (item.isExpanded) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: styleProps.primaryColor.withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                      ],
-                    ),
+                        child: Text(
+                          item.category.toUpperCase(),
+                          style: TextStyle(
+                            color: styleProps.primaryColor,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      const Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, size: 12, color: AppColors.textHint),
+                          SizedBox(width: 4),
+                          Text(
+                            'In-App Alert • Tap to collapse',
+                            style: TextStyle(fontSize: 10, color: AppColors.textHint, fontStyle: FontStyle.italic),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ],
@@ -759,10 +807,8 @@ class _NotificationCard extends StatelessWidget {
       default:
         return const _NotificationCategoryStyle(
           icon: Icons.notifications_rounded,
-          primaryColor: Color(0xFF312E81),
-          gradient: LinearGradient(
-            colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
-          ),
+          primaryColor: AppColors.primary,
+          gradient: AppColors.primaryGradient,
         );
     }
   }
