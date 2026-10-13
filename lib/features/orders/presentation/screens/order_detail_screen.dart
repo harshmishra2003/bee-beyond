@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/services/receipt_pdf_service.dart';
 import '../../../../core/services/whatsapp_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/order_entity.dart';
@@ -51,7 +49,7 @@ class OrderDetailScreen extends ConsumerWidget {
   }
 
   void _contactSupport(BuildContext context, OrderEntity order) {
-    WhatsAppService.launchWhatsApp(
+    WhatsAppService.launchSupportChat(
       context: context,
       message: 'Hello Bee Beyond Support, I need assistance regarding my Order ${order.orderId}.',
     );
