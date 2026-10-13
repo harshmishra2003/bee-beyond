@@ -5,9 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 class WhatsAppService {
   /// Dummy database of WhatsApp Group URLs per Course
   static const Map<String, String> _courseWhatsAppGroups = {
-    'jc_1': 'https://chat.whatsapp.com/ExampleBreathworkGroup', // Valid group link example
-    'jc_2': '', // Empty link -> triggers "Group Not Available" dialog
-    'jc_3': 'https://chat.whatsapp.com/ExampleVastuGroup', // Valid group link example
+    'jc_1': 'https://chat.whatsapp.com/ExampleBreathworkGroup',
+    'jc_2': '',
+    'jc_3': 'https://chat.whatsapp.com/ExampleVastuGroup',
     'oc_1': 'https://chat.whatsapp.com/ExampleBreathworkGroup',
   };
 
@@ -21,7 +21,6 @@ class WhatsAppService {
     try {
       final groupUrl = customGroupUrl ?? _courseWhatsAppGroups[courseId] ?? '';
 
-      // Case 1: Group URL is empty or not created yet by owner
       if (groupUrl.trim().isEmpty) {
         if (context.mounted) {
           _showGroupNotAvailableDialog(context, courseTitle);
@@ -31,7 +30,6 @@ class WhatsAppService {
 
       final Uri uri = Uri.parse(groupUrl);
 
-      // Case 2: Check if link can be launched
       if (await canLaunchUrl(uri)) {
         final bool launched = await launchUrl(
           uri,
@@ -60,6 +58,31 @@ class WhatsAppService {
           context,
           'An unexpected error occurred: ${e.toString()}',
           customGroupUrl ?? _courseWhatsAppGroups[courseId] ?? '',
+        );
+      }
+    }
+  }
+
+  /// Helper to launch direct WhatsApp support chat
+  static Future<void> launchSupportChat({
+    required BuildContext context,
+    required String message,
+  }) async {
+    final encodedMessage = Uri.encodeComponent(message);
+    final Uri uri = Uri.parse('https://wa.me/919876543210?text=$encodedMessage');
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Connecting to Bee Beyond Customer Support...')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open WhatsApp support.')),
         );
       }
     }
@@ -125,7 +148,6 @@ class WhatsAppService {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Course Badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
@@ -153,7 +175,6 @@ class WhatsAppService {
               ),
             ),
             const SizedBox(height: 14),
-
             const Text(
               'Group Not Created Yet',
               style: TextStyle(
@@ -163,7 +184,6 @@ class WhatsAppService {
               ),
             ),
             const SizedBox(height: 6),
-
             const Text(
               'The course owner/instructor has not published the official WhatsApp study group link for this course yet. Please check back soon or contact support for assistance.',
               style: TextStyle(
@@ -239,7 +259,6 @@ class WhatsAppService {
             ),
             const SizedBox(height: 8),
 
-            // Error Detail Box
             Container(
               padding: const EdgeInsets.all(10),
               width: double.infinity,
