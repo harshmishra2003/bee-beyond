@@ -35,6 +35,7 @@ import '../features/settings/presentation/screens/about_screen.dart';
 import '../features/settings/presentation/screens/privacy_policy_screen.dart';
 import '../features/settings/presentation/screens/support_screen.dart';
 import '../features/splash/presentation/screens/splash_screen.dart';
+import 'page_transitions.dart';
 import 'route_names.dart';
 import 'route_paths.dart';
 
@@ -48,34 +49,64 @@ class AppRouter {
       GoRoute(
         path: RoutePaths.splash,
         name: RouteNames.splash,
-        builder: (context, state) => const SplashScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const SplashScreen(),
+          type: AppTransitionType.fadeScale,
+        ),
       ),
       GoRoute(
         path: RoutePaths.onboarding,
         name: RouteNames.onboarding,
-        builder: (context, state) => const OnboardingScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const OnboardingScreen(),
+          type: AppTransitionType.fadeScale,
+        ),
       ),
 
       // Auth
       GoRoute(
         path: RoutePaths.login,
         name: RouteNames.login,
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const LoginScreen(),
+          type: AppTransitionType.fadeScale,
+        ),
       ),
       GoRoute(
         path: RoutePaths.register,
         name: RouteNames.register,
-        builder: (context, state) => const RegisterScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const RegisterScreen(),
+          type: AppTransitionType.slideUp,
+        ),
       ),
       GoRoute(
         path: RoutePaths.forgotPassword,
         name: RouteNames.forgotPassword,
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const ForgotPasswordScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.otp,
         name: RouteNames.otp,
-        builder: (context, state) => const OtpScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const OtpScreen(),
+          type: AppTransitionType.fadeScale,
+        ),
       ),
 
       // StatefulShellRoute for Bottom Navigation Tabs
@@ -130,144 +161,264 @@ class AppRouter {
       GoRoute(
         path: RoutePaths.courseDetail,
         name: RouteNames.courseDetail,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.uri.queryParameters['id'] ?? 'c_1';
-          return CourseDetailScreen(courseId: id);
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: CourseDetailScreen(courseId: id),
+            type: AppTransitionType.slideUp,
+          );
         },
       ),
       GoRoute(
         path: RoutePaths.courseEnrollment,
         name: RouteNames.courseEnrollment,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.uri.queryParameters['id'] ?? 'c_1';
-          return CourseEnrollmentScreen(courseId: id);
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: CourseEnrollmentScreen(courseId: id),
+            type: AppTransitionType.slideUp,
+          );
         },
       ),
       GoRoute(
         path: RoutePaths.enrollmentReceipt,
         name: RouteNames.enrollmentReceipt,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final data = (state.extra as Map<String, dynamic>?) ?? {};
-          return EnrollmentReceiptScreen(data: data);
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: EnrollmentReceiptScreen(data: data),
+            type: AppTransitionType.slideUp,
+          );
         },
       ),
       GoRoute(
         path: RoutePaths.joinedCourses,
         name: RouteNames.joinedCourses,
-        builder: (context, state) => const JoinedCoursesScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const JoinedCoursesScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.courseMaterial,
         name: RouteNames.courseMaterial,
-        builder: (context, state) => const CourseMaterialScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const CourseMaterialScreen(),
+          type: AppTransitionType.slideUp,
+        ),
       ),
 
       GoRoute(
         path: RoutePaths.products,
         name: RouteNames.products,
-        builder: (context, state) => const ProductsListScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const ProductsListScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.productDetail,
         name: RouteNames.productDetail,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.uri.queryParameters['id'] ?? 'p_1';
-          return ProductDetailScreen(productId: id);
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: ProductDetailScreen(productId: id),
+            type: AppTransitionType.slideUp,
+          );
         },
       ),
 
       GoRoute(
         path: RoutePaths.checkout,
         name: RouteNames.checkout,
-        builder: (context, state) => const CheckoutScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const CheckoutScreen(),
+          type: AppTransitionType.slideUp,
+        ),
       ),
       GoRoute(
         path: RoutePaths.orders,
         name: RouteNames.orders,
-        builder: (context, state) => const OrdersListScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const OrdersListScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.receipts,
         name: RouteNames.receipts,
-        builder: (context, state) => const ReceiptsListScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const ReceiptsListScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.orderDetail,
         name: RouteNames.orderDetail,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.uri.queryParameters['id'] ?? 'ORD-998241';
-          return OrderDetailScreen(orderId: id);
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: OrderDetailScreen(orderId: id),
+            type: AppTransitionType.slideRight,
+          );
         },
       ),
 
       GoRoute(
         path: RoutePaths.notifications,
         name: RouteNames.notifications,
-        builder: (context, state) => const NotificationsScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const NotificationsScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.search,
         name: RouteNames.search,
-        builder: (context, state) => const SearchScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const SearchScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.membership,
         name: RouteNames.membership,
-        builder: (context, state) => const MembershipScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const MembershipScreen(),
+          type: AppTransitionType.slideUp,
+        ),
       ),
       GoRoute(
         path: RoutePaths.services,
         name: RouteNames.services,
-        builder: (context, state) => const ServicesScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const ServicesScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
 
       // Library
       GoRoute(
         path: RoutePaths.library,
         name: RouteNames.library,
-        builder: (context, state) => const LibraryScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const LibraryScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.music,
         name: RouteNames.music,
-        builder: (context, state) => const MusicScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const MusicScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.video,
         name: 'video',
-        builder: (context, state) => const VideoScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const VideoScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.material,
         name: 'material',
-        builder: (context, state) => const MaterialScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const MaterialScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
 
       // Settings & Profile Edit
       GoRoute(
         path: RoutePaths.editProfile,
         name: RouteNames.editProfile,
-        builder: (context, state) => const EditProfileScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const EditProfileScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.changePassword,
         name: RouteNames.changePassword,
-        builder: (context, state) => const ChangePasswordScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const ChangePasswordScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.about,
         name: RouteNames.about,
-        builder: (context, state) => const AboutScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const AboutScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.support,
         name: RouteNames.support,
-        builder: (context, state) => const SupportScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const SupportScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
       GoRoute(
         path: RoutePaths.privacyPolicy,
         name: RouteNames.privacyPolicy,
-        builder: (context, state) => const PrivacyPolicyScreen(),
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const PrivacyPolicyScreen(),
+          type: AppTransitionType.slideRight,
+        ),
       ),
     ],
   );
