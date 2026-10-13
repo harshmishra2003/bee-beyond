@@ -16,6 +16,7 @@ class MembershipPlan {
   final double price;
   final String duration;
   final List<Color> gradientColors;
+  final List<Color> shineColors;
   final Color accentColor;
   final Color textColor;
   final IconData icon;
@@ -29,6 +30,7 @@ class MembershipPlan {
     required this.price,
     required this.duration,
     required this.gradientColors,
+    required this.shineColors,
     required this.accentColor,
     required this.textColor,
     required this.icon,
@@ -55,9 +57,16 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       tag: 'SILVER SHINE PASS',
       price: 1200.0,
       duration: '1 YEAR ACCESS',
-      gradientColors: [Color(0xFFE2E8F0), Color(0xFF94A3B8), Color(0xFF64748B)],
-      accentColor: Color(0xFF475569),
-      textColor: Color(0xFF1E293B),
+      gradientColors: [Color(0xFFCBD5E1), Color(0xFF94A3B8), Color(0xFF475569)],
+      shineColors: [
+        Colors.transparent,
+        Color(0x30FFFFFF),
+        Color(0xFFFFFFFF),
+        Color(0x30FFFFFF),
+        Colors.transparent,
+      ],
+      accentColor: Color(0xFF334155),
+      textColor: Color(0xFF0F172A),
       icon: Icons.workspace_premium_rounded,
       benefits: [
         '10% Flat Discount on All Bach & Ayurvedic Remedies',
@@ -74,6 +83,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       duration: '1 YEAR ACCESS',
       isPopular: true,
       gradientColors: [Color(0xFFF59E0B), Color(0xFFD97706), Color(0xFFB45309)],
+      shineColors: [
+        Colors.transparent,
+        Color(0x50FCD34D),
+        Color(0xFFFFFBEB),
+        Color(0x50FCD34D),
+        Colors.transparent,
+      ],
       accentColor: Color(0xFF78350F),
       textColor: Colors.white,
       icon: Icons.stars_rounded,
@@ -91,6 +107,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       price: 1100.0,
       duration: '1 YEAR ACCESS',
       gradientColors: [Color(0xFF6366F1), Color(0xFF4338CA), Color(0xFF312E81)],
+      shineColors: [
+        Colors.transparent,
+        Color(0x50A5B4FC),
+        Color(0xFFEEF2FF),
+        Color(0x50A5B4FC),
+        Colors.transparent,
+      ],
       accentColor: Color(0xFF818CF8),
       textColor: Colors.white,
       icon: Icons.military_tech_rounded,
@@ -108,6 +131,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       price: 2000.0,
       duration: '1 YEAR VIP ACCESS',
       gradientColors: [Color(0xFF0288D1), Color(0xFF00695C), Color(0xFF00ACC1), Color(0xFF80DEEA)],
+      shineColors: [
+        Colors.transparent,
+        Color(0x5080DEEA),
+        Color(0xFFE0F7FA),
+        Color(0x5080DEEA),
+        Colors.transparent,
+      ],
       accentColor: Color(0xFF00838F),
       textColor: Colors.white,
       icon: Icons.diamond_rounded,
@@ -125,7 +155,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     super.initState();
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(milliseconds: 2600),
     )..repeat();
   }
 
@@ -173,7 +203,6 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       date: DateTime.now(),
     );
 
-    // Add receipt to provider
     ref.read(receiptsProvider.notifier).addReceipt(receipt);
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -183,7 +212,6 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       ),
     );
 
-    // Open Tax Invoice
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ReceiptPreviewScreen(receipt: receipt),
@@ -248,7 +276,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
             const SizedBox(height: 20),
 
-            // MEMBERSHIP CARDS LIST WITH METALLIC SHIMMER
+            // MEMBERSHIP CARDS LIST WITH METALLIC SHIMMER & BRAND EMBLEM
             ..._plans.map((plan) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 20.0),
@@ -268,7 +296,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     return AnimatedBuilder(
       animation: _shimmerController,
       builder: (context, child) {
-        final shimmerPos = _shimmerController.value * 2.5 - 0.75;
+        final shimmerPos = _shimmerController.value * 2.8 - 0.9;
 
         return Stack(
           children: [
@@ -296,13 +324,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Card Header Row
+                  // Card Header Row (No Overlap with Top-Right Emblem)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          Icon(plan.icon, color: plan.isPopular ? Colors.amberAccent : Colors.white, size: 28),
+                          Icon(plan.icon, color: plan.isPopular ? Colors.amberAccent : Colors.white, size: 26),
                           const SizedBox(width: 8),
                           Text(
                             plan.tag,
@@ -310,23 +338,32 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                               color: plan.isPopular ? Colors.amberAccent : Colors.white70,
                               fontSize: 10,
                               fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
+                              letterSpacing: 0.8,
                             ),
                           ),
+                          if (plan.isPopular) ...[
+                            const SizedBox(width: 8),
+                            _ZoomingWidget(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.amberAccent,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: const [
+                                    BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                                  ],
+                                ),
+                                child: const Text(
+                                  'BEST VALUE',
+                                  style: TextStyle(color: Color(0xFF78350F), fontSize: 9, fontWeight: FontWeight.w900),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
-                      if (plan.isPopular)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.amberAccent,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'BEST VALUE',
-                            style: TextStyle(color: Color(0xFF78350F), fontSize: 9.5, fontWeight: FontWeight.w900),
-                          ),
-                        ),
+                      // Reserved Space for Top Right Brand Emblem
+                      const SizedBox(width: 32),
                     ],
                   ),
 
@@ -344,12 +381,12 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
                   const SizedBox(height: 8),
 
-                  // Slowly Interpolating Price Counter
+                  // DIGITAL CLOCK ROLL-DOWN ANIMATED PRICE COUNTER
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
-                      _AnimatedPriceCounter(
+                      _DigitalClockRollCounter(
                         targetAmount: plan.price,
                         style: TextStyle(
                           color: plan.textColor,
@@ -393,37 +430,46 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                         ),
                       )),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
 
-                  // Shiny Glossy Subscribe Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: plan.accentColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 4,
-                      ),
-                      onPressed: () => _subscribePlan(plan),
-                      icon: Icon(Icons.bolt_rounded, color: plan.accentColor, size: 20),
-                      label: Text(
-                        'SUBSCRIBE NOW →',
-                        style: TextStyle(
-                          color: plan.accentColor,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
+                  // Shiny Glossy Pulsing Subscribe Button
+                  _ShiningPulsingSubscribeButton(
+                    plan: plan,
+                    onPressed: () => _subscribePlan(plan),
                   ),
                 ],
               ),
             ),
 
-            // METALLIC SHIMMER LIGHT STREAK OVERLAY
+            // TOP RIGHT CORNER BRAND LOGO EMBLEM (CLEANLY POSITIONED WITH ZERO OVERLAP)
+            Positioned(
+              top: 14,
+              right: 14,
+              child: Container(
+                padding: const EdgeInsets.all(2.5),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 5,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    AssetPaths.beeBeyondImage2,
+                    width: 24,
+                    height: 24,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+
+            // COLOR-SPECIFIC METALLIC SHIMMER LIGHT STREAK OVERLAY
             Positioned.fill(
               child: IgnorePointer(
                 child: ClipRRect(
@@ -431,14 +477,8 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                   child: ShaderMask(
                     shaderCallback: (bounds) {
                       return LinearGradient(
-                        colors: const [
-                          Colors.transparent,
-                          Colors.white24,
-                          Colors.white60,
-                          Colors.white24,
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.4, 0.5, 0.6, 1.0],
+                        colors: plan.shineColors,
+                        stops: const [0.0, 0.35, 0.5, 0.65, 1.0],
                         begin: Alignment(shimmerPos - 1.0, -0.5),
                         end: Alignment(shimmerPos, 0.5),
                       ).createShader(bounds);
@@ -456,26 +496,245 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
   }
 }
 
-// SLOWLY INTERPOLATING ANIMATED PRICE COUNTER
-class _AnimatedPriceCounter extends StatelessWidget {
+// DIGITAL CLOCK ROLL-DOWN ANIMATED PRICE COUNTER WIDGET
+class _DigitalClockRollCounter extends StatefulWidget {
   final double targetAmount;
   final TextStyle style;
 
-  const _AnimatedPriceCounter({
+  const _DigitalClockRollCounter({
     required this.targetAmount,
     required this.style,
   });
 
   @override
+  State<_DigitalClockRollCounter> createState() => _DigitalClockRollCounterState();
+}
+
+class _DigitalClockRollCounterState extends State<_DigitalClockRollCounter>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: targetAmount),
-      duration: const Duration(milliseconds: 1400),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Text(
-          CurrencyUtils.formatINR(value),
-          style: style,
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final progress = _controller.value;
+        final currentVal = widget.targetAmount *
+            CurvedAnimation(
+              parent: _controller,
+              curve: Curves.easeOutCubic,
+            ).value;
+
+        final formattedText = CurrencyUtils.formatINR(currentVal);
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: List.generate(formattedText.length, (index) {
+            final char = formattedText[index];
+            final stagger = (index * 0.08).clamp(0.0, 0.4);
+            final charProgress = ((progress - stagger) / (1.0 - stagger)).clamp(0.0, 1.0);
+            final rollY = (1.0 - charProgress) * -1.2;
+
+            return Transform.translate(
+              offset: Offset(0, rollY * 20),
+              child: Opacity(
+                opacity: charProgress.clamp(0.1, 1.0),
+                child: Text(
+                  char,
+                  style: widget.style,
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+}
+
+// ZOOM-IN ZOOM-OUT ANIMATION WIDGET FOR STICKERS
+class _ZoomingWidget extends StatefulWidget {
+  final Widget child;
+
+  const _ZoomingWidget({required this.child});
+
+  @override
+  State<_ZoomingWidget> createState() => _ZoomingWidgetState();
+}
+
+class _ZoomingWidgetState extends State<_ZoomingWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+
+    _scaleAnim = Tween<double>(begin: 0.92, end: 1.10).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnim,
+      child: widget.child,
+    );
+  }
+}
+
+// SHINING & PULSING POP-UP/DOWN SUBSCRIBE BUTTON WIDGET
+class _ShiningPulsingSubscribeButton extends StatefulWidget {
+  final MembershipPlan plan;
+  final VoidCallback onPressed;
+
+  const _ShiningPulsingSubscribeButton({
+    required this.plan,
+    required this.onPressed,
+  });
+
+  @override
+  State<_ShiningPulsingSubscribeButton> createState() =>
+      __ShiningPulsingSubscribeButtonState();
+}
+
+class __ShiningPulsingSubscribeButtonState
+    extends State<_ShiningPulsingSubscribeButton>
+    with TickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late AnimationController _shineController;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+
+    _shineController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat();
+
+    _scaleAnim = Tween<double>(begin: 0.98, end: 1.04).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _shineController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_pulseController, _shineController]),
+      builder: (context, child) {
+        final shinePos = _shineController.value * 3.0 - 1.0;
+
+        return ScaleTransition(
+          scale: _scaleAnim,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withAlpha(140),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: widget.plan.accentColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 4,
+                    ),
+                    onPressed: widget.onPressed,
+                    icon: Icon(Icons.bolt_rounded, color: widget.plan.accentColor, size: 20),
+                    label: Text(
+                      'SUBSCRIBE NOW →',
+                      style: TextStyle(
+                        color: widget.plan.accentColor,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Button Light Streak Shine
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: ShaderMask(
+                        shaderCallback: (bounds) {
+                          return LinearGradient(
+                            colors: const [
+                              Colors.transparent,
+                              Colors.white10,
+                              Colors.white70,
+                              Colors.white10,
+                              Colors.transparent,
+                            ],
+                            stops: const [0.0, 0.4, 0.5, 0.6, 1.0],
+                            begin: Alignment(shinePos - 1.0, -0.5),
+                            end: Alignment(shinePos, 0.5),
+                          ).createShader(bounds);
+                        },
+                        blendMode: BlendMode.srcATop,
+                        child: Container(color: Colors.white.withAlpha(1)),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
