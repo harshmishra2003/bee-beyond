@@ -229,7 +229,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                       onPressed: () {
-                        showSignOutConfirmationDialog(context);
+                        showSignOutConfirmationDialog(context, ref: ref);
                       },
                       icon: const Icon(Icons.logout_rounded, size: 22),
                       label: const Text(
