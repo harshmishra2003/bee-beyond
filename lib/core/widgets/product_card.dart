@@ -11,6 +11,7 @@ class ProductCard extends StatelessWidget {
   final double? originalPrice;
   final VoidCallback onTap;
   final VoidCallback onAddToCart;
+  final VoidCallback? onBuyNow;
 
   const ProductCard({
     super.key,
@@ -20,6 +21,7 @@ class ProductCard extends StatelessWidget {
     this.originalPrice,
     required this.onTap,
     required this.onAddToCart,
+    this.onBuyNow,
   });
 
   @override
@@ -91,21 +93,44 @@ class ProductCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: onAddToCart,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryLight,
-                        minimumSize: const Size.fromHeight(32),
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  Row(
+                    children: [
+                      // Cart Icon Button
+                      IconButton(
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.all(6),
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        ),
+                        icon: const Icon(Icons.add_shopping_cart_rounded, color: AppColors.primary, size: 16),
+                        onPressed: onAddToCart,
+                        tooltip: 'Add to Cart',
                       ),
-                      child: Text(
-                        'Add to Cart',
-                        style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      const SizedBox(width: 6),
+                      // Buy Now Button
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: onBuyNow ?? onAddToCart,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            elevation: 0,
+                            minimumSize: const Size.fromHeight(32),
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: const Text(
+                            'BUY NOW',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
