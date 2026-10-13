@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../routing/page_transitions.dart';
 
 class BookItem {
   final String id;
@@ -145,8 +146,9 @@ class _MaterialScreenState extends State<MaterialScreen> {
 
   void _openBookViewer(BookItem book) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => _FlipBookViewerScreen(book: book),
+      buildSmoothPageRoute(
+        page: _FlipBookViewerScreen(book: book),
+        type: AppTransitionType.slideUp,
       ),
     );
   }
