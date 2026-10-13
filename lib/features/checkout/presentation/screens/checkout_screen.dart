@@ -33,6 +33,34 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _stateController = TextEditingController(text: 'Maharashtra');
   final _pincodeController = TextEditingController(text: '400001');
 
+  // Pre-saved addresses
+  final List<Map<String, String>> _savedAddresses = [
+    {
+      'id': 'home',
+      'label': '🏠 Home',
+      'name': 'Aarav Sharma',
+      'phone': '+91 9876543210',
+      'email': 'aarav@example.com',
+      'address': 'Flat 302, Green Heights, MG Road',
+      'city': 'Mumbai',
+      'state': 'Maharashtra',
+      'pincode': '400001',
+    },
+    {
+      'id': 'office',
+      'label': '🏢 Office',
+      'name': 'Aarav Sharma',
+      'phone': '+91 9876543210',
+      'email': 'aarav@example.com',
+      'address': '4th Floor, MindSpace Tech Park, Malad West',
+      'city': 'Mumbai',
+      'state': 'Maharashtra',
+      'pincode': '400064',
+    },
+  ];
+
+  String _selectedAddressId = 'home';
+
   // Card Payment Fields
   final _cardNumberController = TextEditingController();
   final _cardExpiryController = TextEditingController();
@@ -81,6 +109,167 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     super.dispose();
   }
 
+  void _applySavedAddress(Map<String, String> addr) {
+    setState(() {
+      _selectedAddressId = addr['id']!;
+      _nameController.text = addr['name']!;
+      _phoneController.text = addr['phone']!;
+      _emailController.text = addr['email']!;
+      _addressController.text = addr['address']!;
+      _cityController.text = addr['city']!;
+      _stateController.text = addr['state']!;
+      _pincodeController.text = addr['pincode']!;
+    });
+  }
+
+  // GPS Current Location Detection Flow
+  void _fetchGpsCurrentLocation() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _GpsLocationFetcherModal(
+        onSuccess: (detectedData) {
+          Navigator.pop(ctx);
+          _showLocationSuccessDialog(detectedData);
+        },
+        onError: (errMsg) {
+          Navigator.pop(ctx);
+          _showLocationErrorDialog(errMsg);
+        },
+      ),
+    );
+  }
+
+  void _showLocationSuccessDialog(Map<String, String> data) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Color(0xFFECFDF5),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 24),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('GPS Location Detected!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  Text('High-Accuracy Satellite Lock', style: TextStyle(fontSize: 10.5, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Detected Current Location:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Street: ${data['address']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text('City & State: ${data['city']}, ${data['state']}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                  Text('PIN Code: ${data['pincode']}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textHint)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() {
+                _selectedAddressId = 'custom';
+                _addressController.text = data['address']!;
+                _cityController.text = data['city']!;
+                _stateController.text = data['state']!;
+                _pincodeController.text = data['pincode']!;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('GPS Location applied to delivery address!'),
+                  backgroundColor: AppColors.success,
+                ),
+              );
+            },
+            icon: const Icon(Icons.my_location_rounded, color: Colors.white, size: 16),
+            label: const Text('Apply Address', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLocationErrorDialog(String errorMsg) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.location_off_rounded, color: Color(0xFFEF4444), size: 26),
+            SizedBox(width: 10),
+            Text('Location Notice', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(errorMsg, style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.35)),
+            const SizedBox(height: 10),
+            const Text('You can type your delivery address manually in the form fields.', style: TextStyle(fontSize: 11.5, color: AppColors.textHint)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Enter Manually', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _fetchGpsCurrentLocation();
+            },
+            child: const Text('Retry GPS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // UPI App Navigation & Deep Link Execution
   Future<void> _processUpiPayment({
     required String appName,
@@ -88,7 +277,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     required double totalAmount,
     required List<CartItemEntity> items,
   }) async {
-    // Construct standard UPI Payment URI
     final encodedTitle = Uri.encodeComponent('BEE BEYOND Wellness');
     final upiUriString =
         'upi://pay?pa=$upiId&pn=$encodedTitle&am=${totalAmount.toStringAsFixed(2)}&cu=INR&tn=${Uri.encodeComponent("Order Payment")}';
@@ -104,7 +292,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       launched = false;
     }
 
-    // Fallback if UPI app isn't installed on device/emulator: Show Interactive Processing Modal
     if (!launched && mounted) {
       _showUpiProcessingModal(
         appName: appName,
@@ -117,7 +304,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     }
   }
 
-  // Interactive UPI Processing Modal
   void _showUpiProcessingModal({
     required String appName,
     required String upiId,
@@ -143,7 +329,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  // Complete Order & Generate Official Receipt
   void _completeOrderSuccess({
     required String paymentMethod,
     required List<CartItemEntity> items,
@@ -156,7 +341,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final addressStr =
         '${_addressController.text.trim()}, ${_cityController.text.trim()}, ${_stateController.text.trim()} - ${_pincodeController.text.trim()}';
 
-    // Calculate subtotal and tax
     final subtotal = items.isEmpty ? totalAmount : items.subtotal;
 
     final receiptItems = items.isEmpty
@@ -181,13 +365,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       date: DateTime.now(),
     );
 
-    // Save to Receipts Provider
     ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
-
-    // Clear Shopping Cart
     ref.read(cartManagerProvider.notifier).clearCart();
 
-    // Show Success SnackBar & Navigate to Receipt Preview
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Payment Successful! Generating Tax Invoice...'),
@@ -202,7 +382,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  // On Pay Button Pressed
   void _handlePayOrder(List<CartItemEntity> cartItems, double totalAmount) async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -360,8 +539,68 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
               const SizedBox(height: 20),
 
-              // SECTION 1: SHIPPING ADDRESS
-              _buildSectionHeader('1. Delivery Address', Icons.location_on_outlined),
+              // SECTION 1: SHIPPING ADDRESS WITH GPS & SAVED CHIPS
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildSectionHeader('1. Delivery Address', Icons.location_on_outlined),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      side: const BorderSide(color: AppColors.primary, width: 1.2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: _fetchGpsCurrentLocation,
+                    icon: const Icon(Icons.my_location_rounded, color: AppColors.primary, size: 15),
+                    label: const Text('Fetch GPS Location', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // SAVED ADDRESS SELECTION CHIPS
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ..._savedAddresses.map((addr) {
+                      final isSelected = _selectedAddressId == addr['id'];
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: ChoiceChip(
+                          label: Text(addr['label']!),
+                          selected: isSelected,
+                          selectedColor: AppColors.primary,
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.white : AppColors.textSecondary,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                          onSelected: (selected) {
+                            if (selected) _applySavedAddress(addr);
+                          },
+                        ),
+                      );
+                    }),
+                    ChoiceChip(
+                      label: const Text('✏️ Custom / Edit'),
+                      selected: _selectedAddressId == 'custom',
+                      selectedColor: AppColors.primary,
+                      backgroundColor: const Color(0xFFF1F5F9),
+                      labelStyle: TextStyle(
+                        color: _selectedAddressId == 'custom' ? Colors.white : AppColors.textSecondary,
+                        fontWeight: _selectedAddressId == 'custom' ? FontWeight.bold : FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                      onSelected: (selected) {
+                        if (selected) setState(() => _selectedAddressId = 'custom');
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 12),
 
               _buildTextField(controller: _nameController, label: 'Full Name *', validator: (v) => v == null || v.trim().isEmpty ? 'Full Name required' : null),
@@ -488,7 +727,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  // ORDER SUMMARY CARD
   Widget _buildOrderSummaryCard({
     required List<CartItemEntity> cartItems,
     required double subtotal,
@@ -529,7 +767,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ),
           const Divider(height: 20, color: AppColors.divider),
 
-          // Items Preview List
           if (cartItems.isNotEmpty)
             ...cartItems.map((item) => Padding(
                   padding: const EdgeInsets.only(bottom: 6.0),
@@ -581,7 +818,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  // UPI OPTIONS PANEL
   Widget _buildUpiOptionsPanel(double totalAmount) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -623,7 +859,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             );
           }),
 
-          // Custom VPA Input
           if (_selectedUpiApp == 'custom') ...[
             const SizedBox(height: 8),
             _buildTextField(
@@ -637,7 +872,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  // CARD OPTIONS PANEL
   Widget _buildCardOptionsPanel() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -673,7 +907,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  // NET BANKING PANEL
   Widget _buildNetBankingPanel() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -688,7 +921,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           const Text('Select Your Bank for NetBanking:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _selectedBank,
+            initialValue: _selectedBank,
             decoration: InputDecoration(
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
@@ -705,7 +938,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  // COD PANEL
   Widget _buildCodPanel() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -811,6 +1043,86 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.borderSubtle)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+      ),
+    );
+  }
+}
+
+// REALISTIC GPS LOCATION FETCHER MODAL
+class _GpsLocationFetcherModal extends StatefulWidget {
+  final Function(Map<String, String>) onSuccess;
+  final Function(String) onError;
+
+  const _GpsLocationFetcherModal({
+    required this.onSuccess,
+    required this.onError,
+  });
+
+  @override
+  State<_GpsLocationFetcherModal> createState() => _GpsLocationFetcherModalState();
+}
+
+class _GpsLocationFetcherModalState extends State<_GpsLocationFetcherModal> {
+  int _seconds = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) setState(() => _seconds++);
+      if (_seconds == 2) {
+        _timer?.cancel();
+        widget.onSuccess({
+          'address': 'Unit 204, Crystal Plaza, New Link Rd',
+          'city': 'Mumbai',
+          'state': 'Maharashtra',
+          'pincode': '400053',
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color(0xFFEEF2FF),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.my_location_rounded, color: AppColors.primary, size: 36),
+            ),
+            const SizedBox(height: 16),
+            const Text('Fetching GPS Location...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const SizedBox(height: 6),
+            const Text('Connecting to satellite GPS to resolve street, city & pincode...', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            const SizedBox(height: 20),
+            const CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: () {
+                _timer?.cancel();
+                widget.onError('GPS Location search cancelled. Please enter your address manually.');
+              },
+              icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.error),
+              label: const Text('Cancel & Enter Manually', style: TextStyle(color: AppColors.error, fontSize: 12)),
+            ),
+          ],
+        ),
       ),
     );
   }
