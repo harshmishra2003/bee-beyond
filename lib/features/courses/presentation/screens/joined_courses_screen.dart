@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/services/whatsapp_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -338,21 +339,47 @@ class _JoinedCoursesScreenState extends ConsumerState<JoinedCoursesScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Course Image Poster
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: CachedNetworkImage(
-                        imageUrl: course.imageUrl,
-                        width: 85,
-                        height: 75,
-                        fit: BoxFit.cover,
-                        errorWidget: (context, url, error) => Container(
-                          width: 85,
-                          height: 75,
-                          color: AppColors.primary,
-                          child: const Icon(Icons.school_rounded, color: Colors.white),
+                    // Course Image Poster with Top Right Brand Logo Badge
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: CachedNetworkImage(
+                            imageUrl: course.imageUrl,
+                            width: 85,
+                            height: 75,
+                            fit: BoxFit.cover,
+                            errorWidget: (context, url, error) => Container(
+                              width: 85,
+                              height: 75,
+                              color: AppColors.primary,
+                              child: const Icon(Icons.school_rounded, color: Colors.white),
+                            ),
+                          ),
                         ),
-                      ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(1.5),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(color: Colors.black26, blurRadius: 3),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                AssetPaths.beeBeyondImage2,
+                                width: 16,
+                                height: 16,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(width: 14),
 
