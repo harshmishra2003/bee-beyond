@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/course_card.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -95,13 +96,13 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
 
           return Column(
             children: [
-              // Categories Filter
+              // Categories Filter Bar
               if (categories.isNotEmpty)
                 Container(
                   color: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   child: SizedBox(
-                    height: 40,
+                    height: 36,
                     child: ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       scrollDirection: Axis.horizontal,
@@ -127,7 +128,7 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
                           onTap: () {
                             setState(() {
                               _selectedCategory = category;
-                              _selectedSubCategory = null; // Reset subcategory when category changes
+                              _selectedSubCategory = null;
                             });
                           },
                         );
@@ -136,13 +137,13 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
                   ),
                 ),
                 
-              // Subcategories Filter
+              // Subcategories Filter Bar
               if (subCategories.isNotEmpty)
                 Container(
                   color: const Color(0xFFF8FAFC),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: SizedBox(
-                    height: 36,
+                    height: 32,
                     child: ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       scrollDirection: Axis.horizontal,
@@ -177,48 +178,13 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
                   ),
                 ),
 
-              // Course List
+              // Course List or Empty Placeholder
               Expanded(
                 child: filteredCourses.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.search_off_rounded, size: 64, color: AppColors.textHint),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No courses found',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Try selecting a different category\nor removing filters.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: AppColors.textSecondary),
-                            ),
-                            const SizedBox(height: 24),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _selectedCategory = null;
-                                  _selectedSubCategory = null;
-                                });
-                              },
-                              child: const Text('View All Courses', style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
-                        ),
-                      )
+                    ? _buildEmptyState()
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
+                        physics: const BouncingScrollPhysics(),
                         itemCount: filteredCourses.length,
                         separatorBuilder: (context, index) => const SizedBox(height: 16),
                         itemBuilder: (context, index) {
@@ -252,6 +218,7 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
     );
   }
 
+  // SLEEK COMPACT FILTER CHIP
   Widget _buildFilterChip({
     required String label,
     required bool isSelected,
@@ -262,25 +229,27 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: isSubCategory ? 12 : 14,
+        ),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected 
               ? (isSubCategory ? AppColors.secondary : AppColors.primary)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+              : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isSelected 
                 ? (isSubCategory ? AppColors.secondary : AppColors.primary)
-                : AppColors.borderSubtle,
-            width: 1.5,
+                : const Color(0xFFE2E8F0),
+            width: 1.2,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: (isSubCategory ? AppColors.secondary : AppColors.primary).withAlpha(76),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+                    color: (isSubCategory ? AppColors.secondary : AppColors.primary).withAlpha(60),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   )
                 ]
               : null,
@@ -288,10 +257,128 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? Colors.white : const Color(0xFF475569),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            fontSize: isSubCategory ? 13 : 14,
+            fontSize: isSubCategory ? 12 : 13,
           ),
+        ),
+      ),
+    );
+  }
+
+  // STUNNING ELEGANT EMPTY STATE PLACEHOLDER
+  Widget _buildEmptyState() {
+    return Center(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Glowing Emblem Container
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFF2F0FC),
+                border: Border.all(color: AppColors.primary.withAlpha(60), width: 2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x1A4B489B),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Image.asset(
+                  AssetPaths.beeBeyondImage2,
+                  width: 58,
+                  height: 58,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.search_off_rounded,
+                    size: 44,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'No Courses Found',
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+                letterSpacing: 0.2,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'No courses match your selected category filter.\nTry picking another category or reset filters.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+
+            const SizedBox(height: 22),
+
+            // Compact Elegant Button
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: AppColors.primaryGradient,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x334B489B),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: () {
+                    setState(() {
+                      _selectedCategory = null;
+                      _selectedSubCategory = null;
+                    });
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Reset & View All Courses',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
