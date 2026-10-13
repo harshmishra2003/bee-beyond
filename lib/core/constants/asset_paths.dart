@@ -1,6 +1,6 @@
 class AssetPaths {
   static const String logo = 'assets/images/bee beeyond2.png';
-  static const String beeBeyondImage1 = 'assets/images/bee beeyond2.png';
+  static const String beeBeyondImage1 = 'assets/images/bee beeyond.png';
   static const String beeBeyondImage2 = 'assets/images/bee beeyond2.png';
   static const String vastu = 'assets/images/vastu.png';
   static const String ancientHealing = 'assets/images/Ancient Healing Mastery.png';
