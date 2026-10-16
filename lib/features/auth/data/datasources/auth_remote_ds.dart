@@ -41,8 +41,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = response.data;
-      if (data['status'] == 'success' || data['success'] == true || data['status'] == true || data['user'] != null) {
-        final userData = data['user'] ?? data['data'] ?? data;
+      if (data['status'] == 'success' || data['success'] == true || data['status'] == true || data['data'] != null) {
+        // PHP API returns nested JSON: {"success":true,"data":{"user":{...}, "token": "..."}}
+        final userData = data['data']?['user'] ?? data['user'] ?? data['data'] ?? data;
         return UserModel.fromJson(userData);
       } else {
         throw ServerFailure(data['message'] ?? 'Login failed');
@@ -80,8 +81,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = response.data;
-      if (data['status'] == 'success' || data['success'] == true || data['status'] == true || data['user'] != null) {
-        final userData = data['user'] ?? data['data'] ?? data;
+      if (data['status'] == 'success' || data['success'] == true || data['status'] == true || data['data'] != null) {
+        // PHP API returns nested JSON: {"success":true,"data":{"user":{...}, "token": "..."}}
+        final userData = data['data']?['user'] ?? data['user'] ?? data['data'] ?? data;
         return UserModel.fromJson(userData);
       } else {
         throw ServerFailure(data['message'] ?? 'Registration failed');
