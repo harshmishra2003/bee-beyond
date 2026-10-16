@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/utils/app_alert_manager.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/auth_background_wrapper.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _isSubmitted = false;
@@ -21,14 +24,40 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _onSendResetLink() {
+  void _onSendResetLink() async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isSubmitted = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password reset link sent to your email!')),
-      );
+      
+      // Show Smart Loading Dialog
+      AppAlertManager.showLoading(context, message: "Sending reset link...");
+      
+      try {
+        await ref.read(authStateProvider.notifier).forgotPassword(_emailController.text.trim());
+        
+        // Pop the loading dialog
+        if (mounted) {
+           Navigator.of(context, rootNavigator: true).pop();
+        }
+        if (!mounted) return;
+
+        setState(() {
+          _isSubmitted = true;
+        });
+        
+        AppAlertManager.showSuccess(
+          context,
+          title: 'Link Sent!',
+          description: 'A password reset link has been sent to your email address.',
+          autoDismissAfter: const Duration(seconds: 3),
+        );
+      } catch (e) {
+        // Pop the loading dialog
+        if (mounted) {
+           Navigator.of(context, rootNavigator: true).pop();
+        }
+        if (!mounted) return;
+
+        AppAlertManager.showError(context, e, customTitle: "Request Failed");
+      }
     }
   }
 
