@@ -18,7 +18,7 @@ class CourseModel extends CourseEntity {
     return CourseModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
-      description: json['description'] ?? '',
+      description: json['description'] ?? '',                                 
       category: json['category'] ?? '',
       subCategory: json['subCategory'],
       imageUrl: json['image_url'] ?? '',
