@@ -7,6 +7,7 @@ class StatusDialog extends StatelessWidget {
   final String title;
   final String description;
   final bool isSuccess;
+  final bool isLoading;
   final VoidCallback? onAction;
   final String? actionText;
 
@@ -15,6 +16,7 @@ class StatusDialog extends StatelessWidget {
     required this.title,
     required this.description,
     this.isSuccess = true,
+    this.isLoading = false,
     this.onAction,
     this.actionText,
   });
@@ -54,19 +56,32 @@ class StatusDialog extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             
-            // Status Icon
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isSuccess ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
-                shape: BoxShape.circle,
+            // Status Icon or Loading Indicator
+            if (isLoading)
+               const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 4.0,
+                    color: AppColors.primary,
+                  ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isSuccess ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isSuccess ? Icons.check_circle_outline_rounded : Icons.error_outline_rounded,
+                  color: isSuccess ? const Color(0xFF10B981) : AppColors.error,
+                  size: 48,
+                ),
               ),
-              child: Icon(
-                isSuccess ? Icons.check_circle_outline_rounded : Icons.error_outline_rounded,
-                color: isSuccess ? const Color(0xFF10B981) : AppColors.error,
-                size: 48,
-              ),
-            ),
             const SizedBox(height: 20),
 
             // Title
@@ -93,8 +108,8 @@ class StatusDialog extends StatelessWidget {
             ),
             const SizedBox(height: 28),
 
-            // Action Button (Retry or other action)
-            if (onAction != null && actionText != null)
+            // Action Button (Only show if not loading)
+            if (!isLoading && onAction != null && actionText != null)
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -107,6 +122,7 @@ class StatusDialog extends StatelessWidget {
                     elevation: 0,
                   ),
                   onPressed: () {
+                    // Close the dialog first, then run action
                     Navigator.of(context).pop();
                     onAction!();
                   },
@@ -117,20 +133,6 @@ class StatusDialog extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
-                  ),
-                ),
-              ),
-              
-            // Loading indicator if no action button is provided (auto-dismiss mode)
-            if (onAction == null)
-              const Padding(
-                padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -145,6 +147,7 @@ class StatusDialog extends StatelessWidget {
     required String title,
     required String description,
     bool isSuccess = true,
+    bool isLoading = false,
     VoidCallback? onAction,
     String? actionText,
     Duration? autoDismissAfter,
@@ -152,17 +155,18 @@ class StatusDialog extends StatelessWidget {
   }) {
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: !isLoading, // Prevent dismissal if loading
       builder: (BuildContext dialogContext) => StatusDialog(
         title: title,
         description: description,
         isSuccess: isSuccess,
+        isLoading: isLoading,
         onAction: onAction,
         actionText: actionText,
       ),
     ).then((_) {
       if (onDismiss != null && autoDismissAfter == null) {
-        // Handle manual dismiss if needed
+        onDismiss();
       }
     });
 
