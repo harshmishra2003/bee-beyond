@@ -1,130 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../providers/notifications_provider.dart';
 
-class NotificationItem {
-  final String id;
-  final String title;
-  final String message;
-  final String time;
-  final String category; // 'courses', 'orders', 'promos', 'community', 'live'
-  final String group; // 'Today', 'Yesterday', 'Earlier'
-  bool isUnread;
-  bool isExpanded;
-
-  NotificationItem({
-    required this.id,
-    required this.title,
-    required this.message,
-    required this.time,
-    required this.category,
-    required this.group,
-    this.isUnread = true,
-    this.isExpanded = false,
-  });
-}
-
-class NotificationsScreen extends StatefulWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> {
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   String _selectedFilter = 'All';
 
-  final List<NotificationItem> _notifications = [
-    // Today
-    NotificationItem(
-      id: 'n_1',
-      title: '🎉 50% Off Flash Sale!',
-      message: 'Get 50% discount on Vastu Shastra Masterclass for the next 24 hours. Use promo code BEYOND50 at checkout to claim your limited period wellness offer.',
-      time: '10m ago',
-      category: 'promos',
-      group: 'Today',
-      isUnread: true,
-    ),
-    NotificationItem(
-      id: 'n_2',
-      title: 'New Module Unlocked! 🎓',
-      message: 'Module 2: Bach Flower Therapy & Emotional Balance is now live in your learning portal. Access new video lectures, reading PDFs, and downloadable worksheets.',
-      time: '2h ago',
-      category: 'courses',
-      group: 'Today',
-      isUnread: true,
-    ),
-    NotificationItem(
-      id: 'n_3',
-      title: 'Order Dispatched 📦',
-      message: 'Your order #ORD-998241 containing Bach Flower Oil & Essential Drops has been dispatched via BlueDart Express. Tracking ID: BD-998241IN.',
-      time: '5h ago',
-      category: 'orders',
-      group: 'Today',
-      isUnread: true,
-    ),
+  int getUnreadCount(List<NotificationItem> notifications) {
+    return notifications.where((n) => n.isUnread).length;
+  }
 
-    // Yesterday
-    NotificationItem(
-      id: 'n_4',
-      title: 'Live Session Notice 🔴',
-      message: 'Live Breathwork & Meditation session starts today at 7:00 PM. Please prepare a quiet room and sit comfortably for guided chakra healing.',
-      time: '1d ago',
-      category: 'live',
-      group: 'Yesterday',
-      isUnread: false,
-    ),
-    NotificationItem(
-      id: 'n_5',
-      title: 'WhatsApp Study Group Invited 💬',
-      message: 'You are invited to join the official Vastu Diplomates WhatsApp Study Group. Connect with peers, share queries, and receive daily herbal tips.',
-      time: '1d ago',
-      category: 'community',
-      group: 'Yesterday',
-      isUnread: false,
-    ),
-
-    // Earlier This Week
-    NotificationItem(
-      id: 'n_6',
-      title: 'Certificate Awarded 🏆',
-      message: 'Congratulations! Your completion certificate for Ancient Healing Mastery is ready for download in your student portal.',
-      time: '3d ago',
-      category: 'courses',
-      group: 'Earlier',
-      isUnread: false,
-    ),
-    NotificationItem(
-      id: 'n_7',
-      title: 'Payment Receipt Confirmed 💳',
-      message: 'Payment of ₹2,499 received for Breathwork For Emotional Release. Tax invoice #REC-2025-7742 has been generated.',
-      time: '4d ago',
-      category: 'orders',
-      group: 'Earlier',
-      isUnread: false,
-    ),
-  ];
-
-  int get _unreadCount => _notifications.where((n) => n.isUnread).length;
-
-  List<NotificationItem> get _filteredNotifications {
+  List<NotificationItem> getFilteredNotifications(List<NotificationItem> notifications) {
     if (_selectedFilter == 'Unread') {
-      return _notifications.where((n) => n.isUnread).toList();
+      return notifications.where((n) => n.isUnread).toList();
     } else if (_selectedFilter == 'Courses') {
-      return _notifications.where((n) => n.category == 'courses').toList();
+      return notifications.where((n) => n.category == 'courses').toList();
     } else if (_selectedFilter == 'Orders') {
-      return _notifications.where((n) => n.category == 'orders').toList();
+      return notifications.where((n) => n.category == 'orders').toList();
     } else if (_selectedFilter == 'Offers') {
-      return _notifications.where((n) => n.category == 'promos').toList();
+      return notifications.where((n) => n.category == 'promos').toList();
     }
-    return _notifications;
+    return notifications;
   }
 
   void _markAllAsRead() {
-    setState(() {
-      for (var n in _notifications) {
-        n.isUnread = false;
-      }
-    });
+    ref.read(notificationsProvider.notifier).markAllAsRead();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('All notifications marked as read ✓'),
@@ -134,13 +41,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  void _clearAllNotifications() {
-    if (_notifications.isEmpty) return;
+  void _clearAllNotifications(List<NotificationItem> currentList) {
+    if (currentList.isEmpty) return;
 
-    final backup = List<NotificationItem>.from(_notifications);
-    setState(() {
-      _notifications.clear();
-    });
+    final backup = List<NotificationItem>.from(currentList);
+    ref.read(notificationsProvider.notifier).clearAll();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -150,9 +55,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           label: 'UNDO',
           textColor: Colors.amberAccent,
           onPressed: () {
-            setState(() {
-              _notifications.addAll(backup);
-            });
+            ref.read(notificationsProvider.notifier).restoreBackup(backup);
           },
         ),
       ),
@@ -160,12 +63,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _removeNotification(NotificationItem item) {
-    final index = _notifications.indexWhere((n) => n.id == item.id);
+    final currentList = ref.read(notificationsProvider);
+    final index = currentList.indexWhere((n) => n.id == item.id);
     if (index == -1) return;
 
-    setState(() {
-      _notifications.removeAt(index);
-    });
+    ref.read(notificationsProvider.notifier).removeNotification(item.id);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -175,9 +77,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           label: 'UNDO',
           textColor: Colors.amberAccent,
           onPressed: () {
-            setState(() {
-              _notifications.insert(index, item);
-            });
+            final backup = List<NotificationItem>.from(ref.read(notificationsProvider));
+            backup.insert(index, item);
+            ref.read(notificationsProvider.notifier).restoreBackup(backup);
           },
         ),
       ),
@@ -186,7 +88,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final list = _filteredNotifications;
+    final notifications = ref.watch(notificationsProvider);
+    final unreadCount = ref.watch(unreadNotificationsCountProvider);
+    final list = getFilteredNotifications(notifications);
     final groups = ['Today', 'Yesterday', 'Earlier'];
 
     return Scaffold(
@@ -208,7 +112,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 fontSize: 18,
               ),
             ),
-            if (_unreadCount > 0) ...[
+            if (unreadCount > 0) ...[
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
@@ -219,7 +123,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '$_unreadCount NEW',
+                  '$unreadCount NEW',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 9.5,
@@ -231,7 +135,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ],
         ),
         actions: [
-          if (_notifications.isNotEmpty) ...[
+          if (notifications.isNotEmpty) ...[
             IconButton(
               tooltip: 'Mark All Read',
               icon: const Icon(Icons.done_all_rounded, color: Color(0xFF059669), size: 22),
@@ -259,7 +163,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                         onPressed: () {
                           Navigator.pop(ctx);
-                          _clearAllNotifications();
+                          _clearAllNotifications(notifications);
                         },
                         child: const Text('Clear All', style: TextStyle(color: Colors.white)),
                       ),
@@ -284,35 +188,35 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 children: [
                   _FilterChip(
                     label: 'All',
-                    count: _notifications.length,
+                    count: notifications.length,
                     isSelected: _selectedFilter == 'All',
                     onTap: () => setState(() => _selectedFilter = 'All'),
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
                     label: 'Unread',
-                    count: _unreadCount,
+                    count: unreadCount,
                     isSelected: _selectedFilter == 'Unread',
                     onTap: () => setState(() => _selectedFilter = 'Unread'),
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
                     label: 'Courses 🎓',
-                    count: _notifications.where((n) => n.category == 'courses').length,
+                    count: notifications.where((n) => n.category == 'courses').length,
                     isSelected: _selectedFilter == 'Courses',
                     onTap: () => setState(() => _selectedFilter = 'Courses'),
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
                     label: 'Orders 📦',
-                    count: _notifications.where((n) => n.category == 'orders').length,
+                    count: notifications.where((n) => n.category == 'orders').length,
                     isSelected: _selectedFilter == 'Orders',
                     onTap: () => setState(() => _selectedFilter = 'Orders'),
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
                     label: 'Offers 🏷️',
-                    count: _notifications.where((n) => n.category == 'promos').length,
+                    count: notifications.where((n) => n.category == 'promos').length,
                     isSelected: _selectedFilter == 'Offers',
                     onTap: () => setState(() => _selectedFilter = 'Offers'),
                   ),
@@ -396,10 +300,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               child: _NotificationCard(
                                 item: item,
                                 onTap: () {
-                                  setState(() {
-                                    item.isExpanded = !item.isExpanded;
-                                    item.isUnread = false;
-                                  });
+                                  ref.read(notificationsProvider.notifier).toggleExpandAndRead(item.id);
                                 },
                               ),
                             ),
