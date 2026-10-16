@@ -5,12 +5,20 @@ import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign_out_dialog.dart';
 import '../../../../routing/route_paths.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class HomeDrawer extends ConsumerWidget {
   const HomeDrawer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+    final user = authState.value;
+
+    final userName = user?.name ?? 'Guest User';
+    final userEmail = user?.email ?? 'Please log in';
+    final studentId = user?.studentId ?? 'N/A';
+
     return Drawer(
       backgroundColor: const Color(0xFFF8FAFC),
       child: Column(
@@ -67,34 +75,34 @@ class HomeDrawer extends ConsumerWidget {
                     const SizedBox(width: 14),
 
                     // User Info
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Aarav Sharma',
+                            userName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 17,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 0.3,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
-                            'aarav@example.com',
+                            userEmail,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Color(0xFFC7D2FE),
                               fontSize: 11.5,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(height: 6),
-                          Row(
+                          const SizedBox(height: 6),
+                          const Row(
                             children: [
                               // VIP Tag
                               _HeaderBadge(
@@ -112,36 +120,37 @@ class HomeDrawer extends ConsumerWidget {
                 const SizedBox(height: 12),
 
                 // ID Bar
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 0.8),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'STUDENT ID',
-                        style: TextStyle(
-                          color: Color(0xFFA5B4FC),
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.bold,
+                if (user != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 0.8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'STUDENT ID',
+                          style: TextStyle(
+                            color: Color(0xFFA5B4FC),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'BEYOND-2025-884',
-                        style: TextStyle(
-                          color: Colors.amberAccent,
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
+                        Text(
+                          studentId,
+                          style: const TextStyle(
+                            color: Colors.amberAccent,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
