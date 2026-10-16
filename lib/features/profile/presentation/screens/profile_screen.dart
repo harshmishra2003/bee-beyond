@@ -131,7 +131,7 @@ class ProfileScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              'Student ID: ${profile.studentId}',
+                              'Student ID: ${profile.studentId.isNotEmpty ? profile.studentId : 'N/A'}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -249,8 +249,6 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
-
-
 
   Widget _buildSettingsSection(BuildContext context, {required String title, required List<_SettingsItem> items}) {
     return Column(
