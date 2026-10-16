@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/widgets/status_dialog.dart';
+import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../routing/route_paths.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_background_wrapper.dart';
@@ -69,7 +69,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  void _onRegister() {
+  void _onRegister() async {
     if (!_agreedToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please accept the Terms & Conditions and Privacy Policy')),
@@ -78,22 +78,46 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     if (_formKey.currentState?.validate() ?? false) {
-      ref.read(authStateProvider.notifier).login(
-            _emailController.text.trim(),
-            _passwordController.text.trim(),
-          );
-          
-      // Show Success Dialog
-      StatusDialog.show(
-        context,
-        title: 'Account Created!',
-        description: 'Your Bee Beyond account has been created successfully. Welcome to a healthier journey!',
-        isSuccess: true,
-        autoDismissAfter: const Duration(seconds: 3),
-        onDismiss: () {
-          context.go(RoutePaths.onboarding);
-        },
-      );
+      // Show Smart Loading Dialog
+      AppAlertManager.showLoading(context, message: "Creating Account...");
+
+      try {
+        await ref.read(authStateProvider.notifier).register(
+          name: _fullNameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          password: _passwordController.text.trim(),
+          dob: _dobController.text.trim(),
+          gender: _selectedGender,
+        );
+
+        // Pop the loading dialog
+        if (mounted) {
+           Navigator.of(context, rootNavigator: true).pop();
+        }
+
+        if (!mounted) return;
+
+        // Show Success Dialog
+        AppAlertManager.showSuccess(
+          context,
+          title: 'Account Created!',
+          description: 'Your Bee Beyond account has been created successfully. Welcome to a healthier journey!',
+          autoDismissAfter: const Duration(seconds: 3),
+          onAction: () {
+            context.go(RoutePaths.home);
+          },
+        );
+      } catch (e) {
+        // Pop the loading dialog
+        if (mounted) {
+           Navigator.of(context, rootNavigator: true).pop();
+        }
+        if (!mounted) return;
+
+        // Show Smart Error Dialog
+        AppAlertManager.showError(context, e, customTitle: "Registration Failed");
+      }
     }
   }
 
@@ -234,7 +258,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: AbsorbPointer(
                   child: _buildCustomTextField(
                     controller: _dobController,
-                    hintText: 'Date of Birth',
+                    hintText: 'Date of Birth (Optional)',
                     prefixIcon: Icons.calendar_today_outlined,
                     suffixIcon: const Icon(Icons.calendar_month_outlined, color: Color(0xFF7B61FF), size: 20),
                   ),
@@ -247,7 +271,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               DropdownButtonFormField<String>(
                 initialValue: _selectedGender,
                 decoration: InputDecoration(
-                  hintText: 'Select Gender',
+                  hintText: 'Select Gender (Optional)',
                   hintStyle: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF9E9BBD)),
                   prefixIcon: const Icon(Icons.location_on_outlined, color: Color(0xFF7B61FF), size: 20),
                   filled: true,
