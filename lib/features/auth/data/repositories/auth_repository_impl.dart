@@ -1,7 +1,9 @@
+import 'dart:convert';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_ds.dart';
+import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -12,15 +14,45 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserEntity> login(String email, String password) async {
     final user = await remoteDataSource.login(email, password);
-    await secureStorage.saveAuthToken('sample_jwt_token_${user.id}');
+    
+    // Save Token (if your API returns a specific token field, use that here instead)
+    await secureStorage.saveAuthToken('auth_token_${user.id}');
+    
+    // Dynamically save the returned User data locally
+    await secureStorage.saveUserData(jsonEncode(user.toJson()));
+    
     return user;
   }
 
   @override
-  Future<UserEntity> register(String name, String email, String phone, String password) async {
-    final user = await remoteDataSource.register(name, email, phone, password);
-    await secureStorage.saveAuthToken('sample_jwt_token_${user.id}');
+  Future<UserEntity> register({
+    required String name,
+    required String email,
+    required String phone,
+    required String password,
+    String? dob,
+    String? gender,
+  }) async {
+    final user = await remoteDataSource.register(
+      name: name,
+      email: email,
+      phone: phone,
+      password: password,
+      dob: dob,
+      gender: gender,
+    );
+    
+    await secureStorage.saveAuthToken('auth_token_${user.id}');
+    
+    // Dynamically save the returned User data locally
+    await secureStorage.saveUserData(jsonEncode(user.toJson()));
+    
     return user;
+  }
+
+  @override
+  Future<void> forgotPassword(String email) async {
+    await remoteDataSource.forgotPassword(email);
   }
 
   @override
@@ -31,18 +63,25 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout() async {
     await secureStorage.deleteAuthToken();
+    await secureStorage.deleteUserData();
   }
 
   @override
   Future<UserEntity?> getCurrentUser() async {
     final token = await secureStorage.getAuthToken();
     if (token == null) return null;
-    return const UserEntity(
-      id: 'u_101',
-      name: 'Aarav Sharma',
-      email: 'aarav@example.com',
-      phone: '+91 9876543210',
-      studentId: 'BEYOND-2025-884',
-    );
+    
+    // Retrieve the dynamically saved User data
+    final userDataJson = await secureStorage.getUserData();
+    if (userDataJson != null) {
+      try {
+        final decodedData = jsonDecode(userDataJson);
+        return UserModel.fromJson(decodedData);
+      } catch (e) {
+        return null;
+      }
+    }
+    
+    return null;
   }
 }
