@@ -15,10 +15,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<UserEntity> login(String email, String password) async {
     final user = await remoteDataSource.login(email, password);
     
-    // Save Token (if your API returns a specific token field, use that here instead)
-    await secureStorage.saveAuthToken('auth_token_${user.id}');
-    
-    // Dynamically save the returned User data locally
+    // Save the User data locally for instant UI access across sessions
     await secureStorage.saveUserData(jsonEncode(user.toJson()));
     
     return user;
@@ -42,9 +39,7 @@ class AuthRepositoryImpl implements AuthRepository {
       gender: gender,
     );
     
-    await secureStorage.saveAuthToken('auth_token_${user.id}');
-    
-    // Dynamically save the returned User data locally
+    // Save the User data locally for instant UI access across sessions
     await secureStorage.saveUserData(jsonEncode(user.toJson()));
     
     return user;
@@ -71,7 +66,6 @@ class AuthRepositoryImpl implements AuthRepository {
     final token = await secureStorage.getAuthToken();
     if (token == null) return null;
     
-    // Retrieve the dynamically saved User data
     final userDataJson = await secureStorage.getUserData();
     if (userDataJson != null) {
       try {
