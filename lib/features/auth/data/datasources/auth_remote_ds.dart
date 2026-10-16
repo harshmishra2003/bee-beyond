@@ -25,8 +25,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> login(String email, String password) async {
-    // Try sending x-www-form-urlencoded format directly, some PHP backends
-    // reject explicit multipart/form-data boundaries if not specifically configured.
+    // The PHP backend expects standard JSON format
     final response = await dioClient.post(
       ApiEndpoints.login,
       data: {
@@ -35,7 +34,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       },
       options: Options(
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
       ),
     );
@@ -74,7 +73,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       },
       options: Options(
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
       ),
     );
@@ -101,7 +100,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       },
       options: Options(
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
       ),
     );
@@ -128,7 +127,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       },
       options: Options(
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
       ),
     );
