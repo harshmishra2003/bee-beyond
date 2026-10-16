@@ -1,32 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/status_dialog.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
-class EditProfileScreen extends StatefulWidget {
+class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Personal Controllers
-  final _fullNameController = TextEditingController(text: 'Aarav Sharma');
-  final _dobController = TextEditingController(text: '15/08/1996');
+  late TextEditingController _fullNameController;
+  late TextEditingController _dobController;
 
   String _selectedGender = 'Male';
   String _selectedBloodGroup = 'O+';
 
   // Contact Controllers
-  final _emailController = TextEditingController(text: 'aarav.sharma@example.com');
-  final _phoneController = TextEditingController(text: '+91 98765 43210');
-  final _altPhoneController = TextEditingController(text: '+91 91234 56789');
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+  final _altPhoneController = TextEditingController();
 
   // Wellness Profile
   String _selectedHealthInterest = 'Bach Flower Therapy';
@@ -35,8 +37,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // Residence Address
   String _selectedState = 'Maharashtra';
   String _selectedCity = 'Mumbai';
-  final _addressController = TextEditingController(text: 'Flat 302, Green Heights, MG Road');
-  final _pincodeController = TextEditingController(text: '400001');
+  final _addressController = TextEditingController();
+  final _pincodeController = TextEditingController();
 
   bool _agreeToPrivacyRules = true;
   bool _isSaving = false;
@@ -72,6 +74,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     'Business Owner',
     'Other',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final user = ref.read(authStateProvider).value;
+    
+    _fullNameController = TextEditingController(text: user?.name ?? '');
+    _emailController = TextEditingController(text: user?.email ?? '');
+    _phoneController = TextEditingController(text: user?.phone ?? '');
+    _dobController = TextEditingController(text: ''); // Add logic here if API returned dob
+  }
 
   @override
   void dispose() {
@@ -270,6 +283,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authStateProvider).value;
+    final userName = user?.name ?? 'User';
+    final studentId = user?.studentId ?? 'N/A';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: const CustomAppBar(title: 'Edit Student Profile'),
@@ -282,7 +299,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // AVATAR & STUDENT ID BANNER
-              _buildAvatarSection(),
+              _buildAvatarSection(userName, studentId),
 
               const SizedBox(height: 20),
 
@@ -541,7 +558,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   // AVATAR & ID SECTION
-  Widget _buildAvatarSection() {
+  Widget _buildAvatarSection(String name, String studentId) {
     return Center(
       child: Column(
         children: [
@@ -587,7 +604,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          const Text('Aarav Sharma', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 3),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -596,7 +613,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: const Color(0xFFA7F3D0)),
             ),
-            child: const Text('STUDENT ID: BY-2025-8821 • VERIFIED PROFILE ✓', style: TextStyle(color: Color(0xFF059669), fontSize: 9.5, fontWeight: FontWeight.w900)),
+            child: Text('STUDENT ID: $studentId • VERIFIED PROFILE ✓', style: const TextStyle(color: Color(0xFF059669), fontSize: 9.5, fontWeight: FontWeight.w900)),
           ),
         ],
       ),
