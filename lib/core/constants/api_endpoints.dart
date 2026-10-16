@@ -1,11 +1,11 @@
 class ApiEndpoints {
-  static const String baseUrl = 'https://api.beeyondwellness.com/v1';
+  static const String baseUrl = 'https://metricstestingapp.xyz/api';
 
   // Auth
-  static const String login = '/auth/login';
-  static const String register = '/auth/register';
-  static const String verifyOtp = '/auth/verify-otp';
-  static const String forgotPassword = '/auth/forgot-password';
+  static const String login = '/auth/login.php';
+  static const String register = '/auth/register.php';
+  static const String verifyOtp = '/auth/verify-otp.php';
+  static const String forgotPassword = '/auth/forgot_password.php';
 
   // Home & Dashboard
   static const String homeData = '/home';
