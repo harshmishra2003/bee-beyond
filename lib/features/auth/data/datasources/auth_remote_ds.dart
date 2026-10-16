@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/secure_storage_service.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -20,12 +21,12 @@ abstract class AuthRemoteDataSource {
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final DioClient dioClient;
+  final SecureStorageService secureStorage;
 
-  AuthRemoteDataSourceImpl(this.dioClient);
+  AuthRemoteDataSourceImpl(this.dioClient, this.secureStorage);
 
   @override
   Future<UserModel> login(String email, String password) async {
-    // The PHP backend expects standard JSON format
     final response = await dioClient.post(
       ApiEndpoints.login,
       data: {
@@ -42,8 +43,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = response.data;
       if (data['status'] == 'success' || data['success'] == true || data['status'] == true || data['data'] != null) {
-        // PHP API returns nested JSON: {"success":true,"data":{"user":{...}, "token": "..."}}
+        // PHP API returns nested JSON: {"success":true, "data":{"user":{...}, "token": "..."}}
         final userData = data['data']?['user'] ?? data['user'] ?? data['data'] ?? data;
+        
+        // Save the real Bearer token into SecureStorage
+        final token = data['data']?['token'] ?? data['token'];
+        if (token != null && token.toString().isNotEmpty) {
+          await secureStorage.saveAuthToken(token.toString());
+        }
+
         return UserModel.fromJson(userData);
       } else {
         throw ServerFailure(data['message'] ?? 'Login failed');
@@ -82,8 +90,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = response.data;
       if (data['status'] == 'success' || data['success'] == true || data['status'] == true || data['data'] != null) {
-        // PHP API returns nested JSON: {"success":true,"data":{"user":{...}, "token": "..."}}
+        // PHP API returns nested JSON: {"success":true, "data":{"user":{...}, "token": "..."}}
         final userData = data['data']?['user'] ?? data['user'] ?? data['data'] ?? data;
+
+        // Save the real Bearer token into SecureStorage
+        final token = data['data']?['token'] ?? data['token'];
+        if (token != null && token.toString().isNotEmpty) {
+          await secureStorage.saveAuthToken(token.toString());
+        }
+
         return UserModel.fromJson(userData);
       } else {
         throw ServerFailure(data['message'] ?? 'Registration failed');
