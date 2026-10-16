@@ -21,7 +21,10 @@ final dioClientProvider = Provider<DioClient>((ref) {
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(
-    remoteDataSource: AuthRemoteDataSourceImpl(ref.watch(dioClientProvider)),
+    remoteDataSource: AuthRemoteDataSourceImpl(
+      ref.watch(dioClientProvider),
+      ref.watch(secureStorageProvider),
+    ),
     secureStorage: ref.watch(secureStorageProvider),
   );
 });
@@ -84,7 +87,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
   }
 
   Future<void> forgotPassword(String email) async {
-    // We don't change state here since it doesn't log the user in.
     try {
       await _repository.forgotPassword(email);
     } catch (e) {
