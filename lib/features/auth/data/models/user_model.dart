@@ -11,13 +11,16 @@ class UserModel extends UserEntity {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Handling nested user structures just in case
+    final userData = json['user'] ?? json;
+
     return UserModel(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      phone: json['phone'] ?? '',
-      studentId: json['student_id'] ?? 'BB-1001',
-      avatarUrl: json['avatar_url'],
+      id: userData['id']?.toString() ?? '',
+      name: userData['name']?.toString() ?? '',
+      email: userData['email']?.toString() ?? '',
+      phone: userData['phone']?.toString() ?? '',
+      studentId: userData['student_id']?.toString() ?? 'BB-1001',
+      avatarUrl: userData['avatar_url']?.toString(),
     );
   }
 
