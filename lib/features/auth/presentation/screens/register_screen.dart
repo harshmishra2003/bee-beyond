@@ -98,14 +98,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
         if (!mounted) return;
 
-        // Show Success Dialog
+        // Show Success Dialog -> Directly Navigate to ONBOARDING for new registered users!
         AppAlertManager.showSuccess(
           context,
           title: 'Account Created!',
           description: 'Your Bee Beyond account has been created successfully. Welcome to a healthier journey!',
-          autoDismissAfter: const Duration(seconds: 3),
+          autoDismissAfter: const Duration(seconds: 2),
           onAction: () {
-            context.go(RoutePaths.home);
+            context.go(RoutePaths.onboarding);
           },
         );
       } catch (e) {
