@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/status_dialog.dart';
+import '../../../../core/utils/app_alert_manager.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../routing/route_paths.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_background_wrapper.dart';
@@ -31,38 +32,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _onLogin() {
+  void _onLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
-      // Simulated Login Verification
-      if (email == 'test@beebeyond.com' && password != 'password123') {
-        // Failed case
-        StatusDialog.show(
+      // Show Smart Loading Dialog
+      AppAlertManager.showLoading(context, message: "Authenticating...");
+
+      try {
+        await ref.read(authStateProvider.notifier).login(email, password);
+
+        // Pop the loading dialog
+        if (mounted) {
+           Navigator.of(context, rootNavigator: true).pop();
+        }
+
+        if (!mounted) return;
+
+        AppAlertManager.showSuccess(
           context,
-          title: 'Login Failed',
-          description: 'The email or password you entered is incorrect. Please try again.',
-          isSuccess: false,
-          actionText: 'Retry',
-          onAction: () {
-            // Simply close the dialog and let user retry
-          },
-        );
-      } else {
-        // Success case
-        ref.read(authStateProvider.notifier).login(email, password);
-        
-        StatusDialog.show(
-          context,
-          title: 'Login Successful',
-          description: 'Welcome back to Bee Beyond! Loading your dashboard...',
-          isSuccess: true,
+          title: 'Welcome Back!',
+          description: 'Successfully logged in. Loading your dashboard...',
           autoDismissAfter: const Duration(seconds: 2),
-          onDismiss: () {
+          onAction: () {
             context.go(RoutePaths.home);
-          },
+          }
         );
+      } catch (e) {
+        // Pop the loading dialog
+        if (mounted) {
+           Navigator.of(context, rootNavigator: true).pop();
+        }
+        if (!mounted) return;
+
+        // Show Smart Error Dialog
+        AppAlertManager.showError(context, e, customTitle: "Login Failed");
       }
     }
   }
@@ -252,9 +257,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Google Sign-In initialized!')),
-                        );
+                         AppAlertManager.showError(
+                            context, 
+                            const PermissionFailure("Google Sign-In is temporarily unavailable."),
+                            customTitle: "Not Available",
+                          );
                       },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
@@ -298,9 +305,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Apple Sign-In initialized!')),
-                        );
+                          AppAlertManager.showError(
+                            context, 
+                            const PermissionFailure("Apple Sign-In is temporarily unavailable."),
+                            customTitle: "Not Available",
+                          );
                       },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
