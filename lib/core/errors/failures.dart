@@ -18,7 +18,11 @@ class CacheFailure extends Failure {
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'Network Connection Failed']);
+  const NetworkFailure([super.message = 'Network connection failed.']);
+}
+
+class TimeoutFailure extends Failure {
+  const TimeoutFailure([super.message = 'Request timed out.']);
 }
 
 class AuthFailure extends Failure {
@@ -27,4 +31,20 @@ class AuthFailure extends Failure {
 
 class ValidationFailure extends Failure {
   const ValidationFailure(super.message);
+}
+
+class NotFoundFailure extends Failure {
+  const NotFoundFailure(super.message);
+}
+
+class ConflictFailure extends Failure {
+  const ConflictFailure(super.message);
+}
+
+class PaymentFailure extends Failure {
+  const PaymentFailure(super.message);
+}
+
+class PermissionFailure extends Failure {
+  const PermissionFailure(super.message);
 }
