@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/constants/api_endpoints.dart';
@@ -41,18 +42,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = response.data;
-      if (data['status'] == 'success' || data['success'] == true || data['status'] == true || data['data'] != null) {
-        // PHP API returns nested JSON: {"success":true, "data":{"user":{...}, "token": "..."}}
-        final userData = data['data']?['user'] ?? data['user'] ?? data['data'] ?? data;
+      final rawData = response.data;
+      final Map<String, dynamic> data = rawData is String 
+          ? jsonDecode(rawData) 
+          : Map<String, dynamic>.from(rawData);
+
+      final isSuccess = data['success'] == true || 
+                        data['status'] == 'success' || 
+                        data['status'] == true;
+
+      if (isSuccess && data['data'] != null) {
+        final userData = data['data']?['user'] ?? data['user'] ?? data['data'];
         
-        // Save the real Bearer token into SecureStorage
         final token = data['data']?['token'] ?? data['token'];
         if (token != null && token.toString().isNotEmpty) {
           await secureStorage.saveAuthToken(token.toString());
         }
 
-        return UserModel.fromJson(userData);
+        return UserModel.fromJson(Map<String, dynamic>.from(userData));
       } else {
         throw ServerFailure(data['message'] ?? 'Login failed');
       }
@@ -88,18 +95,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = response.data;
-      if (data['status'] == 'success' || data['success'] == true || data['status'] == true || data['data'] != null) {
-        // PHP API returns nested JSON: {"success":true, "data":{"user":{...}, "token": "..."}}
-        final userData = data['data']?['user'] ?? data['user'] ?? data['data'] ?? data;
+      final rawData = response.data;
+      final Map<String, dynamic> data = rawData is String 
+          ? jsonDecode(rawData) 
+          : Map<String, dynamic>.from(rawData);
 
-        // Save the real Bearer token into SecureStorage
+      final isSuccess = data['success'] == true || 
+                        data['status'] == 'success' || 
+                        data['status'] == true;
+
+      if (isSuccess && data['data'] != null) {
+        final userData = data['data']?['user'] ?? data['user'] ?? data['data'];
+
         final token = data['data']?['token'] ?? data['token'];
         if (token != null && token.toString().isNotEmpty) {
           await secureStorage.saveAuthToken(token.toString());
         }
 
-        return UserModel.fromJson(userData);
+        return UserModel.fromJson(Map<String, dynamic>.from(userData));
       } else {
         throw ServerFailure(data['message'] ?? 'Registration failed');
       }
@@ -123,8 +136,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = response.data;
-      if (data['status'] == 'success' || data['success'] == true || data['status'] == true) {
+      final rawData = response.data;
+      final Map<String, dynamic> data = rawData is String 
+          ? jsonDecode(rawData) 
+          : Map<String, dynamic>.from(rawData);
+
+      if (data['success'] == true || data['status'] == 'success' || data['status'] == true) {
         return; // Success
       } else {
         throw ServerFailure(data['message'] ?? 'Failed to send reset link');
@@ -149,8 +166,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       ),
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = response.data;
-      return data['status'] == 'success' || data['success'] == true;
+      final rawData = response.data;
+      final Map<String, dynamic> data = rawData is String 
+          ? jsonDecode(rawData) 
+          : Map<String, dynamic>.from(rawData);
+
+      return data['success'] == true || data['status'] == 'success';
     }
     return false;
   }
