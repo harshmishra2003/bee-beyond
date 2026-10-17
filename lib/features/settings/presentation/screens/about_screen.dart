@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -10,28 +8,22 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(title: 'About Bee Beyond'),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      backgroundColor: AppColors.background,
+      appBar: const CustomAppBar(title: 'About Bee Beyonnd'),
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CircleAvatar(
-              radius: 40,
-              backgroundColor: AppColors.primary,
-              child: Icon(Icons.spa, size: 40, color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            Text(AppConstants.appName, style: AppTextStyles.headlineMedium),
-            const SizedBox(height: 6),
-            Text(AppConstants.appTagline, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
-            const SizedBox(height: 24),
             Text(
-              'Bee Beyond is a dedicated holistic wellness platform offering certified online courses, drugless therapies, Bach Flower remedies, and authentic natural healing products.',
-              style: AppTextStyles.bodyLarge,
-              textAlign: TextAlign.center,
+              'Bee Beyonnd',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary),
             ),
-            const Spacer(),
-            Text('Version 1.0.0 (Build 100)', style: AppTextStyles.labelSmall),
+            SizedBox(height: 12),
+            Text(
+              'Bee Beyonnd is a dedicated holistic wellness platform offering certified online courses, drugless therapies, and natural wellness solutions to support physical, mental, and spiritual well-being.',
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+            ),
           ],
         ),
       ),
