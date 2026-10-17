@@ -321,7 +321,7 @@ class HomeDrawer extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 const Text(
-                  'Bee Beyond App v2.5.0',
+                  'Bee Beyonnd App v2.5.0',
                   style: TextStyle(
                     color: Color(0xFF64748B),
                     fontSize: 10.5,
