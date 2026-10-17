@@ -204,7 +204,7 @@ class ProfileScreen extends ConsumerWidget {
                           icon: Icons.info_outline_rounded,
                           iconColor: const Color(0xFF4B489B),
                           iconBgColor: const Color(0xFFECEBFA),
-                          title: 'About Bee Beyond',
+                          title: 'About Bee Beyonnd',
                           onTap: () => context.push(RoutePaths.about),
                         ),
                         _SettingsItem(
