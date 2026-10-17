@@ -77,9 +77,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
-        leadingWidth: 58,
+        leadingWidth: 54,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12.0, top: 8.0, bottom: 8.0),
+          padding: const EdgeInsets.only(left: 10.0, top: 8.0, bottom: 8.0),
           child: InkWell(
             onTap: () => _scaffoldKey.currentState?.openDrawer(),
             borderRadius: BorderRadius.circular(12),
@@ -102,23 +102,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         title: Center(
-          child: Image.asset(
-            AssetPaths.beeBeyondImage1,
-            height: 42,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.spa_rounded, color: AppColors.primary, size: 24),
-                const SizedBox(width: 6),
-                Text(
-                  'Bee Beyond',
-                  style: AppTextStyles.titleLarge.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w900,
-                  ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Image.asset(
+                AssetPaths.beeBeyondImage1,
+                height: 38,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.spa_rounded, color: AppColors.primary, size: 24),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Bee Beyond',
+                      style: AppTextStyles.titleLarge.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -180,7 +186,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           // DYNAMICALLY STYLED NOTIFICATION BELL ACTION WITH AMBER ICON & BADGE
           Padding(
-            padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, right: 12.0),
+            padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, right: 10.0),
             child: InkWell(
               onTap: () => context.push(RoutePaths.notifications),
               borderRadius: BorderRadius.circular(12),
