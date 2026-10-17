@@ -175,7 +175,7 @@ class _CategoryCarouselState extends State<CategoryCarousel> {
     if (widget.categories.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
-      height: 128,
+      height: 132,
       child: Listener(
         onPointerDown: (_) => _handlePointerDown(),
         onPointerUp: (_) => _handlePointerUp(),
@@ -193,7 +193,7 @@ class _CategoryCarouselState extends State<CategoryCarousel> {
             return GestureDetector(
               onTap: () => widget.onCategorySelected(cat),
               child: Container(
-                width: 88,
+                width: 94,
                 margin: const EdgeInsets.only(right: 12),
                 child: Column(
                   children: [
@@ -223,18 +223,29 @@ class _CategoryCarouselState extends State<CategoryCarousel> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 7),
-                    // Category Name Text
-                    Text(
-                      cat.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        height: 1.15,
+                    const SizedBox(height: 6),
+                    // Responsive Category Name Text (FittedBox prevents word splitting)
+                    SizedBox(
+                      height: 32,
+                      child: Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.center,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                            child: Text(
+                              cat.name,
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: AppColors.textPrimary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                height: 1.15,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
