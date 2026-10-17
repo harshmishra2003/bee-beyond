@@ -28,7 +28,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
   late Animation<double> _dotsOpacityAnim;
 
   // Typewriter Letter State
-  final String _targetText = "Bee Beyond";
+  final String _targetText = "Bee Beyonnd";
   int _visibleLetterCount = 0;
 
   @override
@@ -249,7 +249,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                         children: [
                           const SizedBox(height: 24),
 
-                          // 3A. POP-UP LOGO EMBLEM
+                          // 3A. POP-UP OFFICIAL LOGO BANNER
                           AnimatedBuilder(
                             animation: _entranceController,
                             builder: (context, child) {
@@ -261,13 +261,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                                 ),
                               );
                             },
-                            child: SizedBox(
-                              width: 160,
-                              height: 160,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
                               child: Image.asset(
-                                AssetPaths.beeBeyondImage2,
-                                width: 160,
-                                height: 160,
+                                AssetPaths.beeBeyondImage1,
+                                height: 100,
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) => _buildEmblemFallback(),
                               ),
@@ -276,7 +274,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
                           const SizedBox(height: 20),
 
-                          // 3B. TYPEWRITER ONE-BY-ONE LETTER ANIMATION: "Bee Beyond"
+                          // 3B. TYPEWRITER ONE-BY-ONE LETTER ANIMATION: "Bee Beyonnd"
                           FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Padding(
