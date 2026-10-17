@@ -102,7 +102,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         AppAlertManager.showSuccess(
           context,
           title: 'Account Created!',
-          description: 'Your Bee Beyond account has been created successfully. Welcome to a healthier journey!',
+          description: 'Your Bee Beyonnd account has been created successfully. Welcome to a healthier journey!',
           autoDismissAfter: const Duration(seconds: 2),
           onAction: () {
             context.go(RoutePaths.onboarding);
@@ -157,7 +157,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
               // Subtitle
               Text(
-                'Join Bee Beyond and take the first step\ntowards a healthier and happier you.',
+                'Join Bee Beyonnd and take the first step\ntowards a healthier and happier you.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
