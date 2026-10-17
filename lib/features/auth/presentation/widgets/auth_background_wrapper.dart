@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_paths.dart';
@@ -133,12 +132,12 @@ class _AuthBackgroundWrapperState extends State<AuthBackgroundWrapper> with Sing
 
                     const SizedBox(height: 4),
 
-                    // Top Emblem Logo
-                    SizedBox(
-                      width: 100,
-                      height: 100,
+                    // Official Brand Banner Logo Image
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Image.asset(
-                        AssetPaths.beeBeyondImage2,
+                        AssetPaths.beeBeyondImage1,
+                        height: 76,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) => Container(
                           decoration: const BoxDecoration(
@@ -150,34 +149,7 @@ class _AuthBackgroundWrapperState extends State<AuthBackgroundWrapper> with Sing
                       ),
                     ),
 
-                    const SizedBox(height: 8),
-
-                    // "Bee Beyond" Title
-                    Text(
-                      'Bee Beyond',
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        fontStyle: FontStyle.italic,
-                        color: AppColors.primary,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Subtitle Tagline
-                    Text(
-                      'STEPS TOWARDS PHYSICAL AND MENTAL WELLBEING',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: const Color(0xFFEF4444),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
                     // Form Card Child Widget
                     widget.child,
