@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/category_entity.dart';
 
 class _FrameTheme {
@@ -193,7 +192,7 @@ class _CategoryCarouselState extends State<CategoryCarousel> {
             return GestureDetector(
               onTap: () => widget.onCategorySelected(cat),
               child: Container(
-                width: 94,
+                width: 96,
                 margin: const EdgeInsets.only(right: 12),
                 child: Column(
                   children: [
@@ -224,26 +223,20 @@ class _CategoryCarouselState extends State<CategoryCarousel> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    // Responsive Category Name Text (FittedBox prevents word splitting)
+                    // Uniform & Responsive Category Name Text across all items
                     SizedBox(
                       height: 32,
                       child: Center(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.center,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                            child: Text(
-                              cat.name,
-                              maxLines: 2,
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.textPrimary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                height: 1.15,
-                              ),
-                            ),
+                        child: Text(
+                          cat.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            height: 1.18,
                           ),
                         ),
                       ),
