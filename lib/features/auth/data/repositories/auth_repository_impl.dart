@@ -57,8 +57,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
-    await secureStorage.deleteAuthToken();
-    await secureStorage.deleteUserData();
+    try {
+      await secureStorage.deleteAuthToken();
+      await secureStorage.deleteUserData();
+      await secureStorage.clearAll();
+    } catch (_) {
+      // Safely ignore storage errors during sign out
+    }
   }
 
   @override
