@@ -149,17 +149,23 @@ class KPIActionGrid extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                // Text Label
-                Text(
-                  item.title,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 10.5,
-                    letterSpacing: 0.3,
+                // Text Label with FittedBox to prevent text overflow or mid-word breaking
+                SizedBox(
+                  height: 16,
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        item.title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 10.5,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
