@@ -83,7 +83,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _fullNameController = TextEditingController(text: user?.name ?? '');
     _emailController = TextEditingController(text: user?.email ?? '');
     _phoneController = TextEditingController(text: user?.phone ?? '');
-    _dobController = TextEditingController(text: ''); // Add logic here if API returned dob
+    _dobController = TextEditingController(text: '');
   }
 
   @override
@@ -271,7 +271,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       StatusDialog.show(
         context,
         title: 'Profile Updated Successfully!',
-        description: 'Your student profile & wellness preferences have been updated in the Bee Beyond database.',
+        description: 'Your student profile & wellness preferences have been updated in the Bee Beyonnd database.',
         isSuccess: true,
         autoDismissAfter: const Duration(seconds: 2),
         onDismiss: () {
@@ -508,7 +508,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
-                        'I confirm that all personal and health profile details provided above are accurate and I agree to the Bee Beyond Data Privacy Guidelines & Terms.',
+                        'I confirm that all personal and health profile details provided above are accurate and I agree to the Bee Beyonnd Data Privacy Guidelines & Terms.',
                         style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.35),
                       ),
                     ),
