@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'Bee Beyond';
+  static const String appName = 'Bee Beyonnd';
   static const String appTagline = 'Ayurvedic, Wellness & Alternative Healing Platform';
   static const String currencySymbol = '₹';
   static const String supportEmail = 'support@beeyond.com';
