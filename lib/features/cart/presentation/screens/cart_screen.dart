@@ -121,21 +121,6 @@ class CartScreen extends ConsumerWidget {
                 height: 1.35,
               ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                elevation: 0,
-              ),
-              onPressed: () => context.go(RoutePaths.home),
-              icon: const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 16),
-              label: const Text(
-                'Start Shopping',
-                style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-              ),
-            ),
           ],
         ),
       ),
