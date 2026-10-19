@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../services/secure_storage_service.dart';
 
 class AuthInterceptor extends Interceptor {
   final SecureStorageService _secureStorage;
+  final VoidCallback? onUnauthorized;
 
-  AuthInterceptor(this._secureStorage);
+  AuthInterceptor(this._secureStorage, {this.onUnauthorized});
 
   @override
   Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
@@ -18,7 +20,7 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 401) {
-      // Handle token expiration / refresh token logic if needed
+      onUnauthorized?.call();
     }
     return super.onError(err, handler);
   }
