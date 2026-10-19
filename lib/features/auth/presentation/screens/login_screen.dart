@@ -55,9 +55,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           title: 'Welcome Back!',
           description: 'Successfully logged in. Loading your dashboard...',
           autoDismissAfter: const Duration(seconds: 2),
-          onAction: () {
-            context.go(RoutePaths.home);
-          }
         );
       } catch (e) {
         // Pop the loading dialog
@@ -75,6 +72,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthBackgroundWrapper(
+      showBackButton: false,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
         decoration: BoxDecoration(
