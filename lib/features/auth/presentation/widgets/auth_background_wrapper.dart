@@ -114,8 +114,8 @@ class _AuthBackgroundWrapperState extends State<AuthBackgroundWrapper> with Sing
                 padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
                 child: Column(
                   children: [
-                    // Top Left Back Navigation Icon
-                    if (widget.showBackButton || canPop)
+                    // Top Left Back Navigation Icon (Only show if explicitly requested and pop-able)
+                    if (widget.showBackButton && canPop)
                       Align(
                         alignment: Alignment.centerLeft,
                         child: IconButton(
