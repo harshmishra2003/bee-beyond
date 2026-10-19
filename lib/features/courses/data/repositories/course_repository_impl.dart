@@ -28,4 +28,9 @@ class CourseRepositoryImpl implements CourseRepository {
     await Future.delayed(const Duration(milliseconds: 500));
     return true;
   }
+
+  @override
+  Future<void> saveJoinedCourses(List<JoinedCourseEntity> courses) async {
+    await remoteDataSource.saveJoinedCourses(courses);
+  }
 }
