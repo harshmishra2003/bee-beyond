@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/interceptors/auth_interceptor.dart';
 import '../../../../core/network/interceptors/logging_interceptor.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../data/datasources/auth_remote_ds.dart';
 import '../../data/repositories/auth_repository_impl.dart';
-import '../../domain/entities/user_entity.dart';
+import '../../domain/entities/auth_state.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
@@ -14,7 +16,12 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
 
 final dioClientProvider = Provider<DioClient>((ref) {
   return DioClient(
-    authInterceptor: AuthInterceptor(ref.watch(secureStorageProvider)),
+    authInterceptor: AuthInterceptor(
+      ref.watch(secureStorageProvider),
+      onUnauthorized: () {
+        ref.read(authStateProvider.notifier).logout();
+      },
+    ),
     loggingInterceptor: LoggingInterceptor(),
   );
 });
@@ -29,34 +36,51 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   );
 });
 
-final authStateProvider = StateNotifierProvider<AuthNotifier, AsyncValue<UserEntity?>>((ref) {
-  return AuthNotifier(ref.watch(authRepositoryProvider));
+final StateNotifierProvider<AuthNotifier, AuthState> authStateProvider =
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  return AuthNotifier(
+    ref.watch(authRepositoryProvider),
+    ref.watch(secureStorageProvider),
+  );
 });
 
-class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
+class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  final SecureStorageService _secureStorage;
 
-  AuthNotifier(this._repository) : super(const AsyncValue.data(null)) {
+  AuthNotifier(this._repository, this._secureStorage) : super(AuthState.loading()) {
     checkCurrentUser();
   }
 
   Future<void> checkCurrentUser() async {
-    state = const AsyncValue.loading();
+    state = AuthState.loading();
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+
+      final token = await _secureStorage.getAuthToken();
       final user = await _repository.getCurrentUser();
-      state = AsyncValue.data(user);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+
+      if (token != null && token.isNotEmpty && user != null) {
+        state = AuthState.authenticated(user, hasSeenOnboarding: hasSeenOnboarding);
+      } else {
+        state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
+      }
+    } catch (_) {
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+      state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
     }
   }
 
   Future<void> login(String email, String password) async {
-    state = const AsyncValue.loading();
     try {
       final user = await _repository.login(email, password);
-      state = AsyncValue.data(user);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+
+      state = AuthState.authenticated(user, hasSeenOnboarding: hasSeenOnboarding);
+    } catch (e) {
       rethrow;
     }
   }
@@ -69,7 +93,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
     String? dob,
     String? gender,
   }) async {
-    state = const AsyncValue.loading();
     try {
       final user = await _repository.register(
         name: name,
@@ -79,9 +102,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
         dob: dob,
         gender: gender,
       );
-      state = AsyncValue.data(user);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(StorageKeys.isOnboardingCompleted, false);
+
+      state = AuthState.authenticated(user, hasSeenOnboarding: false);
+    } catch (e) {
       rethrow;
     }
   }
@@ -94,8 +119,21 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
     }
   }
 
+  Future<void> completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(StorageKeys.isOnboardingCompleted, true);
+
+    state = state.copyWith(hasSeenOnboarding: true);
+  }
+
   Future<void> logout() async {
-    await _repository.logout();
-    state = const AsyncValue.data(null);
+    try {
+      await _repository.logout();
+    } catch (_) {}
+
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+
+    state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
   }
 }
