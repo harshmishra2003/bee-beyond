@@ -208,7 +208,7 @@ class JoinedCoursesSection extends ConsumerWidget {
             height: 100,
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (err, stack) => const SizedBox.shrink(),
         ),
       ],
     );
@@ -519,9 +519,10 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
                           child: GestureDetector(
                             onTap: () async {
                               setState(() => _isJoining = true);
-                              await WhatsAppService.openWhatsAppGroup(
-                                groupUrl: 'https://chat.whatsapp.com/BeeBeyondOfficialStudyGroup',
-                                groupName: '$title Study Group',
+                              await WhatsAppService.joinWhatsAppGroup(
+                                context: context,
+                                courseId: id,
+                                courseTitle: title,
                               );
                               if (mounted) {
                                 setState(() => _isJoining = false);
