@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../data/datasources/course_remote_ds.dart';
 import '../../data/repositories/course_repository_impl.dart';
 import '../../domain/entities/course_entity.dart';
@@ -6,7 +7,9 @@ import '../../domain/entities/joined_course_entity.dart';
 import '../../domain/repositories/course_repository.dart';
 
 final courseRepositoryProvider = Provider<CourseRepository>((ref) {
-  return CourseRepositoryImpl(CourseRemoteDataSourceImpl());
+  return CourseRepositoryImpl(
+    CourseRemoteDataSourceImpl(ref.watch(dioClientProvider)),
+  );
 });
 
 final allCoursesProvider = FutureProvider<List<CourseEntity>>((ref) async {
