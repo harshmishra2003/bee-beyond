@@ -1,12 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../routing/route_paths.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -95,36 +92,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
     // Start Entrance Animation
     _entranceController.forward();
-
-    // Auto Navigate after sequence finishes based on Auth Session State
-    _entranceController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        Future.delayed(const Duration(milliseconds: 600), () async {
-          if (!mounted) return;
-          
-          // Check Secure Storage for Auth Token and User Data
-          final secureStorage = ref.read(secureStorageProvider);
-          final authToken = await secureStorage.getAuthToken();
-          final userData = await secureStorage.getUserData();
-
-          if (!mounted) return;
-
-          // Check if user has an active authenticated session
-          final bool isAuthenticated = authToken != null && 
-                                       authToken.isNotEmpty && 
-                                       userData != null && 
-                                       userData.isNotEmpty;
-
-          if (isAuthenticated) {
-            // Logged in user goes straight to Dashboard Home
-            context.go(RoutePaths.home);
-          } else {
-            // Unauthenticated user goes straight to Login Screen
-            context.go(RoutePaths.login);
-          }
-        });
-      }
-    });
   }
 
   @override
