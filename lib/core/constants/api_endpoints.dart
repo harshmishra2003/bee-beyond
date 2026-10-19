@@ -17,6 +17,15 @@ class ApiEndpoints {
   static const String joinedCourses = '/courses/joined';
   static const String courseDetail = '/courses/';
 
+  // Library & Media
+  static const String library = '/library';
+  static const String books = '/library/books';
+  static const String music = '/library/music';
+  static const String video = '/library/video';
+
+  // Services
+  static const String services = '/services';
+
   // Products
   static const String products = '/products';
   static const String productDetail = '/products/';
