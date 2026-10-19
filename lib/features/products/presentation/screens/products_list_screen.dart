@@ -19,57 +19,109 @@ class ProductsListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: const CustomAppBar(title: 'Wellness & Healing Products'),
       body: productsAsync.when(
-        data: (products) => GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.60,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
-          ),
-          itemCount: products.length,
-          itemBuilder: (context, index) {
-            final product = products[index];
-            return ProductCard(
-              title: product.title,
-              imageUrl: product.imageUrl,
-              price: product.price,
-              originalPrice: product.originalPrice,
-              onTap: () => context.push('${RoutePaths.productDetail}?id=${product.id}'),
-              onAddToCart: () {
-                ref.read(cartManagerProvider.notifier).addToCart(
-                      CartItemEntity(
-                        id: product.id,
-                        title: product.title,
-                        imageUrl: product.imageUrl,
-                        price: product.price,
-                        quantity: 1,
-                      ),
-                    );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${product.title} added to cart!'),
-                    backgroundColor: AppColors.primary,
-                  ),
-                );
-              },
-              onBuyNow: () {
-                ref.read(cartManagerProvider.notifier).addToCart(
-                      CartItemEntity(
-                        id: product.id,
-                        title: product.title,
-                        imageUrl: product.imageUrl,
-                        price: product.price,
-                        quantity: 1,
-                      ),
-                    );
-                context.push(RoutePaths.checkout);
-              },
-            );
-          },
-        ),
+        data: (products) {
+          if (products.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.60,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+            ),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return ProductCard(
+                title: product.title,
+                imageUrl: product.imageUrl,
+                price: product.price,
+                originalPrice: product.originalPrice,
+                onTap: () => context.push('${RoutePaths.productDetail}?id=${product.id}'),
+                onAddToCart: () {
+                  ref.read(cartManagerProvider.notifier).addToCart(
+                        CartItemEntity(
+                          id: product.id,
+                          title: product.title,
+                          imageUrl: product.imageUrl,
+                          price: product.price,
+                          quantity: 1,
+                        ),
+                      );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${product.title} added to cart!'),
+                      backgroundColor: AppColors.primary,
+                    ),
+                  );
+                },
+                onBuyNow: () {
+                  ref.read(cartManagerProvider.notifier).addToCart(
+                        CartItemEntity(
+                          id: product.id,
+                          title: product.title,
+                          imageUrl: product.imageUrl,
+                          price: product.price,
+                          quantity: 1,
+                        ),
+                      );
+                  context.push(RoutePaths.checkout);
+                },
+              );
+            },
+          );
+        },
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
         error: (err, stack) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.error))),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEF2FF),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFC7D2FE)),
+              ),
+              child: const Icon(
+                Icons.inventory_2_outlined,
+                size: 56,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'No Healing Products Available Yet',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Our store team is stocking organic Bach flower drops, Ayurvedic herbal teas, and Vastu tools. Check back soon!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
