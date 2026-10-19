@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/widgets/animated_clock_icon.dart';
 import '../../../../core/widgets/shining_view_all_button.dart';
+import '../../../courses/presentation/providers/course_provider.dart';
 
 class OurCoursesSection extends StatelessWidget {
   final VoidCallback onViewAllTap;
@@ -160,7 +162,7 @@ class OurCoursesSection extends StatelessWidget {
 }
 
 /// Oval-Rectangular Compact Our Course Card
-class _OurCourseCard extends StatefulWidget {
+class _OurCourseCard extends ConsumerStatefulWidget {
   final Map<String, dynamic> course;
   final Function(String courseId) onCourseTap;
 
@@ -170,10 +172,10 @@ class _OurCourseCard extends StatefulWidget {
   });
 
   @override
-  State<_OurCourseCard> createState() => _OurCourseCardState();
+  ConsumerState<_OurCourseCard> createState() => _OurCourseCardState();
 }
 
-class _OurCourseCardState extends State<_OurCourseCard> {
+class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
   bool _isEnrolled = false;
   bool _isEnrolling = false;
 
@@ -451,6 +453,14 @@ class _OurCourseCardState extends State<_OurCourseCard> {
                             }
 
                             setState(() => _isEnrolling = true);
+
+                            await ref.read(joinedCoursesProvider.notifier).joinCourse(
+                              courseId: id,
+                              title: widget.course['title'] ?? '',
+                              imageUrl: widget.course['image'] ?? '',
+                              initialProgress: 0.1,
+                            );
+
                             await Future.delayed(const Duration(milliseconds: 250));
 
                             if (mounted) {
