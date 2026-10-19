@@ -20,9 +20,10 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
   @override
   Future<List<CourseModel>> getAllCourses() async {
-    if (_dioClient != null) {
+    final dio = _dioClient;
+    if (dio != null) {
       try {
-        final response = await _dioClient!.get(ApiEndpoints.courses);
+        final response = await dio.get(ApiEndpoints.courses);
         if (response.statusCode == 200 && response.data != null) {
           final data = response.data;
           final List<dynamic> list = data is Map
@@ -43,9 +44,10 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
   @override
   Future<CourseModel> getCourseById(String id) async {
-    if (_dioClient != null) {
+    final dio = _dioClient;
+    if (dio != null) {
       try {
-        final response = await _dioClient!.get('${ApiEndpoints.courseDetail}$id');
+        final response = await dio.get('${ApiEndpoints.courseDetail}$id');
         if (response.statusCode == 200 && response.data != null) {
           final data = response.data;
           final Map<String, dynamic> json =
