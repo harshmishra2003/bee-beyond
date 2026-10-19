@@ -1,148 +1,24 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../routing/page_transitions.dart';
+import '../../domain/entities/book_item.dart';
+import '../providers/library_provider.dart';
 
-class BookItem {
-  final String id;
-  final String title;
-  final String author;
-  final String category;
-  final String size;
-  final int totalPages;
-  final double rating;
-  final String description;
-  final List<String> samplePagesContent;
-
-  const BookItem({
-    required this.id,
-    required this.title,
-    required this.author,
-    required this.category,
-    required this.size,
-    required this.totalPages,
-    required this.rating,
-    required this.description,
-    required this.samplePagesContent,
-  });
-
-  Color get categoryColor {
-    switch (category.toLowerCase()) {
-      case 'bach flower therapy':
-        return const Color(0xFF059669);
-      case 'vastu shastra':
-        return const Color(0xFFD97706);
-      case 'ayurveda':
-        return const Color(0xFF4338CA);
-      case 'graphology':
-        return const Color(0xFF7C3AED);
-      case 'drugless cure':
-        return const Color(0xFF0288D1);
-      default:
-        return AppColors.primary;
-    }
-  }
-}
-
-class MaterialScreen extends StatefulWidget {
+class MaterialScreen extends ConsumerStatefulWidget {
   const MaterialScreen({super.key});
 
   @override
-  State<MaterialScreen> createState() => _MaterialScreenState();
+  ConsumerState<MaterialScreen> createState() => _MaterialScreenState();
 }
 
-class _MaterialScreenState extends State<MaterialScreen> {
+class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   String _selectedCategory = 'All';
-  final Set<String> _downloadedBookIds = {'b_1'};
-  final Set<String> _bookmarkedIds = {'b_1', 'b_3'};
-
-  static const List<String> _categories = [
-    'All',
-    'Bach Flower Therapy',
-    'Vastu Shastra',
-    'Ayurveda',
-    'Graphology',
-    'Drugless Cure',
-  ];
-
-  static const List<BookItem> _allBooks = [
-    BookItem(
-      id: 'b_1',
-      title: '38 Bach Flower Remedies Reference Chart & Diagnostic Guide',
-      author: 'Dr. Edward Bach & Bee Beyond Vault',
-      category: 'Bach Flower Therapy',
-      size: '2.4 MB',
-      totalPages: 12,
-      rating: 4.9,
-      description: 'Official clinical handbook detailing all 38 flower essences, emotional states classification, dosage preparation, and real patient case studies.',
-      samplePagesContent: [
-        'CHAPTER 1: INTRODUCTION TO BACH FLOWER REMEDIES\n\nDr. Edward Bach discovered that physical ailments often stem from emotional imbalances. The 38 flower essences are non-toxic, natural remedies that restore harmony to the human mind.\n\nKey Essence 1: Agrimony - Mental torture behind a brave face.\nKey Essence 2: Aspen - Fear of unknown origins and anxiety.\nKey Essence 3: Beech - Intolerance and critical behavior.',
-        'CHAPTER 2: SELECTION & DOSAGE FORMULATION\n\nSelecting the right remedy requires acute observation of the patient\'s emotional disposition rather than physical symptoms.\n\nDosage Guidelines:\n• Mixing Bottles: Add 2 drops of each selected essence into a 30ml dropper bottle with pure spring water.\n• Frequency: Take 4 drops, 4 times daily under the tongue.',
-        'CHAPTER 3: CLINICAL DIAGNOSIS & CASE STUDIES\n\nCase Study A: Acute panic and sudden shock.\nPrescription: Rescue Remedy + Star of Bethlehem + Rock Rose.\n\nOutcome: Patient reported emotional stabilization within 15 minutes of oral administration.',
-        'CHAPTER 4: ADVANCED REMEDY COMBINATIONS\n\nFor chronic depression and deep grief, combine Mustard and Sweet Chestnut with Walnut for smooth life transition protection.',
-      ],
-    ),
-    BookItem(
-      id: 'b_2',
-      title: 'Vastu Shastra Directions, 5 Elements & Non-Demolition Guide',
-      author: 'Guruji Rajesh Vastu',
-      category: 'Vastu Shastra',
-      size: '4.1 MB',
-      totalPages: 18,
-      rating: 4.8,
-      description: 'Comprehensive guide covering Panchatattva (5 Elements) balancing, direction alignments, bedroom placement, and pyramid remedies.',
-      samplePagesContent: [
-        'CHAPTER 1: THE FIVE ELEMENTS (PANCHATATTVA)\n\nVastu Shastra harmonizes Water, Fire, Earth, Air, and Space energies inside residential and commercial properties.\n\n• North-East (Eshanya): Water Element - Ideal for Meditation & Prayer.\n• South-East (Agneya): Fire Element - Ideal for Kitchen Placement.',
-        'CHAPTER 2: NON-DEMOLITION VASTU REMEDIES\n\nWhen structural alterations are impossible, non-demolition remedies like Brass Pyramids, Helix Strips, and Color Tapes neutralize negative directional doshas.',
-        'CHAPTER 3: BEDROOM & STUDY ROOM ALIGNMENTS\n\nMaster Bedroom should ideally be situated in the South-West (Nairutya) direction to ensure stability, financial growth, and family authority.',
-      ],
-    ),
-    BookItem(
-      id: 'b_3',
-      title: 'Ayurvedic Dinacharya Daily Routine & Prakriti Handbook',
-      author: 'Acharya Devraj Ji',
-      category: 'Ayurveda',
-      size: '3.2 MB',
-      totalPages: 15,
-      rating: 4.9,
-      description: 'Ancient Ayurvedic lifestyle guide for Vata, Pitta, and Kapha constitution diagnosis, herbal cleanses, and daily dinacharya rituals.',
-      samplePagesContent: [
-        'CHAPTER 1: PRAKRITI DIAGNOSIS (DOSHAS)\n\nUnderstanding Vata (Air/Space), Pitta (Fire/Water), and Kapha (Water/Earth) is the foundation of Ayurvedic drugless healing.\n\n• Vata: Light, cold, dry, active.\n• Pitta: Hot, sharp, intense.\n• Kapha: Heavy, slow, stable, smooth.',
-        'CHAPTER 2: MORNING DINACHARYA RITUALS\n\n1. Brahma Muhurta Waking (Before Sunrise).\n2. Ushapan: Drinking lukewarm water stored in a copper vessel.\n3. Jivha Nirlekhana: Tongue scraping to remove Ama toxins.',
-        'CHAPTER 3: GUT HEALING & SEASONAL DIET\n\nEat according to your Agni (Digestive Fire). Avoid conflicting foods (Viruddha Ahara) like milk with citrus fruits or fish.',
-      ],
-    ),
-    BookItem(
-      id: 'b_4',
-      title: 'Graphology Handwriting & Signature Analysis Basics',
-      author: 'Dr. Vivek Anand',
-      category: 'Graphology',
-      size: '1.9 MB',
-      totalPages: 10,
-      rating: 4.7,
-      description: 'Learn personality assessment through handwriting slant, pressure, loops, spacing, and signature stroke analysis.',
-      samplePagesContent: [
-        'CHAPTER 1: HANDWRITING SLANTS & EMOTIONS\n\n• Right Slant (Forward): Expressive, emotional, social personality.\n• Vertical Slant: Logical, controlled, analytical mind.\n• Left Slant (Backward): Reserved, cautious, introverted tendencies.',
-        'CHAPTER 2: SIGNATURE ANALYSIS SECRETS\n\nA signature represents a person\'s public persona.\n\n• Underline with Dot: Confidence with caution.\n• Legible Signature: Transparency and open nature.',
-      ],
-    ),
-    BookItem(
-      id: 'b_5',
-      title: 'Drugless Natural Cure Principles & Herbal Remedies',
-      author: 'Bee Beyond Wellness Vault',
-      category: 'Drugless Cure',
-      size: '5.6 MB',
-      totalPages: 24,
-      rating: 4.9,
-      description: 'Natural healing wisdom explaining fasting therapy, hydrotherapy, mud packs, and herbal compresses for chronic wellness.',
-      samplePagesContent: [
-        'CHAPTER 1: THE LAWS OF NATURAL HEALING\n\nDisease is the body\'s natural effort to eliminate accumulated toxic waste. Suppressing symptoms with heavy synthetic drugs leads to chronic conditions.',
-        'CHAPTER 2: HYDROTHERAPY & MUD PACKS\n\nApplying cold mud packs to the abdomen relieves gut heat, improves peristalsis, and detoxifies the liver naturally.',
-      ],
-    ),
-  ];
+  final Set<String> _downloadedBookIds = {};
+  final Set<String> _bookmarkedIds = {};
 
   void _openBookViewer(BookItem book) {
     Navigator.of(context).push(
@@ -193,112 +69,197 @@ class _MaterialScreenState extends State<MaterialScreen> {
     });
   }
 
+  List<String> _extractCategories(List<BookItem> books) {
+    final Set<String> cats = {'All'};
+    for (var b in books) {
+      if (b.category.isNotEmpty) cats.add(b.category);
+    }
+    return cats.toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filteredBooks = _allBooks.where((b) {
-      if (_selectedCategory == 'All') return true;
-      return b.category.toLowerCase() == _selectedCategory.toLowerCase();
-    }).toList();
+    final booksAsync = ref.watch(booksAndMaterialsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'Books & Study Materials'),
-      body: Column(
-        children: [
-          const SizedBox(height: 12),
+      body: booksAsync.when(
+        data: (allBooks) {
+          if (allBooks.isEmpty) {
+            return _buildEmptyState();
+          }
 
-          // CATEGORY FILTER CHIPS
-          SizedBox(
-            height: 38,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: _categories.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final cat = _categories[index];
-                final isSelected = _selectedCategory == cat;
+          final categories = _extractCategories(allBooks);
+          final filteredBooks = allBooks.where((b) {
+            if (_selectedCategory == 'All') return true;
+            return b.category.toLowerCase() == _selectedCategory.toLowerCase();
+          }).toList();
 
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = cat;
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+          return Column(
+            children: [
+              const SizedBox(height: 12),
+
+              // CATEGORY FILTER CHIPS
+              if (categories.length > 1)
+                SizedBox(
+                  height: 38,
+                  child: ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.borderSubtle,
-                        width: 1.5,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: AppColors.primary.withAlpha(60),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              )
-                            ]
-                          : null,
-                    ),
-                    child: Text(
-                      cat,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : AppColors.textSecondary,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length,
+                    separatorBuilder: (context, index) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final cat = categories[index];
+                      final isSelected = _selectedCategory == cat;
 
-          const SizedBox(height: 16),
-
-          // LIST HEADER
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$_selectedCategory Books (${filteredBooks.length})',
-                  style: AppTextStyles.titleLarge.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategory = cat;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.primary : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected ? AppColors.primary : AppColors.borderSubtle,
+                              width: 1.5,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primary.withAlpha(60),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    )
+                                  ]
+                                : null,
+                          ),
+                          child: Text(
+                            cat,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : AppColors.textSecondary,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                const Icon(Icons.library_books_rounded, color: AppColors.primary, size: 20),
-              ],
+
+              const SizedBox(height: 16),
+
+              // LIST HEADER
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '$_selectedCategory Books (${filteredBooks.length})',
+                      style: AppTextStyles.titleLarge.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Icon(Icons.library_books_rounded, color: AppColors.primary, size: 20),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // BOOKS LIST
+              Expanded(
+                child: filteredBooks.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No books found in $_selectedCategory category.',
+                          style: const TextStyle(color: AppColors.textHint, fontSize: 14),
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: filteredBooks.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 14),
+                        itemBuilder: (context, index) {
+                          final book = filteredBooks[index];
+                          final isDownloaded = _downloadedBookIds.contains(book.id);
+                          final isBookmarked = _bookmarkedIds.contains(book.id);
+
+                          return _buildBookCard(book, isDownloaded, isBookmarked);
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (err, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Text(
+              'Error loading books: $err',
+              style: const TextStyle(color: AppColors.error),
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          const SizedBox(height: 12),
-
-          // BOOKS LIST
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              physics: const BouncingScrollPhysics(),
-              itemCount: filteredBooks.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 14),
-              itemBuilder: (context, index) {
-                final book = filteredBooks[index];
-                final isDownloaded = _downloadedBookIds.contains(book.id);
-                final isBookmarked = _bookmarkedIds.contains(book.id);
-
-                return _buildBookCard(book, isDownloaded, isBookmarked);
-              },
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEF2FF),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFC7D2FE)),
+              ),
+              child: const Icon(
+                Icons.menu_book_rounded,
+                size: 56,
+                color: AppColors.primary,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            const Text(
+              'No Study Materials Available Yet',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Our publishing team is uploading certified digital handbooks, study materials, and reference charts. Check back soon!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -494,7 +455,8 @@ class _FlipBookViewerScreenState extends State<_FlipBookViewerScreen> {
   }
 
   void _nextPage() {
-    if (_currentPage < widget.book.samplePagesContent.length - 1) {
+    if (widget.book.samplePagesContent.isNotEmpty &&
+        _currentPage < widget.book.samplePagesContent.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 450),
         curve: Curves.easeOutCubic,
@@ -513,7 +475,9 @@ class _FlipBookViewerScreenState extends State<_FlipBookViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = widget.book.samplePagesContent;
+    final pages = widget.book.samplePagesContent.isNotEmpty
+        ? widget.book.samplePagesContent
+        : ['Sample content preview for this book will be available once uploaded.'];
 
     final bgColor = _isDarkMode ? const Color(0xFF1E1E2E) : const Color(0xFFFAF8F5);
     final paperColor = _isDarkMode ? const Color(0xFF28283D) : const Color(0xFFFFFDF9);
