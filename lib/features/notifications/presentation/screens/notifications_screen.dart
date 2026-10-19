@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../routing/route_paths.dart';
 import '../providers/notifications_provider.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -362,7 +364,27 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 height: 1.35,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 18),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF312E81),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                elevation: 0,
+              ),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go(RoutePaths.home);
+                }
+              },
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 16),
+              label: const Text(
+                'Back to Home',
+                style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.bold),
+              ),
+            ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF312E81),
