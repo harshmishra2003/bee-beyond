@@ -1,12 +1,10 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../routing/page_transitions.dart';
-import '../../../../routing/route_paths.dart';
 import '../../domain/entities/book_item.dart';
 import '../providers/library_provider.dart';
 
@@ -258,21 +256,6 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                 fontSize: 13,
                 color: AppColors.textSecondary,
                 height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 18),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                elevation: 0,
-              ),
-              onPressed: () => context.go(RoutePaths.home),
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 16),
-              label: const Text(
-                'Back to Home',
-                style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.bold),
               ),
             ),
           ],
