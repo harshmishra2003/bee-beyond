@@ -1,173 +1,21 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../domain/entities/video_workshop_item.dart';
+import '../providers/library_provider.dart';
 
-class VideoWorkshopItem {
-  final String id;
-  final String title;
-  final String category;
-  final String instructor;
-  final String duration;
-  final String views;
-  final double rating;
-  final String thumbnailUrl;
-  final String description;
-  final List<String> takeaways;
-  final bool isFeatured;
-
-  const VideoWorkshopItem({
-    required this.id,
-    required this.title,
-    required this.category,
-    required this.instructor,
-    required this.duration,
-    required this.views,
-    required this.rating,
-    required this.thumbnailUrl,
-    required this.description,
-    required this.takeaways,
-    this.isFeatured = false,
-  });
-
-  String get categoryBadge {
-    switch (category.toLowerCase()) {
-      case 'bach flower':
-        return '🌿 BACH FLOWER';
-      case 'ayurveda':
-        return '🎓 AYURVEDA';
-      case 'vastu shastra':
-        return '🔮 VASTU SHASTRA';
-      case 'breathwork':
-        return '🧘 BREATHWORK';
-      case 'meditation':
-        return '✨ MEDITATION';
-      default:
-        return '📹 WORKSHOP';
-    }
-  }
-
-  Color get categoryColor {
-    switch (category.toLowerCase()) {
-      case 'bach flower':
-        return const Color(0xFF059669);
-      case 'ayurveda':
-        return const Color(0xFF4338CA);
-      case 'vastu shastra':
-        return const Color(0xFFD97706);
-      case 'breathwork':
-        return const Color(0xFF0288D1);
-      case 'meditation':
-        return const Color(0xFF7C3AED);
-      default:
-        return AppColors.primary;
-    }
-  }
-}
-
-class VideoScreen extends StatefulWidget {
+class VideoScreen extends ConsumerStatefulWidget {
   const VideoScreen({super.key});
 
   @override
-  State<VideoScreen> createState() => _VideoScreenState();
+  ConsumerState<VideoScreen> createState() => _VideoScreenState();
 }
 
-class _VideoScreenState extends State<VideoScreen> {
+class _VideoScreenState extends ConsumerState<VideoScreen> {
   String _selectedCategory = 'All';
-
-  static const List<String> _categories = [
-    'All',
-    'Bach Flower',
-    'Ayurveda',
-    'Vastu Shastra',
-    'Breathwork',
-    'Meditation',
-  ];
-
-  static const List<VideoWorkshopItem> _allWorkshops = [
-    VideoWorkshopItem(
-      id: 'v_1',
-      title: 'Mastering 38 Bach Flower Essences & Diagnostic Clinical Cases',
-      category: 'Bach Flower',
-      instructor: 'Dr. Ananya Sharma (MD)',
-      duration: '45 Mins',
-      views: '3.8k Views',
-      rating: 4.9,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80',
-      description: 'A complete clinical masterclass on 38 Bach remedies, emotional mapping, dosage selection, and practical patient diagnosis.',
-      takeaways: [
-        'Emotional mapping for 38 Bach essences',
-        'Clinical diagnosis & dosage formulation',
-        'Patient case study analysis & live practice',
-      ],
-      isFeatured: true,
-    ),
-    VideoWorkshopItem(
-      id: 'v_2',
-      title: 'Daily Morning Ayurvedic Dinacharya & Gut Healing Secrets',
-      category: 'Ayurveda',
-      instructor: 'Acharya Devraj Ji',
-      duration: '22 Mins',
-      views: '2.1k Views',
-      rating: 4.8,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1512290900676-26c2bfb26465?auto=format&fit=crop&w=800&q=80',
-      description: 'Learn ancient Indian healing routines, Prakriti assessment, morning rituals, and natural drugless gut healing.',
-      takeaways: [
-        'Prakriti self-diagnosis guidelines',
-        'Morning ritual routine for high energy',
-        'Herbal teas & gut health remedies',
-      ],
-    ),
-    VideoWorkshopItem(
-      id: 'v_3',
-      title: 'Vastu Directions, North-East Energy & Non-Demolition Remedies',
-      category: 'Vastu Shastra',
-      instructor: 'Guruji Rajesh Vastu',
-      duration: '35 Mins',
-      views: '4.2k Views',
-      rating: 4.9,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=800&q=80',
-      description: 'In-depth video guide on direction correction, balancing 5 elements, and applying pyramid non-demolition remedies.',
-      takeaways: [
-        'North-East and South-West energy balancing',
-        'Pyramid and brass metal remedy placement',
-        'Office & residential Vastu optimization',
-      ],
-    ),
-    VideoWorkshopItem(
-      id: 'v_4',
-      title: 'Pranayama, Anulom Vilom & Deep Mind Release Masterclass',
-      category: 'Breathwork',
-      instructor: 'Yogini Sunita',
-      duration: '28 Mins',
-      views: '1.9k Views',
-      rating: 4.8,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80',
-      description: 'Transformative breathwork session for anxiety relief, nervous system reset, and vital prana energy cultivation.',
-      takeaways: [
-        'Correct posture & breathing rhythm',
-        'Vagus nerve activation techniques',
-        'Instant 5-minute stress relief method',
-      ],
-    ),
-    VideoWorkshopItem(
-      id: 'v_5',
-      title: '7 Chakra Sound Alignment & Aura Cleansing Guided Workshop',
-      category: 'Meditation',
-      instructor: 'Dr. Vivek Anand',
-      duration: '30 Mins',
-      views: '5.1k Views',
-      rating: 5.0,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=800&q=80',
-      description: 'Experience deep sonic meditation frequencies for chakra rebalancing, aura purification, and inner tranquility.',
-      takeaways: [
-        '7 Primary Chakra frequency frequencies',
-        'Aura cleansing visualization guide',
-        'Deep relaxation & sleep enhancement',
-      ],
-    ),
-  ];
 
   void _playVideoModal(VideoWorkshopItem workshop) {
     showModalBottomSheet(
@@ -178,130 +26,221 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
+  List<String> _extractCategories(List<VideoWorkshopItem> workshops) {
+    final Set<String> cats = {'All'};
+    for (var w in workshops) {
+      if (w.category.isNotEmpty) cats.add(w.category);
+    }
+    return cats.toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final featuredWorkshop = _allWorkshops.firstWhere((w) => w.isFeatured, orElse: () => _allWorkshops.first);
-    final filteredWorkshops = _allWorkshops.where((w) {
-      if (_selectedCategory == 'All') return true;
-      return w.category.toLowerCase() == _selectedCategory.toLowerCase();
-    }).toList();
+    final videoAsync = ref.watch(videoWorkshopsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'Guided Video Workshops'),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12),
+      body: videoAsync.when(
+        data: (allWorkshops) {
+          if (allWorkshops.isEmpty) {
+            return _buildEmptyState();
+          }
 
-            // FEATURED HERO WORKSHOP BANNER
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildFeaturedHeroCard(featuredWorkshop),
-            ),
+          final featuredWorkshop = allWorkshops.firstWhere(
+            (w) => w.isFeatured,
+            orElse: () => allWorkshops.first,
+          );
 
-            const SizedBox(height: 20),
+          final categories = _extractCategories(allWorkshops);
+          final filteredWorkshops = allWorkshops.where((w) {
+            if (_selectedCategory == 'All') return true;
+            return w.category.toLowerCase() == _selectedCategory.toLowerCase();
+          }).toList();
 
-            // CATEGORY FILTER CHIPS
-            SizedBox(
-              height: 38,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: _categories.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final cat = _categories[index];
-                  final isSelected = _selectedCategory == cat;
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
 
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedCategory = cat;
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                // FEATURED HERO WORKSHOP BANNER
+                if (allWorkshops.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: _buildFeaturedHeroCard(featuredWorkshop),
+                  ),
+
+                const SizedBox(height: 20),
+
+                // CATEGORY FILTER CHIPS
+                if (categories.length > 1)
+                  SizedBox(
+                    height: 38,
+                    child: ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.borderSubtle,
-                          width: 1.5,
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.primary.withAlpha(60),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                )
-                              ]
-                            : null,
-                      ),
-                      child: Text(
-                        cat,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.textSecondary,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categories.length,
+                      separatorBuilder: (context, index) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final cat = categories[index];
+                        final isSelected = _selectedCategory == cat;
 
-            const SizedBox(height: 16),
-
-            // WORKSHOPS LIST HEADER
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '$_selectedCategory Workshops (${filteredWorkshops.length})',
-                    style: AppTextStyles.titleLarge.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedCategory = cat;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppColors.primary : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected ? AppColors.primary : AppColors.borderSubtle,
+                                width: 1.5,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: AppColors.primary.withAlpha(60),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 3),
+                                      )
+                                    ]
+                                  : null,
+                            ),
+                            child: Text(
+                              cat,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : AppColors.textSecondary,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  const Row(
+
+                const SizedBox(height: 16),
+
+                // WORKSHOPS LIST HEADER
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.filter_list_rounded, size: 18, color: AppColors.textHint),
-                      SizedBox(width: 4),
                       Text(
-                        'Recent',
-                        style: TextStyle(color: AppColors.textHint, fontSize: 12, fontWeight: FontWeight.bold),
+                        '$_selectedCategory Workshops (${filteredWorkshops.length})',
+                        style: AppTextStyles.titleLarge.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Row(
+                        children: [
+                          Icon(Icons.filter_list_rounded, size: 18, color: AppColors.textHint),
+                          SizedBox(width: 4),
+                          Text(
+                            'Recent',
+                            style: TextStyle(color: AppColors.textHint, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // WORKSHOPS LIST
+                if (filteredWorkshops.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Center(
+                      child: Text(
+                        'No video workshops found in $_selectedCategory category.',
+                        style: const TextStyle(color: AppColors.textHint, fontSize: 14),
+                      ),
+                    ),
+                  )
+                else
+                  ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredWorkshops.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 14),
+                    itemBuilder: (context, index) {
+                      final workshop = filteredWorkshops[index];
+                      return _buildWorkshopCard(workshop);
+                    },
+                  ),
+
+                const SizedBox(height: 32),
+              ],
+            ),
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (err, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Text('Error loading video workshops: $err', style: const TextStyle(color: AppColors.error)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEF2FF),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFC7D2FE)),
+              ),
+              child: const Icon(
+                Icons.ondemand_video_rounded,
+                size: 56,
+                color: AppColors.primary,
               ),
             ),
-
-            const SizedBox(height: 12),
-
-            // WORKSHOPS LIST
-            ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredWorkshops.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 14),
-              itemBuilder: (context, index) {
-                final workshop = filteredWorkshops[index];
-                return _buildWorkshopCard(workshop);
-              },
+            const SizedBox(height: 20),
+            const Text(
+              'No Video Workshops Available Yet',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
-
-            const SizedBox(height: 32),
+            const SizedBox(height: 8),
+            const Text(
+              'Our video team is editing masterclasses and practical workshops. New videos will appear here soon!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
           ],
         ),
       ),
@@ -328,17 +267,23 @@ class _VideoScreenState extends State<VideoScreen> {
           child: Stack(
             children: [
               // Background Image
-              CachedNetworkImage(
-                imageUrl: workshop.thumbnailUrl,
-                height: 210,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorWidget: (context, url, error) => Container(
-                  height: 210,
-                  color: AppColors.primaryDark,
-                  child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
-                ),
-              ),
+              workshop.thumbnailUrl.startsWith('http')
+                  ? CachedNetworkImage(
+                      imageUrl: workshop.thumbnailUrl,
+                      height: 210,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorWidget: (context, url, error) => Container(
+                        height: 210,
+                        color: AppColors.primaryDark,
+                        child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
+                      ),
+                    )
+                  : Container(
+                      height: 210,
+                      color: AppColors.primaryDark,
+                      child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
+                    ),
 
               // Gradient Overlay
               Positioned.fill(
@@ -515,18 +460,25 @@ class _VideoScreenState extends State<VideoScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: CachedNetworkImage(
-                        imageUrl: workshop.thumbnailUrl,
-                        width: 105,
-                        height: 85,
-                        fit: BoxFit.cover,
-                        errorWidget: (context, url, error) => Container(
-                          width: 105,
-                          height: 85,
-                          color: AppColors.primary,
-                          child: const Icon(Icons.ondemand_video_rounded, color: Colors.white),
-                        ),
-                      ),
+                      child: workshop.thumbnailUrl.startsWith('http')
+                          ? CachedNetworkImage(
+                              imageUrl: workshop.thumbnailUrl,
+                              width: 105,
+                              height: 85,
+                              fit: BoxFit.cover,
+                              errorWidget: (context, url, error) => Container(
+                                width: 105,
+                                height: 85,
+                                color: AppColors.primary,
+                                child: const Icon(Icons.ondemand_video_rounded, color: Colors.white),
+                              ),
+                            )
+                          : Container(
+                              width: 105,
+                              height: 85,
+                              color: AppColors.primary,
+                              child: const Icon(Icons.ondemand_video_rounded, color: Colors.white),
+                            ),
                     ),
                     Positioned.fill(
                       child: Container(
@@ -700,12 +652,19 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: CachedNetworkImage(
-                    imageUrl: widget.workshop.thumbnailUrl,
-                    width: double.infinity,
-                    height: 210,
-                    fit: BoxFit.cover,
-                  ),
+                  child: widget.workshop.thumbnailUrl.startsWith('http')
+                      ? CachedNetworkImage(
+                          imageUrl: widget.workshop.thumbnailUrl,
+                          width: double.infinity,
+                          height: 210,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          width: double.infinity,
+                          height: 210,
+                          color: AppColors.primaryDark,
+                          child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
+                        ),
                 ),
                 Positioned.fill(
                   child: Container(
@@ -862,48 +821,49 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
                   const SizedBox(height: 16),
 
                   // Key Takeaways
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7F6FF),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 18),
-                            SizedBox(width: 6),
-                            Text(
-                              'Key Learning Takeaways',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13.5,
+                  if (widget.workshop.takeaways.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F6FF),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 18),
+                              SizedBox(width: 6),
+                              Text(
+                                'Key Learning Takeaways',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ...widget.workshop.takeaways.map((t) => Padding(
-                              padding: const EdgeInsets.only(bottom: 4.0),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.arrow_right_rounded, color: AppColors.primary, size: 18),
-                                  Expanded(
-                                    child: Text(
-                                      t,
-                                      style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ...widget.workshop.takeaways.map((t) => Padding(
+                                padding: const EdgeInsets.only(bottom: 4.0),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.arrow_right_rounded, color: AppColors.primary, size: 18),
+                                    Expanded(
+                                      child: Text(
+                                        t,
+                                        style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            )),
-                      ],
+                                  ],
+                                ),
+                              )),
+                        ],
+                      ),
                     ),
-                  ),
 
                   const SizedBox(height: 20),
 
