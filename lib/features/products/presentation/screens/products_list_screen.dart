@@ -120,21 +120,6 @@ class ProductsListScreen extends ConsumerWidget {
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: 18),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                elevation: 0,
-              ),
-              onPressed: () => context.go(RoutePaths.home),
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 16),
-              label: const Text(
-                'Back to Home',
-                style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.bold),
-              ),
-            ),
           ],
         ),
       ),
