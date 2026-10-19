@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -527,7 +526,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen> with SingleTickerProv
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.black48,
+                  color: Colors.black.withAlpha(120),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.equalizer_rounded, color: Colors.white, size: 24),
