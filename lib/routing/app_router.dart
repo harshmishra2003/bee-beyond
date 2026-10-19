@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -38,13 +39,18 @@ import '../features/splash/presentation/screens/splash_screen.dart';
 import 'page_transitions.dart';
 import 'route_names.dart';
 import 'route_paths.dart';
+import 'router_notifier.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-class AppRouter {
-  static final GoRouter router = GoRouter(
+final routerProvider = Provider<GoRouter>((ref) {
+  final routerNotifier = ref.watch(routerNotifierProvider);
+
+  return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: RoutePaths.splash,
+    refreshListenable: routerNotifier,
+    redirect: routerNotifier.redirect,
     routes: [
       GoRoute(
         path: RoutePaths.splash,
@@ -67,7 +73,7 @@ class AppRouter {
         ),
       ),
 
-      // Auth
+      // Auth Stack
       GoRoute(
         path: RoutePaths.login,
         name: RouteNames.login,
@@ -109,7 +115,7 @@ class AppRouter {
         ),
       ),
 
-      // StatefulShellRoute for Bottom Navigation Tabs
+      // App Stack (StatefulShellRoute for Bottom Navigation Tabs)
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainScreen(navigationShell: navigationShell);
@@ -157,7 +163,7 @@ class AppRouter {
         ],
       ),
 
-      // Standalone Routes
+      // Standalone Protected App Stack Routes
       GoRoute(
         path: RoutePaths.courseDetail,
         name: RouteNames.courseDetail,
@@ -422,4 +428,4 @@ class AppRouter {
       ),
     ],
   );
-}
+});
