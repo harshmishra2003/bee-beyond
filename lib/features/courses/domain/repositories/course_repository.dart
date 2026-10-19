@@ -6,4 +6,5 @@ abstract class CourseRepository {
   Future<CourseEntity> getCourseById(String id);
   Future<List<JoinedCourseEntity>> getJoinedCourses();
   Future<bool> enrollCourse(String id);
+  Future<void> saveJoinedCourses(List<JoinedCourseEntity> courses);
 }
