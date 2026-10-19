@@ -16,16 +16,42 @@ class CourseModel extends CourseEntity {
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
     return CourseModel(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',                                 
-      category: json['category'] ?? '',
-      subCategory: json['subCategory'],
-      imageUrl: json['image_url'] ?? '',
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      duration: json['duration'] ?? '',
-      rating: (json['rating'] as num?)?.toDouble() ?? 5.0,
-      modulesCount: json['modules_count'] ?? 10,
+      id: json['id']?.toString() ?? json['course_id']?.toString() ?? '',
+      title: json['title']?.toString() ?? json['name']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      category: json['category']?.toString() ?? json['category_name']?.toString() ?? 'General',
+      subCategory: json['subCategory']?.toString() ?? json['sub_category']?.toString(),
+      imageUrl: json['imageUrl']?.toString() ??
+          json['image_url']?.toString() ??
+          json['image']?.toString() ??
+          json['poster']?.toString() ??
+          '',
+      price: (json['price'] as num?)?.toDouble() ??
+          double.tryParse(json['price']?.toString() ?? '0') ??
+          0.0,
+      duration: json['duration']?.toString() ?? 'Self-Paced',
+      rating: (json['rating'] as num?)?.toDouble() ??
+          double.tryParse(json['rating']?.toString() ?? '5.0') ??
+          5.0,
+      modulesCount: (json['modulesCount'] as num?)?.toInt() ??
+          (json['modules_count'] as num?)?.toInt() ??
+          int.tryParse(json['modules']?.toString() ?? '10') ??
+          10,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'category': category,
+      'subCategory': subCategory,
+      'imageUrl': imageUrl,
+      'price': price,
+      'duration': duration,
+      'rating': rating,
+      'modulesCount': modulesCount,
+    };
   }
 }
