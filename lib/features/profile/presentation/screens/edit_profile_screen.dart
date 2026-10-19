@@ -78,7 +78,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final user = ref.read(authStateProvider).value;
+    final user = ref.read(authStateProvider).user;
     
     _fullNameController = TextEditingController(text: user?.name ?? '');
     _emailController = TextEditingController(text: user?.email ?? '');
@@ -283,7 +283,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authStateProvider).value;
+    final user = ref.watch(authStateProvider).user;
     final userName = user?.name ?? 'User';
     final studentId = user?.studentId ?? 'N/A';
 
