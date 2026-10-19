@@ -551,27 +551,29 @@ class _JoinedCoursesScreenState extends ConsumerState<JoinedCoursesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.school_outlined, size: 72, color: AppColors.textHint),
-            const SizedBox(height: 16),
+            const Icon(Icons.school_outlined, size: 56, color: AppColors.textHint),
+            const SizedBox(height: 14),
             const Text(
               'No Joined Courses Yet',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             const Text(
               'Explore certified courses in Bach Flower, Vastu Shastra & Ayurveda and enroll to start your learning journey.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13.5, height: 1.4),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
+            const SizedBox(height: 18),
+            ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                elevation: 0,
               ),
               onPressed: () => context.go(RoutePaths.courses),
-              child: const Text('Explore Certified Courses', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.explore_rounded, color: Colors.white, size: 16),
+              label: const Text('Explore Certified Courses', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
