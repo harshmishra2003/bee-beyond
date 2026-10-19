@@ -1,3 +1,5 @@
+import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/network/dio_client.dart';
 import '../models/product_model.dart';
 
 abstract class ProductRemoteDataSource {
@@ -6,42 +8,59 @@ abstract class ProductRemoteDataSource {
 }
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
+  final DioClient? _dioClient;
+
+  ProductRemoteDataSourceImpl([this._dioClient]);
+
   @override
   Future<List<ProductModel>> getProducts() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return const [
-      ProductModel(
-        id: 'p_1',
-        title: 'Rescue Remedy - Bach Flower Essence Drop (30ml)',
-        description: 'Natural stress relief formulation made from natural Bach flowers.',
-        category: 'Bach Flower',
-        price: 799.0,
-        originalPrice: 999.0,
-        imageUrl: 'https://images.unsplash.com/photo-1608248597263-000799965d83?auto=format&fit=crop&w=600&q=80',
-      ),
-      ProductModel(
-        id: 'p_2',
-        title: 'Ayurvedic Herbal Healing Tea Blend (200g)',
-        description: 'Prakriti balancing organic tea with Ashwagandha, Brahmi & Tulsi.',
-        category: 'Ayurvedic Upchar',
-        price: 499.0,
-        originalPrice: 650.0,
-        imageUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=600&q=80',
-      ),
-      ProductModel(
-        id: 'p_3',
-        title: 'Bach Flower Remedy Guide Book (Hardcover)',
-        description: 'Comprehensive practitioner book covering all 38 remedies with case examples.',
-        category: 'Books',
-        price: 1299.0,
-        imageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80',
-      ),
-    ];
+    final dio = _dioClient;
+    if (dio != null) {
+      try {
+        final response = await dio.get(ApiEndpoints.products);
+        if (response.statusCode == 200 && response.data != null) {
+          final data = response.data;
+          final List<dynamic> list = data is Map
+              ? (data['data'] ?? data['products'] ?? [])
+              : (data is List ? data : []);
+
+          return list
+              .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
+              .toList();
+        }
+      } catch (_) {
+        return [];
+      }
+    }
+    return [];
   }
 
   @override
   Future<ProductModel> getProductById(String id) async {
+    final dio = _dioClient;
+    if (dio != null) {
+      try {
+        final response = await dio.get('${ApiEndpoints.productDetail}$id');
+        if (response.statusCode == 200 && response.data != null) {
+          final data = response.data;
+          final Map<String, dynamic> json =
+              data is Map ? (data['data'] ?? data) : {};
+          return ProductModel.fromJson(json);
+        }
+      } catch (_) {}
+    }
+
     final products = await getProducts();
-    return products.firstWhere((p) => p.id == id, orElse: () => products.first);
+    return products.firstWhere(
+      (p) => p.id == id,
+      orElse: () => ProductModel(
+        id: id,
+        title: 'Product Details',
+        description: 'Details for this product will be loaded dynamically.',
+        category: 'Store',
+        imageUrl: '',
+        price: 0.0,
+      ),
+    );
   }
 }
