@@ -1,24 +1,22 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../routing/route_paths.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/onboarding_page_four.dart';
 import '../widgets/onboarding_page_one.dart';
 import '../widgets/onboarding_page_three.dart';
 import '../widgets/onboarding_page_two.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerProviderStateMixin {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   late AnimationController _leavesController;
 
@@ -53,11 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
   }
 
   Future<void> _finishOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(StorageKeys.isOnboardingCompleted, true);
-    if (mounted) {
-      context.go(RoutePaths.home);
-    }
+    await ref.read(authStateProvider.notifier).completeOnboarding();
   }
 
   @override
