@@ -71,10 +71,12 @@ class CartScreen extends ConsumerWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  elevation: 0,
                 ),
                 onPressed: () => ref.invalidate(cartManagerProvider),
-                child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                child: const Text('Retry', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -85,52 +87,57 @@ class CartScreen extends ConsumerWidget {
 
   Widget _buildEmptyState(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            AssetPaths.emptyCart,
-            width: 200,
-            height: 200,
-            errorBuilder: (context, error, stackTrace) => const Icon(
-              Icons.shopping_cart_outlined,
-              size: 100,
-              color: AppColors.textHint,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              AssetPaths.emptyCart,
+              width: 140,
+              height: 140,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.shopping_cart_outlined,
+                size: 72,
+                color: AppColors.textHint,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Your Cart is Empty',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
+            const SizedBox(height: 18),
+            const Text(
+              'Your Cart is Empty',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Looks like you haven\'t added\nanything to your cart yet.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              color: AppColors.textSecondary,
-              height: 1.4,
+            const SizedBox(height: 6),
+            const Text(
+              'Looks like you haven\'t added anything to your cart yet.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.35,
+              ),
             ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                elevation: 0,
+              ),
+              onPressed: () => context.go(RoutePaths.home),
+              icon: const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 16),
+              label: const Text(
+                'Start Shopping',
+                style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+              ),
             ),
-            onPressed: () => context.go(RoutePaths.home),
-            child: const Text(
-              'Start Shopping',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
