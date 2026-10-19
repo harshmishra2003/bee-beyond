@@ -563,18 +563,6 @@ class _JoinedCoursesScreenState extends ConsumerState<JoinedCoursesScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
             ),
-            const SizedBox(height: 18),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                elevation: 0,
-              ),
-              onPressed: () => context.go(RoutePaths.courses),
-              icon: const Icon(Icons.explore_rounded, color: Colors.white, size: 16),
-              label: const Text('Explore Certified Courses', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.bold)),
-            ),
           ],
         ),
       ),
