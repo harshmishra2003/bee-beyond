@@ -251,6 +251,14 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
         _isSubmitting = false;
       });
 
+      // Automatically add course to Joined Courses
+      await ref.read(joinedCoursesProvider.notifier).joinCourse(
+        courseId: course.id,
+        title: course.title,
+        imageUrl: course.imageUrl,
+        initialProgress: 0.1,
+      );
+
       // Create Enrollment Data
       final studentName = '${_firstNameController.text.trim()} ${_middleNameController.text.trim()} ${_lastNameController.text.trim()}'.replaceAll('  ', ' ');
       final enrollmentId = 'ENR-2025-${(1000 + (widget.courseId.hashCode % 8999)).abs()}';
