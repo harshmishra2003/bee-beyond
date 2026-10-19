@@ -6,7 +6,7 @@ import '../../../../core/widgets/animated_clock_icon.dart';
 import '../../../../core/widgets/shining_view_all_button.dart';
 import '../../../courses/presentation/providers/course_provider.dart';
 
-class OurCoursesSection extends StatelessWidget {
+class OurCoursesSection extends ConsumerWidget {
   final VoidCallback onViewAllTap;
   final Function(String courseId) onCourseTap;
 
@@ -16,55 +16,10 @@ class OurCoursesSection extends StatelessWidget {
     required this.onCourseTap,
   });
 
-  static const List<Map<String, dynamic>> ourCourses = [
-    {
-      'id': 'c_1',
-      'title': 'Certified Bach Flower Therapy & Healing Course',
-      'price': '₹ 2,499',
-      'originalPrice': '₹ 3,500',
-      'duration': '24 Hours',
-      'rating': '4.9',
-      'category': 'Bach Flower',
-      'badge': 'BESTSELLER',
-      'image': AssetPaths.ancientHealing,
-    },
-    {
-      'id': 'c_2',
-      'title': 'Ayurvedic Lifestyle & Drugless Upchar Diploma',
-      'price': '₹ 3,999',
-      'originalPrice': '₹ 5,000',
-      'duration': '32 Hours',
-      'rating': '4.8',
-      'category': 'Ayurvedic Upchar',
-      'badge': 'POPULAR',
-      'image': AssetPaths.bachFlower,
-    },
-    {
-      'id': 'c_6',
-      'title': 'Advanced Vastu Shastra Certification',
-      'price': '₹ 4,999',
-      'originalPrice': '₹ 7,500',
-      'duration': '40 Hours',
-      'rating': '5.0',
-      'category': 'Vastu',
-      'badge': 'PREMIUM',
-      'image': AssetPaths.vastu,
-    },
-    {
-      'id': 'c_3',
-      'title': 'Mind & Life Coaching Masterclass',
-      'price': '₹ 2,999',
-      'originalPrice': '₹ 4,500',
-      'duration': '20 Hours',
-      'rating': '4.7',
-      'category': 'Counselling',
-      'badge': 'CERTIFIED',
-      'image': AssetPaths.beeBeyondImage1,
-    },
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final coursesAsync = ref.watch(allCoursesProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -139,22 +94,115 @@ class OurCoursesSection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
 
-        // Sleek Compact Oval-Rectangular Horizontal List
-        SizedBox(
-          height: 220,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: ourCourses.length,
-            itemBuilder: (context, index) {
-              final course = ourCourses[index];
-              return _OurCourseCard(
-                course: course,
-                onCourseTap: onCourseTap,
+        coursesAsync.when(
+          data: (courses) {
+            if (courses.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0C000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFC7D2FE)),
+                        ),
+                        child: const Icon(
+                          Icons.menu_book_rounded,
+                          color: Color(0xFF4338CA),
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Courses Coming Soon',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Our team is adding certified wellness programs. Stay tuned!',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF64748B),
+                                height: 1.3,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            InkWell(
+                              onTap: onViewAllTap,
+                              child: const Text(
+                                'Explore All Categories →',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF4338CA),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
-            },
+            }
+
+            return SizedBox(
+              height: 220,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: courses.length,
+                itemBuilder: (context, index) {
+                  final c = courses[index];
+                  return _OurCourseCard(
+                    course: {
+                      'id': c.id,
+                      'title': c.title,
+                      'price': '₹ ${c.price.toInt()}',
+                      'originalPrice': '₹ ${(c.price * 1.3).toInt()}',
+                      'duration': c.duration,
+                      'rating': '${c.rating}',
+                      'category': c.category,
+                      'badge': 'FEATURED',
+                      'image': c.imageUrl,
+                    },
+                    onCourseTap: onCourseTap,
+                  );
+                },
+              ),
+            );
+          },
+          loading: () => const SizedBox(
+            height: 100,
+            child: Center(child: CircularProgressIndicator()),
           ),
+          error: (err, stack) => const SizedBox.shrink(),
         ),
       ],
     );
@@ -229,291 +277,210 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thumbnail Poster
-            Stack(
-              children: [
-                _buildCourseImage(image),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Thumbnail Poster
+              Stack(
+                children: [
+                  _buildCourseImage(image),
 
-                Positioned.fill(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0x50000000),
-                          Color(0x00000000),
-                          Color(0x70000000),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Top Right Badge & Brand Logo Emblem
-                Positioned(
-                  top: 5,
-                  right: 5,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
-                          ),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          badge,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 7.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 3),
-                      Container(
-                        padding: const EdgeInsets.all(1.5),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(color: Colors.black26, blurRadius: 3),
+                  Positioned.fill(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0x50000000),
+                            Color(0x00000000),
+                            Color(0x70000000),
                           ],
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            AssetPaths.beeBeyondImage2,
-                            width: 17,
-                            height: 17,
-                            fit: BoxFit.cover,
-                          ),
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-                // Top Left Rating Tag
-                Positioned(
-                  top: 5,
-                  left: 5,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.75),
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: Colors.amber, width: 0.7),
                     ),
+                  ),
+
+                  // Top Right Badge & Brand Logo Emblem
+                  Positioned(
+                    top: 5,
+                    right: 5,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.star_rounded, size: 9, color: Colors.amber),
-                        const SizedBox(width: 2),
-                        Text(
-                          rating,
-                          style: const TextStyle(
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                            ),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            badge,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 7.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Container(
+                          padding: const EdgeInsets.all(1.5),
+                          decoration: const BoxDecoration(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 8,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(color: Colors.black26, blurRadius: 3),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              AssetPaths.beeBeyondImage2,
+                              width: 17,
+                              height: 17,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
 
-                // Bottom Right Discount Tag
-                Positioned(
-                  bottom: 5,
-                  right: 5,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Text(
-                      'SPECIAL OFFER',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 7.5,
+                  // Top Left Rating Tag
+                  Positioned(
+                    top: 5,
+                    left: 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: Colors.amber, width: 0.7),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star_rounded, size: 9, color: Colors.amber),
+                          const SizedBox(width: 2),
+                          Text(
+                            rating,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 8,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
 
-            // Card Body Details
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 6, 8, 5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category.toUpperCase(),
-                    style: const TextStyle(
-                      color: Color(0xFF4338CA),
-                      fontSize: 8,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF1E1B4B),
-                      fontWeight: FontWeight.w800,
-                      fontSize: 11.5,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-
-                  // Price Display Row
-                  Row(
-                    children: [
-                      Text(
-                        price,
-                        style: const TextStyle(
-                          color: Color(0xFF1E1B4B),
+                  // Bottom Right Discount Tag
+                  Positioned(
+                    bottom: 5,
+                    right: 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: const Text(
+                        'SPECIAL OFFER',
+                        style: TextStyle(
+                          color: Colors.white,
                           fontWeight: FontWeight.w900,
-                          fontSize: 13,
+                          fontSize: 7.5,
                         ),
                       ),
-                      const SizedBox(width: 5),
-                      Text(
-                        originalPrice,
-                        style: const TextStyle(
-                          color: Color(0xFF9CA3AF),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 9.5,
-                          decoration: TextDecoration.lineThrough,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 6),
+                ],
+              ),
 
-                  // Action Pills Row
-                  Row(
-                    children: [
-                      // Duration
-                      Expanded(
-                        flex: 4,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEEF2FF),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFC7D2FE), width: 0.8),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const AnimatedClockIcon(size: 9.5, color: Color(0xFF312E81)),
-                              const SizedBox(width: 2),
-                              Flexible(
-                                child: Text(
-                                  duration,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Color(0xFF312E81),
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
+              // Card Body Details
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 6, 8, 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      category.toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xFF4338CA),
+                        fontSize: 8,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF1E1B4B),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+
+                    // Price Display Row
+                    Row(
+                      children: [
+                        Text(
+                          price,
+                          style: const TextStyle(
+                            color: Color(0xFF1E1B4B),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
+                        const SizedBox(width: 5),
+                        Text(
+                          originalPrice,
+                          style: const TextStyle(
+                            color: Color(0xFF9CA3AF),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 9.5,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
 
-                      // Enroll Button
-                      Expanded(
-                        flex: 5,
-                        child: GestureDetector(
-                          onTap: () async {
-                            if (_isEnrolled) {
-                              widget.onCourseTap(id);
-                              return;
-                            }
-
-                            setState(() => _isEnrolling = true);
-
-                            await ref.read(joinedCoursesProvider.notifier).joinCourse(
-                              courseId: id,
-                              title: widget.course['title'] ?? '',
-                              imageUrl: widget.course['image'] ?? '',
-                              initialProgress: 0.1,
-                            );
-
-                            await Future.delayed(const Duration(milliseconds: 250));
-
-                            if (mounted) {
-                              setState(() {
-                                _isEnrolling = false;
-                                _isEnrolled = true;
-                              });
-                              widget.onCourseTap(id);
-                            }
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
+                    // Action Pills Row
+                    Row(
+                      children: [
+                        // Duration
+                        Expanded(
+                          flex: 4,
+                          child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 5),
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: _isEnrolled
-                                    ? [const Color(0xFF059669), const Color(0xFF10B981)]
-                                    : [const Color(0xFF4338CA), const Color(0xFF312E81)],
-                              ),
+                              color: const Color(0xFFEEF2FF),
                               borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFC7D2FE), width: 0.8),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                if (_isEnrolling) ...[
-                                  const SizedBox(
-                                    width: 8,
-                                    height: 8,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 1.2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 2),
-                                ] else ...[
-                                  Icon(
-                                    _isEnrolled ? Icons.check_circle_rounded : Icons.flash_on_rounded,
-                                    size: 9.5,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 2),
-                                ],
+                                const AnimatedClockIcon(size: 9.5, color: Color(0xFF312E81)),
+                                const SizedBox(width: 2),
                                 Flexible(
                                   child: Text(
-                                    _isEnrolling
-                                        ? 'Opening...'
-                                        : (_isEnrolled ? 'Enrolled ✓' : 'Enroll Now'),
+                                    duration,
+                                    textAlign: TextAlign.center,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: Color(0xFF312E81),
                                       fontSize: 8.5,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
@@ -521,17 +488,98 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 4),
+
+                        // Enroll Button
+                        Expanded(
+                          flex: 5,
+                          child: GestureDetector(
+                            onTap: () async {
+                              if (_isEnrolled) {
+                                widget.onCourseTap(id);
+                                return;
+                              }
+
+                              setState(() => _isEnrolling = true);
+
+                              await ref.read(joinedCoursesProvider.notifier).joinCourse(
+                                courseId: id,
+                                title: widget.course['title'] ?? '',
+                                imageUrl: widget.course['image'] ?? '',
+                                initialProgress: 0.1,
+                              );
+
+                              await Future.delayed(const Duration(milliseconds: 250));
+
+                              if (mounted) {
+                                setState(() {
+                                  _isEnrolling = false;
+                                  _isEnrolled = true;
+                                });
+                                widget.onCourseTap(id);
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 5),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: _isEnrolled
+                                      ? [const Color(0xFF059669), const Color(0xFF10B981)]
+                                      : [const Color(0xFF4338CA), const Color(0xFF312E81)],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (_isEnrolling) ...[
+                                    const SizedBox(
+                                      width: 8,
+                                      height: 8,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 2),
+                                  ] else ...[
+                                    Icon(
+                                      _isEnrolled ? Icons.check_circle_rounded : Icons.flash_on_rounded,
+                                      size: 9.5,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 2),
+                                  ],
+                                  Flexible(
+                                    child: Text(
+                                      _isEnrolling
+                                          ? 'Opening...'
+                                          : (_isEnrolled ? 'Enrolled ✓' : 'Enroll Now'),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildCourseImage(String imageUrl) {
@@ -543,7 +591,7 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
       );
-    } else {
+    } else if (imageUrl.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: imageUrl,
         height: 85,
@@ -556,6 +604,8 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
         ),
         errorWidget: (context, url, error) => _buildPlaceholder(),
       );
+    } else {
+      return _buildPlaceholder();
     }
   }
 
