@@ -13,7 +13,7 @@ class HomeDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
-    final user = authState.value;
+    final user = authState.user;
 
     final userName = user?.name ?? 'Guest User';
     final userEmail = user?.email ?? 'Please log in';
