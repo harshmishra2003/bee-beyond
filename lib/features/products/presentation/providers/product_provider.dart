@@ -1,11 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../data/datasources/product_remote_ds.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/product_repository.dart';
 
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
-  return ProductRepositoryImpl(ProductRemoteDataSourceImpl());
+  return ProductRepositoryImpl(
+    ProductRemoteDataSourceImpl(ref.watch(dioClientProvider)),
+  );
 });
 
 final allProductsProvider = FutureProvider<List<ProductEntity>>((ref) async {
