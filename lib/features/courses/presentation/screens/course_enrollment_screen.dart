@@ -263,6 +263,8 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
       final studentName = '${_firstNameController.text.trim()} ${_middleNameController.text.trim()} ${_lastNameController.text.trim()}'.replaceAll('  ', ' ');
       final enrollmentId = 'ENR-2025-${(1000 + (widget.courseId.hashCode % 8999)).abs()}';
 
+      if (!mounted) return;
+
       // Navigate to Enrollment Confirmation Receipt Screen
       context.push(
         RoutePaths.enrollmentReceipt,
