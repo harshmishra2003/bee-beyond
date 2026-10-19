@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../routing/route_paths.dart';
 import '../providers/notifications_provider.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -367,53 +365,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 fontSize: 12.5,
                 height: 1.35,
               ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isFiltered) ...[
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      side: const BorderSide(color: Color(0xFF312E81), width: 1.2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedFilter = 'All';
-                      });
-                    },
-                    icon: const Icon(Icons.refresh_rounded, color: Color(0xFF312E81), size: 15),
-                    label: const Text(
-                      'Show All',
-                      style: TextStyle(color: Color(0xFF312E81), fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                ],
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF312E81),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    elevation: 0,
-                  ),
-                  onPressed: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go(RoutePaths.home);
-                    }
-                  },
-                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 15),
-                  label: const Text(
-                    'Back to Home',
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
