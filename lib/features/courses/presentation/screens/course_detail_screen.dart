@@ -98,25 +98,7 @@ class CourseDetailScreen extends ConsumerWidget {
                       ClipRRect(
                         borderRadius:
                             const BorderRadius.vertical(bottom: Radius.circular(24)),
-                        child: course.imageUrl.startsWith('http')
-                            ? CachedNetworkImage(
-                                imageUrl: course.imageUrl,
-                                width: double.infinity,
-                                height: 230,
-                                fit: BoxFit.cover,
-                                errorWidget: (context, url, error) => Container(
-                                  height: 230,
-                                  color: AppColors.surfaceVariant,
-                                  child: const Icon(Icons.school,
-                                      size: 64, color: AppColors.primary),
-                                ),
-                              )
-                            : Container(
-                                height: 230,
-                                color: AppColors.primaryDark,
-                                child: const Icon(Icons.school,
-                                    size: 64, color: Colors.white),
-                              ),
+                        child: _buildHeroBannerImage(course.imageUrl),
                       ),
 
                       // Dark Overlay Gradient
@@ -739,6 +721,64 @@ class CourseDetailScreen extends ConsumerWidget {
                 color: AppColors.textSecondary,
                 height: 1.3,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroBannerImage(String imageUrl) {
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        width: double.infinity,
+        height: 230,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildHeroPlaceholder(),
+      );
+    } else if (imageUrl.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: double.infinity,
+        height: 230,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          height: 230,
+          width: double.infinity,
+          color: const Color(0xFF1E1B4B),
+          child: const Center(child: CircularProgressIndicator(color: Colors.amberAccent)),
+        ),
+        errorWidget: (context, url, error) => _buildHeroPlaceholder(),
+      );
+    } else {
+      return _buildHeroPlaceholder();
+    }
+  }
+
+  Widget _buildHeroPlaceholder() {
+    return Container(
+      height: 230,
+      width: double.infinity,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0F0C20), Color(0xFF1E1B4B), Color(0xFF312E81)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.school_rounded, size: 54, color: Colors.amberAccent),
+          SizedBox(height: 8),
+          Text(
+            'Bee Beeyond Holistic Academy',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
