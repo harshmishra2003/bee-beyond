@@ -8,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/shining_view_all_button.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../cart/presentation/managers/cart_manager.dart';
+import '../../../courses/presentation/providers/course_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../providers/home_provider.dart';
 import '../widgets/category_carousel.dart';
@@ -241,11 +242,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       body: homeDataAsync.when(
-        data: (data) => SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        data: (data) => RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            ref.invalidate(allCoursesProvider);
+            ref.invalidate(homeDataProvider);
+            ref.invalidate(joinedCoursesProvider);
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               const SizedBox(height: 14),
 
               // Search Console Bar
@@ -392,6 +400,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
+      ),
         loading: () => const Center(
           child: Padding(
             padding: EdgeInsets.all(40.0),
