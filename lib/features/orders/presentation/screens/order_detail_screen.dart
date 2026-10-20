@@ -21,7 +21,7 @@ class OrderDetailScreen extends ConsumerWidget {
     return ReceiptEntity(
       receiptId: 'REC-2025-${order.orderId.replaceAll("ORD-", "")}',
       orderId: order.orderId,
-      title: 'Bee Beyond Order ${order.orderId}',
+      title: 'Bee Beeyond Order ${order.orderId}',
       type: 'PRODUCT',
       customerName: 'Aarav Sharma',
       customerPhone: '+91 9876543210',
@@ -51,7 +51,7 @@ class OrderDetailScreen extends ConsumerWidget {
   void _contactSupport(BuildContext context, OrderEntity order) {
     WhatsAppService.launchSupportChat(
       context: context,
-      message: 'Hello Bee Beyond Support, I need assistance regarding my Order ${order.orderId}.',
+      message: 'Hello Bee Beeyond Support, I need assistance regarding my Order ${order.orderId}.',
     );
   }
 
