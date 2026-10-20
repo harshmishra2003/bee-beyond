@@ -16,26 +16,52 @@ class CourseModel extends CourseEntity {
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
     return CourseModel(
-      id: json['id']?.toString() ?? json['course_id']?.toString() ?? '',
-      title: json['title']?.toString() ?? json['name']?.toString() ?? '',
-      description: json['description']?.toString() ?? '',
-      category: json['category']?.toString() ?? json['category_name']?.toString() ?? 'General',
-      subCategory: json['subCategory']?.toString() ?? json['sub_category']?.toString(),
+      id: json['id']?.toString() ??
+          json['course_id']?.toString() ??
+          json['cid']?.toString() ??
+          '',
+      title: json['title']?.toString() ??
+          json['course_title']?.toString() ??
+          json['name']?.toString() ??
+          json['course_name']?.toString() ??
+          '',
+      description: json['description']?.toString() ??
+          json['course_description']?.toString() ??
+          json['details']?.toString() ??
+          json['overview']?.toString() ??
+          '',
+      category: json['category']?.toString() ??
+          json['category_name']?.toString() ??
+          json['cat_name']?.toString() ??
+          'General',
+      subCategory: json['subCategory']?.toString() ??
+          json['sub_category']?.toString() ??
+          json['subcategory']?.toString(),
       imageUrl: json['imageUrl']?.toString() ??
           json['image_url']?.toString() ??
           json['image']?.toString() ??
+          json['banner']?.toString() ??
           json['poster']?.toString() ??
+          json['thumbnail']?.toString() ??
           '',
       price: (json['price'] as num?)?.toDouble() ??
-          double.tryParse(json['price']?.toString() ?? '0') ??
+          (json['course_price'] as num?)?.toDouble() ??
+          double.tryParse(json['price']?.toString() ?? '') ??
+          double.tryParse(json['course_price']?.toString() ?? '') ??
           0.0,
-      duration: json['duration']?.toString() ?? 'Self-Paced',
+      duration: json['duration']?.toString() ??
+          json['course_duration']?.toString() ??
+          json['hours']?.toString() ??
+          'Self-Paced',
       rating: (json['rating'] as num?)?.toDouble() ??
-          double.tryParse(json['rating']?.toString() ?? '5.0') ??
+          (json['avg_rating'] as num?)?.toDouble() ??
+          double.tryParse(json['rating']?.toString() ?? '') ??
           5.0,
       modulesCount: (json['modulesCount'] as num?)?.toInt() ??
           (json['modules_count'] as num?)?.toInt() ??
-          int.tryParse(json['modules']?.toString() ?? '10') ??
+          (json['modules'] as num?)?.toInt() ??
+          int.tryParse(json['modules_count']?.toString() ?? '') ??
+          int.tryParse(json['modules']?.toString() ?? '') ??
           10,
     );
   }
