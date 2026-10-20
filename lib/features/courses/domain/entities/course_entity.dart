@@ -2,21 +2,29 @@ import 'package:equatable/equatable.dart';
 
 class ModuleItemEntity extends Equatable {
   final String id;
-  final String title;
-  final String type; // 'video' or 'pdf'
+  final String moduleTitle;
+  final String lessonTitle;
+  final String description;
+  final String type; // 'video', 'pdf', 'text'
   final String mediaUrl;
   final String durationOrSize;
 
   const ModuleItemEntity({
     required this.id,
-    required this.title,
+    required this.moduleTitle,
+    required this.lessonTitle,
+    this.description = '',
     required this.type,
     required this.mediaUrl,
     required this.durationOrSize,
   });
 
+  String get title =>
+      lessonTitle.isNotEmpty ? '$moduleTitle • $lessonTitle' : moduleTitle;
+
   @override
-  List<Object?> get props => [id, title, type, mediaUrl, durationOrSize];
+  List<Object?> get props =>
+      [id, moduleTitle, lessonTitle, description, type, mediaUrl, durationOrSize];
 }
 
 class CourseEntity extends Equatable {
@@ -33,6 +41,7 @@ class CourseEntity extends Equatable {
   final int modulesCount;
   final List<String> learnings;
   final List<ModuleItemEntity> modulesList;
+  final DateTime? createdAt;
 
   const CourseEntity({
     required this.id,
@@ -48,7 +57,15 @@ class CourseEntity extends Equatable {
     required this.modulesCount,
     this.learnings = const [],
     this.modulesList = const [],
+    this.createdAt,
   });
+
+  bool get isNewCourse {
+    if (createdAt == null) return false;
+    final now = DateTime.now();
+    final diffInHours = now.difference(createdAt!).inHours;
+    return diffInHours >= 0 && diffInHours <= 48;
+  }
 
   @override
   List<Object?> get props => [
@@ -65,5 +82,6 @@ class CourseEntity extends Equatable {
         modulesCount,
         learnings,
         modulesList,
+        createdAt,
       ];
 }
