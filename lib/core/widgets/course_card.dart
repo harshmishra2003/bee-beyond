@@ -27,6 +27,40 @@ class CourseCard extends StatelessWidget {
     this.onJoinGroup,
   });
 
+  Widget _buildCourseImage(String url) {
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        height: 130,
+        width: double.infinity,
+        fit: BoxFit.cover,
+      );
+    } else if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        height: 130,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          height: 130,
+          color: AppColors.surfaceVariant,
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+        errorWidget: (context, url, error) => Container(
+          height: 130,
+          color: AppColors.surfaceVariant,
+          child: const Icon(Icons.school, size: 40, color: AppColors.textHint),
+        ),
+      );
+    } else {
+      return Container(
+        height: 130,
+        color: AppColors.surfaceVariant,
+        child: const Icon(Icons.school, size: 40, color: AppColors.textHint),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -54,22 +88,7 @@ class CourseCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    height: 130,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: 130,
-                      color: AppColors.surfaceVariant,
-                      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 130,
-                      color: AppColors.surfaceVariant,
-                      child: const Icon(Icons.school, size: 40, color: AppColors.textHint),
-                    ),
-                  ),
+                  child: _buildCourseImage(imageUrl),
                 ),
                 Positioned(
                   top: 10,
