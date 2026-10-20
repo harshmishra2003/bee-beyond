@@ -192,6 +192,8 @@ class OurCoursesSection extends ConsumerWidget {
                       'category': c.category,
                       'badge': 'FEATURED',
                       'image': c.imageUrl,
+                      'is_new': c.isNewCourse,
+                      'createdAt': c.createdAt?.toIso8601String(),
                     },
                     onCourseTap: onCourseTap,
                   );
@@ -245,8 +247,13 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
     if (rawDate != null && rawDate.isNotEmpty) {
       try { createdAt = DateTime.tryParse(rawDate); } catch (_) {}
     }
-    final bool isNewFlag = (widget.course['is_new'] == true || widget.course['is_new']?.toString() == '1');
-    final bool showNewLottie = isNewFlag || (createdAt != null && DateTime.now().difference(createdAt).inHours <= 48);
+    final bool isNewFlag = (widget.course['is_new'] == true ||
+        widget.course['is_new']?.toString() == '1' ||
+        widget.course['isNew'] == true ||
+        widget.course['isNew']?.toString() == '1');
+    final bool showNewLottie = isNewFlag ||
+        createdAt == null ||
+        (createdAt != null && DateTime.now().difference(createdAt).inDays.abs() <= 30);
 
     return Container(
       width: 240,
@@ -317,16 +324,48 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (showNewLottie) ...[
-                          SizedBox(
-                            width: 38,
-                            height: 22,
-                            child: Lottie.asset(
-                              AssetPaths.lottieNewBadge,
-                              fit: BoxFit.contain,
-                              repeat: true,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xCC0F172A),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.7), width: 1),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x40EF4444),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: SizedBox(
+                              width: 38,
+                              height: 22,
+                              child: Lottie.asset(
+                                AssetPaths.lottieNewBadge,
+                                fit: BoxFit.contain,
+                                repeat: true,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'NEW',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8.5,
+                                      fontWeight: FontWeight.black,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 3),
+                          const SizedBox(width: 4),
                         ] else ...[
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
