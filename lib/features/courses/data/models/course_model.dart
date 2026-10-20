@@ -8,13 +8,46 @@ class CourseModel extends CourseEntity {
     required super.category,
     super.subCategory,
     required super.imageUrl,
+    super.trailerUrl = '',
     required super.price,
     required super.duration,
     required super.rating,
     required super.modulesCount,
   });
 
+  static String _formatUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return '';
+    final trimmed = url.trim();
+    if (trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('assets/')) {
+      return trimmed;
+    }
+    if (trimmed.startsWith('/')) {
+      return 'https://metricstestingapp.xyz$trimmed';
+    }
+    return 'https://metricstestingapp.xyz/api/$trimmed';
+  }
+
   factory CourseModel.fromJson(Map<String, dynamic> json) {
+    final rawImageUrl = json['imageUrl']?.toString() ??
+        json['image_url']?.toString() ??
+        json['image']?.toString() ??
+        json['thumbnail']?.toString() ??
+        json['thumb']?.toString() ??
+        json['course_image']?.toString() ??
+        json['banner']?.toString() ??
+        json['poster']?.toString() ??
+        '';
+
+    final rawTrailerUrl = json['trailerUrl']?.toString() ??
+        json['trailer_url']?.toString() ??
+        json['trailer']?.toString() ??
+        json['video_url']?.toString() ??
+        json['video']?.toString() ??
+        json['demo_video']?.toString() ??
+        '';
+
     return CourseModel(
       id: json['id']?.toString() ??
           json['course_id']?.toString() ??
@@ -37,13 +70,8 @@ class CourseModel extends CourseEntity {
       subCategory: json['subCategory']?.toString() ??
           json['sub_category']?.toString() ??
           json['subcategory']?.toString(),
-      imageUrl: json['imageUrl']?.toString() ??
-          json['image_url']?.toString() ??
-          json['image']?.toString() ??
-          json['banner']?.toString() ??
-          json['poster']?.toString() ??
-          json['thumbnail']?.toString() ??
-          '',
+      imageUrl: _formatUrl(rawImageUrl),
+      trailerUrl: _formatUrl(rawTrailerUrl),
       price: (json['price'] as num?)?.toDouble() ??
           (json['course_price'] as num?)?.toDouble() ??
           double.tryParse(json['price']?.toString() ?? '') ??
@@ -74,6 +102,7 @@ class CourseModel extends CourseEntity {
       'category': category,
       'subCategory': subCategory,
       'imageUrl': imageUrl,
+      'trailerUrl': trailerUrl,
       'price': price,
       'duration': duration,
       'rating': rating,
