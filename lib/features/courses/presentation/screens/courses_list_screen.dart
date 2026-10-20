@@ -198,6 +198,8 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
                               price: course.price,
                               duration: course.duration,
                               rating: course.rating,
+                              createdAt: course.createdAt,
+                              isNew: course.isNewCourse,
                               onTap: () => context.push('${RoutePaths.courseDetail}?id=${course.id}'),
                               onJoinGroup: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
