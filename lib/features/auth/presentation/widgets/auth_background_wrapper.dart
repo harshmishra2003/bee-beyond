@@ -130,7 +130,7 @@ class _AuthBackgroundWrapperState extends State<AuthBackgroundWrapper> with Sing
                         ),
                       ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 12),
 
                     // Official Brand Banner Logo Image
                     Padding(
@@ -149,7 +149,7 @@ class _AuthBackgroundWrapperState extends State<AuthBackgroundWrapper> with Sing
                       ),
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 38),
 
                     // Form Card Child Widget
                     widget.child,
