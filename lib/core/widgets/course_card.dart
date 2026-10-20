@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import '../constants/asset_paths.dart';
 import '../theme/app_colors.dart';
 import '../utils/currency_utils.dart';
@@ -14,6 +15,8 @@ class CourseCard extends StatelessWidget {
   final double rating;
   final VoidCallback onTap;
   final VoidCallback? onJoinGroup;
+  final DateTime? createdAt;
+  final bool isNew;
 
   const CourseCard({
     super.key,
@@ -26,7 +29,18 @@ class CourseCard extends StatelessWidget {
     required this.rating,
     required this.onTap,
     this.onJoinGroup,
+    this.createdAt,
+    this.isNew = false,
   });
+
+  bool get _shouldShowNewBadge {
+    if (isNew) return true;
+    if (createdAt != null) {
+      final diffInHours = DateTime.now().difference(createdAt!).inHours;
+      return diffInHours >= 0 && diffInHours <= 48; // Disappears after 48 hours (2 days)
+    }
+    return false;
+  }
 
   Widget _buildPlaceholder() {
     return Container(
@@ -114,7 +128,7 @@ class CourseCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // LEFT SIDE: FULLY VISIBLE IMAGE THUMBNAIL (NO CROPPING / ZERO CUT)
+                // LEFT SIDE: FULLY VISIBLE IMAGE THUMBNAIL WITH NEW BADGE OVERLAY
                 Container(
                   width: 115,
                   height: 110,
@@ -135,32 +149,35 @@ class CourseCard extends StatelessWidget {
                       Positioned(
                         top: 4,
                         right: 4,
-                        child: Container(
-                          padding: const EdgeInsets.all(1.5),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(color: Colors.black26, blurRadius: 3),
-                            ],
-                          ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              AssetPaths.beeBeyondImage2,
-                              width: 16,
-                              height: 16,
-                              fit: BoxFit.cover,
+                        child: Image.asset(
+                          AssetPaths.beeBeyondEmblem,
+                          width: 22,
+                          height: 22,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      // Top Left "NEW" Lottie Animated Badge (Visible for 2 days from creation)
+                      if (_shouldShowNewBadge)
+                        Positioned(
+                          top: 2,
+                          left: 2,
+                          child: SizedBox(
+                            width: 38,
+                            height: 24,
+                            child: Lottie.asset(
+                              AssetPaths.lottieNewBadge,
+                              fit: BoxFit.contain,
+                              repeat: true,
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
 
                 const SizedBox(width: 14),
 
-                // RIGHT SIDE: EXPANDED DETAILS (AMAZON / FLIPKART STYLE)
+                // RIGHT SIDE: EXPANDED DETAILS
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
