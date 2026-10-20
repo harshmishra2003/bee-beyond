@@ -8,6 +8,7 @@ import '../../../../core/services/whatsapp_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/shining_join_group_button.dart';
 import '../../../../routing/route_paths.dart';
 import '../../domain/entities/joined_course_entity.dart';
 import '../providers/course_provider.dart';
@@ -484,13 +485,12 @@ class _JoinedCoursesScreenState extends ConsumerState<JoinedCoursesScreen> {
                       flex: 5,
                       child: SizedBox(
                         height: 38,
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            side: const BorderSide(color: Color(0xFF10B981), width: 1.2),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            backgroundColor: const Color(0xFFECFDF5),
-                          ),
+                        child: ShiningJoinGroupButton(
+                          text: 'STUDY GROUP',
+                          fontSize: 10.5,
+                          iconSize: 18,
+                          borderRadius: 10,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           onPressed: () {
                             WhatsAppService.joinWhatsAppGroup(
                               context: context,
@@ -498,15 +498,6 @@ class _JoinedCoursesScreenState extends ConsumerState<JoinedCoursesScreen> {
                               courseTitle: course.title,
                             );
                           },
-                          icon: const Icon(Icons.groups_rounded, color: Color(0xFF059669), size: 18),
-                          label: const Text(
-                            'STUDY GROUP',
-                            style: TextStyle(
-                              color: Color(0xFF059669),
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                         ),
                       ),
                     ),
