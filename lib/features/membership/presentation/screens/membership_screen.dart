@@ -1,8 +1,6 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/asset_paths.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
@@ -118,31 +116,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       textColor: Colors.white,
       icon: Icons.military_tech_rounded,
       benefits: [
-        '25% Flat Discount on All Certified Masterclasses & Products',
-        'Free VIP Vastu Assessment Report (Worth ₹1,500)',
-        'Dedicated Personal Wellness Coach on WhatsApp',
-        'Exclusive Early Access to New Course Modules',
-      ],
-    ),
-    MembershipPlan(
-      id: 'plan_diamond',
-      name: 'Diamond VIP Membership Card',
-      tag: 'ULTIMATE DIAMOND CUT PASS',
-      price: 2000.0,
-      duration: '1 YEAR VIP ACCESS',
-      gradientColors: [Color(0xFF0288D1), Color(0xFF00695C), Color(0xFF00ACC1), Color(0xFF80DEEA)],
-      shineColors: [
-        Colors.transparent,
-        Color(0x5080DEEA),
-        Color(0xFFE0F7FA),
-        Color(0x5080DEEA),
-        Colors.transparent,
-      ],
-      accentColor: Color(0xFF00838F),
-      textColor: Colors.white,
-      icon: Icons.diamond_rounded,
-      benefits: [
-        '40% FLAT OFF ON EVERYTHING Across Bee Beyond Portal',
+        '40% FLAT OFF ON EVERYTHING Across Bee Beeyond Portal',
         '1-on-1 Personal Video Consultation with Doctor (1 Hour)',
         'Unlimited Lifetime Video Workshop Recordings Access',
         'Free Express Pan-India Delivery & Priority Tax Invoices',
@@ -155,7 +129,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     super.initState();
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2600),
+      duration: const Duration(milliseconds: 2800),
     )..repeat();
   }
 
@@ -166,32 +140,18 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
   }
 
   void _subscribePlan(MembershipPlan plan) {
-    showDialog(
-      context: context,
-      builder: (ctx) => _MembershipPurchaseDialog(
-        plan: plan,
-        onConfirm: () {
-          Navigator.pop(ctx);
-          _completeMembershipPurchase(plan);
-        },
-      ),
-    );
-  }
+    final receiptId = 'REC-2025-${(1000 + plan.id.hashCode % 8999).abs()}';
+    final orderId = 'MBR-2025-${(5000 + plan.id.hashCode % 4999).abs()}';
 
-  void _completeMembershipPurchase(MembershipPlan plan) {
-    final randomId = (1000 + math.Random().nextInt(8999)).toString();
-    final receiptId = 'REC-2025-VIP-$randomId';
-    final orderId = 'MEM-2025-$randomId';
-
-    final receipt = ReceiptEntity(
+    final newReceipt = ReceiptEntity(
       receiptId: receiptId,
       orderId: orderId,
-      title: '${plan.name} (${plan.duration})',
+      title: plan.name,
       type: 'SERVICE',
       customerName: 'Aarav Sharma',
       customerPhone: '+91 9876543210',
       customerEmail: 'aarav@example.com',
-      deliveryAddress: 'Online VIP Membership Access Pass (Bee Beyond Portal)',
+      deliveryAddress: 'Online VIP Membership Access Pass (Bee Beeyond Portal)',
       items: [
         ReceiptItem(name: plan.name, quantity: 1, unitPrice: plan.price),
       ],
@@ -199,22 +159,22 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       gstRate: 0.18,
       deliveryFee: 0.0,
       discount: 0.0,
-      paymentMethod: 'UPI / VIP Gateway',
+      paymentMethod: 'UPI / Card (Online)',
       date: DateTime.now(),
     );
 
-    ref.read(receiptsProvider.notifier).addReceipt(receipt);
+    ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Congratulations! You are now subscribed to ${plan.name}!'),
-        backgroundColor: AppColors.success,
+        content: Text('Subscribed to ${plan.name} successfully!'),
+        backgroundColor: const Color(0xFF10B981),
       ),
     );
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ReceiptPreviewScreen(receipt: receipt),
+        builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
       ),
     );
   }
@@ -222,27 +182,31 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
-      appBar: const CustomAppBar(title: 'VIP Membership & Healing Passes'),
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: const CustomAppBar(title: 'VIP Membership Cards'),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // ANIMATED & CRISP HEADER ANNOUNCEMENT BANNER
+            // ANIMATED HEADER BANNER
             const _AnimatedHeaderBanner(),
 
             const SizedBox(height: 20),
 
-            // MEMBERSHIP CARDS LIST WITH METALLIC SHIMMER & BRAND EMBLEM
-            ..._plans.map((plan) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: _buildShimmeringMembershipCard(plan),
-              );
-            }),
+            // MEMBERSHIP CARDS LIST
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _plans.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 20),
+              itemBuilder: (context, index) {
+                final plan = _plans[index];
+                return _buildShimmeringMembershipCard(plan);
+              },
+            ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -282,7 +246,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Card Header Row (No Overlap with Top-Right Emblem)
+                  // Card Header Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -321,7 +285,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                         ],
                       ),
                       // Reserved Space for Top Right Brand Emblem
-                      const SizedBox(width: 32),
+                      const SizedBox(width: 36),
                     ],
                   ),
 
@@ -399,31 +363,32 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
               ),
             ),
 
-            // TOP RIGHT CORNER BRAND LOGO EMBLEM (CLEANLY POSITIONED WITH ZERO OVERLAP)
+            // BACKGROUND TRANSPARENT COLOR-ADAPTIVE EMBLEM WATERMARK
+            Positioned(
+              right: -15,
+              bottom: -15,
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: 0.22,
+                  child: Image.asset(
+                    AssetPaths.beeBeyondEmblem,
+                    width: 165,
+                    height: 165,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+
+            // TOP RIGHT CORNER TRANSPARENT EMBLEM LOGO (NO WHITE BG)
             Positioned(
               top: 14,
               right: 14,
-              child: Container(
-                padding: const EdgeInsets.all(2.5),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 5,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    AssetPaths.beeBeyondImage2,
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+              child: Image.asset(
+                AssetPaths.beeBeyondEmblem,
+                width: 36,
+                height: 36,
+                fit: BoxFit.contain,
               ),
             ),
 
@@ -514,30 +479,12 @@ class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
               ),
               child: Row(
                 children: [
-                  // Crisp & Sharp White Avatar Badge for Bee Beyond Emblem Logo
-                  Container(
+                  // Fully Transparent Bee Beeyond Emblem Logo
+                  Image.asset(
+                    AssetPaths.beeBeyondEmblem,
                     width: 48,
                     height: 48,
-                    padding: const EdgeInsets.all(3),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        AssetPaths.beeBeyondImage2,
-                        width: 42,
-                        height: 42,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    fit: BoxFit.contain,
                   ),
 
                   const SizedBox(width: 14),
@@ -550,7 +497,7 @@ class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
                         Row(
                           children: [
                             Text(
-                              'BEE BEYOND HEALING PASSES',
+                              'BEE BEEYOND HEALING PASSES',
                               style: TextStyle(
                                 color: Colors.amberAccent,
                                 fontSize: 10,
@@ -582,34 +529,6 @@ class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
                 ],
               ),
             ),
-
-            // Animated Light Streak Shine Overlay
-            Positioned.fill(
-              child: IgnorePointer(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: ShaderMask(
-                    shaderCallback: (bounds) {
-                      final pos = animVal * 2.8 - 0.9;
-                      return LinearGradient(
-                        colors: const [
-                          Colors.transparent,
-                          Colors.white10,
-                          Colors.white38,
-                          Colors.white10,
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.4, 0.5, 0.6, 1.0],
-                        begin: Alignment(pos - 1.0, -0.5),
-                        end: Alignment(pos, 0.5),
-                      ).createShader(bounds);
-                    },
-                    blendMode: BlendMode.srcATop,
-                    child: Container(color: Colors.white.withAlpha(1)),
-                  ),
-                ),
-              ),
-            ),
           ],
         );
       },
@@ -617,21 +536,21 @@ class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
   }
 }
 
-// DIGITAL CLOCK ROLL-DOWN ANIMATED PRICE COUNTER WIDGET
-class _DigitalClockRollCounter extends StatefulWidget {
-  final double targetAmount;
-  final TextStyle style;
+// SHINING PULSING SUBSCRIBE BUTTON
+class _ShiningPulsingSubscribeButton extends StatefulWidget {
+  final MembershipPlan plan;
+  final VoidCallback onPressed;
 
-  const _DigitalClockRollCounter({
-    required this.targetAmount,
-    required this.style,
+  const _ShiningPulsingSubscribeButton({
+    required this.plan,
+    required this.onPressed,
   });
 
   @override
-  State<_DigitalClockRollCounter> createState() => _DigitalClockRollCounterState();
+  State<_ShiningPulsingSubscribeButton> createState() => _ShiningPulsingSubscribeButtonState();
 }
 
-class _DigitalClockRollCounterState extends State<_DigitalClockRollCounter>
+class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribeButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -640,8 +559,8 @@ class _DigitalClockRollCounterState extends State<_DigitalClockRollCounter>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..forward();
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -655,43 +574,67 @@ class _DigitalClockRollCounterState extends State<_DigitalClockRollCounter>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final progress = _controller.value;
-        final currentVal = widget.targetAmount *
-            CurvedAnimation(
-              parent: _controller,
-              curve: Curves.easeOutCubic,
-            ).value;
+        final pulseScale = 1.0 + (_controller.value * 0.03);
 
-        final formattedText = CurrencyUtils.formatINR(currentVal);
-
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: List.generate(formattedText.length, (index) {
-            final char = formattedText[index];
-            final stagger = (index * 0.08).clamp(0.0, 0.4);
-            final charProgress = ((progress - stagger) / (1.0 - stagger)).clamp(0.0, 1.0);
-            final rollY = (1.0 - charProgress) * -1.2;
-
-            return Transform.translate(
-              offset: Offset(0, rollY * 20),
-              child: Opacity(
-                opacity: charProgress.clamp(0.1, 1.0),
-                child: Text(
-                  char,
-                  style: widget.style,
-                ),
+        return Transform.scale(
+          scale: pulseScale,
+          child: SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: widget.plan.isPopular ? Colors.amberAccent : Colors.white,
+                foregroundColor: widget.plan.isPopular ? const Color(0xFF78350F) : widget.plan.accentColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: widget.plan.isPopular ? 4 : 0,
               ),
-            );
-          }),
+              onPressed: widget.onPressed,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'CLAIM ${widget.plan.tag}',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_rounded, size: 18),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
   }
 }
 
-// ZOOM-IN ZOOM-OUT ANIMATION WIDGET FOR STICKERS
+// DIGITAL CLOCK ROLL-DOWN ANIMATED COUNTER
+class _DigitalClockRollCounter extends StatelessWidget {
+  final double targetAmount;
+  final TextStyle style;
+
+  const _DigitalClockRollCounter({
+    required this.targetAmount,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: targetAmount),
+      duration: const Duration(milliseconds: 1400),
+      curve: Curves.easeOutBack,
+      builder: (context, val, child) {
+        return Text(
+          CurrencyUtils.formatINR(val),
+          style: style,
+        );
+      },
+    );
+  }
+}
+
+// ZOOMING WIDGET
 class _ZoomingWidget extends StatefulWidget {
   final Widget child;
 
@@ -701,10 +644,8 @@ class _ZoomingWidget extends StatefulWidget {
   State<_ZoomingWidget> createState() => _ZoomingWidgetState();
 }
 
-class _ZoomingWidgetState extends State<_ZoomingWidget>
-    with SingleTickerProviderStateMixin {
+class _ZoomingWidgetState extends State<_ZoomingWidget> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _scaleAnim;
 
   @override
   void initState() {
@@ -713,10 +654,6 @@ class _ZoomingWidgetState extends State<_ZoomingWidget>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-
-    _scaleAnim = Tween<double>(begin: 0.92, end: 1.10).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
   }
 
   @override
@@ -727,254 +664,12 @@ class _ZoomingWidgetState extends State<_ZoomingWidget>
 
   @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _scaleAnim,
-      child: widget.child,
-    );
-  }
-}
-
-// SHINING & PULSING POP-UP/DOWN SUBSCRIBE BUTTON WIDGET
-class _ShiningPulsingSubscribeButton extends StatefulWidget {
-  final MembershipPlan plan;
-  final VoidCallback onPressed;
-
-  const _ShiningPulsingSubscribeButton({
-    required this.plan,
-    required this.onPressed,
-  });
-
-  @override
-  State<_ShiningPulsingSubscribeButton> createState() =>
-      __ShiningPulsingSubscribeButtonState();
-}
-
-class __ShiningPulsingSubscribeButtonState
-    extends State<_ShiningPulsingSubscribeButton>
-    with TickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late AnimationController _shineController;
-  late Animation<double> _scaleAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-
-    _shineController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    )..repeat();
-
-    _scaleAnim = Tween<double>(begin: 0.98, end: 1.04).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    _shineController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_pulseController, _shineController]),
+      animation: _controller,
       builder: (context, child) {
-        final shinePos = _shineController.value * 3.0 - 1.0;
-
-        return ScaleTransition(
-          scale: _scaleAnim,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withAlpha(140),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: widget.plan.accentColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 4,
-                    ),
-                    onPressed: widget.onPressed,
-                    icon: Icon(Icons.bolt_rounded, color: widget.plan.accentColor, size: 20),
-                    label: Text(
-                      'SUBSCRIBE NOW →',
-                      style: TextStyle(
-                        color: widget.plan.accentColor,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Button Light Streak Shine
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: ShaderMask(
-                        shaderCallback: (bounds) {
-                          return LinearGradient(
-                            colors: const [
-                              Colors.transparent,
-                              Colors.white10,
-                              Colors.white70,
-                              Colors.white10,
-                              Colors.transparent,
-                            ],
-                            stops: const [0.0, 0.4, 0.5, 0.6, 1.0],
-                            begin: Alignment(shinePos - 1.0, -0.5),
-                            end: Alignment(shinePos, 0.5),
-                          ).createShader(bounds);
-                        },
-                        blendMode: BlendMode.srcATop,
-                        child: Container(color: Colors.white.withAlpha(1)),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+        final scale = 1.0 + (_controller.value * 0.08);
+        return Transform.scale(scale: scale, child: widget.child);
       },
-    );
-  }
-}
-
-// PURCHASE CONFIRMATION DIALOG
-class _MembershipPurchaseDialog extends StatelessWidget {
-  final MembershipPlan plan;
-  final VoidCallback onConfirm;
-
-  const _MembershipPurchaseDialog({
-    required this.plan,
-    required this.onConfirm,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final gst = plan.price * 0.18;
-    final grandTotal = plan.price + gst;
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.all(22.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: plan.gradientColors.first.withAlpha(50),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(plan.icon, color: plan.gradientColors.first, size: 28),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(plan.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                      Text(plan.duration, style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text('Financial Summary (Incl. 18% GST):', style: TextStyle(fontSize: 11.5, color: AppColors.textHint, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Column(
-                children: [
-                  _buildRow('Base Pass Fee', CurrencyUtils.formatINR(plan.price)),
-                  const SizedBox(height: 4),
-                  _buildRow('CGST (9%)', CurrencyUtils.formatINR(gst / 2)),
-                  const SizedBox(height: 4),
-                  _buildRow('SGST (9%)', CurrencyUtils.formatINR(gst / 2)),
-                  const Divider(height: 16, color: AppColors.divider),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('TOTAL PAYABLE', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
-                      Text(CurrencyUtils.formatINR(grandTotal), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel', style: TextStyle(color: AppColors.textHint)),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    onPressed: onConfirm,
-                    child: const Text('PAY & SUBSCRIBE →', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-        Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-      ],
     );
   }
 }
