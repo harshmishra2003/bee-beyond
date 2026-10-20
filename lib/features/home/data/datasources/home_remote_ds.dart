@@ -145,7 +145,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       BannerModel(
         id: 'b_4',
         imageUrl: AssetPaths.beeBeyondImage1,
-        title: 'Bee Beyond - Transform Mind, Body & Soul',
+        title: 'Bee Beeyond - Transform Mind, Body & Soul',
       ),
       BannerModel(
         id: 'b_5',
