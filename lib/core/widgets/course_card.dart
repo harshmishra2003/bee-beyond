@@ -4,6 +4,7 @@ import 'package:lottie/lottie.dart';
 import '../constants/asset_paths.dart';
 import '../theme/app_colors.dart';
 import '../utils/currency_utils.dart';
+import 'shining_join_group_button.dart';
 
 class CourseCard extends StatelessWidget {
   final String title;
@@ -295,33 +296,9 @@ class CourseCard extends StatelessWidget {
                           ),
 
                           if (onJoinGroup != null)
-                            InkWell(
-                              onTap: onJoinGroup,
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF25D366),
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: const [
-                                    BoxShadow(color: Color(0x2025D366), blurRadius: 4, offset: Offset(0, 2)),
-                                  ],
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.groups_rounded, size: 13, color: Colors.white),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Join Group',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            ShiningJoinGroupButton(
+                              onPressed: onJoinGroup!,
+                              text: 'Join Group',
                             ),
                         ],
                       ),
