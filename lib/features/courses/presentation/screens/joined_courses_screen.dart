@@ -344,18 +344,7 @@ class _JoinedCoursesScreenState extends ConsumerState<JoinedCoursesScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: CachedNetworkImage(
-                            imageUrl: course.imageUrl,
-                            width: 85,
-                            height: 75,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) => Container(
-                              width: 85,
-                              height: 75,
-                              color: AppColors.primary,
-                              child: const Icon(Icons.school_rounded, color: Colors.white),
-                            ),
-                          ),
+                          child: _buildCourseImage(course.imageUrl),
                         ),
                         Positioned(
                           top: 4,
@@ -566,6 +555,44 @@ class _JoinedCoursesScreenState extends ConsumerState<JoinedCoursesScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCourseImage(String url) {
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        width: 85,
+        height: 75,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+      );
+    } else if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        width: 85,
+        height: 75,
+        fit: BoxFit.cover,
+        errorWidget: (context, url, error) => _buildPlaceholder(),
+      );
+    } else {
+      return _buildPlaceholder();
+    }
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      width: 85,
+      height: 75,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Icon(Icons.school_rounded, color: AppColors.primary, size: 28),
     );
   }
 }
