@@ -1,18 +1,17 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../routing/route_paths.dart';
 import '../../../cart/domain/entities/cart_item_entity.dart';
 import '../../../cart/presentation/managers/cart_manager.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
-import '../../../orders/presentation/screens/receipt_preview_screen.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -24,388 +23,89 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Shipping Fields
-  final _nameController = TextEditingController(text: 'Aarav Sharma');
-  final _phoneController = TextEditingController(text: '+91 9876543210');
-  final _emailController = TextEditingController(text: 'aarav@example.com');
-  final _addressController = TextEditingController(text: 'Flat 302, Green Heights, MG Road');
-  final _cityController = TextEditingController(text: 'Mumbai');
-  final _stateController = TextEditingController(text: 'Maharashtra');
-  final _pincodeController = TextEditingController(text: '400001');
+  // Contact & Delivery Controllers
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _pincodeController = TextEditingController();
 
-  // Pre-saved addresses
-  final List<Map<String, String>> _savedAddresses = [
-    {
-      'id': 'home',
-      'label': '🏠 Home',
-      'name': 'Aarav Sharma',
-      'phone': '+91 9876543210',
-      'email': 'aarav@example.com',
-      'address': 'Flat 302, Green Heights, MG Road',
-      'city': 'Mumbai',
-      'state': 'Maharashtra',
-      'pincode': '400001',
-    },
-    {
-      'id': 'office',
-      'label': '🏢 Office',
-      'name': 'Aarav Sharma',
-      'phone': '+91 9876543210',
-      'email': 'aarav@example.com',
-      'address': '4th Floor, MindSpace Tech Park, Malad West',
-      'city': 'Mumbai',
-      'state': 'Maharashtra',
-      'pincode': '400064',
-    },
-  ];
+  String _paymentCategory = 'upi'; // 'upi', 'card', 'netbanking', 'cod'
+  String _selectedUpiApp = 'gpay';
+  final _vpaController = TextEditingController();
 
-  String _selectedAddressId = 'home';
-
-  // Card Payment Fields
   final _cardNumberController = TextEditingController();
   final _cardExpiryController = TextEditingController();
   final _cardCvvController = TextEditingController();
-  final _cardHolderController = TextEditingController();
 
-  // Custom UPI ID Field
-  final _upiIdController = TextEditingController();
-
-  String _paymentCategory = 'upi'; // 'upi', 'card', 'netbanking', 'wallet', 'cod'
-  String _selectedUpiApp = 'gpay'; // 'gpay', 'phonepe', 'paytm', 'bhim', 'custom'
   String _selectedBank = 'HDFC Bank';
   bool _isProcessingPayment = false;
 
   final List<Map<String, String>> _upiApps = [
-    {'id': 'gpay', 'name': 'Google Pay', 'icon': '🌀', 'vpa': 'beebeyond@okaxis'},
-    {'id': 'phonepe', 'name': 'PhonePe', 'icon': '🟣', 'vpa': 'beebeyond@ybl'},
-    {'id': 'paytm', 'name': 'Paytm UPI', 'icon': '🔵', 'vpa': 'beebeyond@paytm'},
-    {'id': 'bhim', 'name': 'BHIM UPI', 'icon': '🇮🇳', 'vpa': 'beebeyond@upi'},
+    {'id': 'gpay', 'name': 'Google Pay', 'icon': '🌀', 'vpa': 'beebeeyond@okaxis'},
+    {'id': 'phonepe', 'name': 'PhonePe', 'icon': '🟣', 'vpa': 'beebeeyond@ybl'},
+    {'id': 'paytm', 'name': 'Paytm UPI', 'icon': '🔵', 'vpa': 'beebeeyond@paytm'},
+    {'id': 'bhim', 'name': 'BHIM UPI', 'icon': '🇮🇳', 'vpa': 'beebeeyond@upi'},
     {'id': 'custom', 'name': 'Enter UPI ID / VPA', 'icon': '⚡', 'vpa': ''},
   ];
 
-  final List<String> _banks = [
+  final List<String> _popularBanks = [
     'HDFC Bank',
-    'ICICI Bank',
     'State Bank of India (SBI)',
+    'ICICI Bank',
     'Axis Bank',
     'Kotak Mahindra Bank',
-    'Punjab National Bank',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Prefill user details if available
+    _nameController.text = 'Aarav Sharma';
+    _emailController.text = 'aarav.sharma@example.com';
+    _phoneController.text = '+91 9876543210';
+    _streetController.text = 'Flat 402, Green Meadows, MG Road';
+    _cityController.text = 'Mumbai';
+    _pincodeController.text = '400001';
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _phoneController.dispose();
     _emailController.dispose();
-    _addressController.dispose();
+    _phoneController.dispose();
+    _streetController.dispose();
     _cityController.dispose();
-    _stateController.dispose();
     _pincodeController.dispose();
+    _vpaController.dispose();
     _cardNumberController.dispose();
     _cardExpiryController.dispose();
     _cardCvvController.dispose();
-    _cardHolderController.dispose();
-    _upiIdController.dispose();
     super.dispose();
   }
 
-  void _applySavedAddress(Map<String, String> addr) {
-    setState(() {
-      _selectedAddressId = addr['id']!;
-      _nameController.text = addr['name']!;
-      _phoneController.text = addr['phone']!;
-      _emailController.text = addr['email']!;
-      _addressController.text = addr['address']!;
-      _cityController.text = addr['city']!;
-      _stateController.text = addr['state']!;
-      _pincodeController.text = addr['pincode']!;
-    });
-  }
-
-  // GPS Current Location Detection Flow
-  void _fetchGpsCurrentLocation() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => _GpsLocationFetcherModal(
-        onSuccess: (detectedData) {
-          Navigator.pop(ctx);
-          _showLocationSuccessDialog(detectedData);
-        },
-        onError: (errMsg) {
-          Navigator.pop(ctx);
-          _showLocationErrorDialog(errMsg);
-        },
-      ),
-    );
-  }
-
-  void _showLocationSuccessDialog(Map<String, String> data) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.white,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Color(0xFFECFDF5),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 24),
-            ),
-            const SizedBox(width: 10),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('GPS Location Detected!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  Text('High-Accuracy Satellite Lock', style: TextStyle(fontSize: 10.5, color: AppColors.textSecondary)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Detected Current Location:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Street: ${data['address']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  const SizedBox(height: 2),
-                  Text('City & State: ${data['city']}, ${data['state']}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-                  Text('PIN Code: ${data['pincode']}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textHint)),
-          ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              setState(() {
-                _selectedAddressId = 'custom';
-                _addressController.text = data['address']!;
-                _cityController.text = data['city']!;
-                _stateController.text = data['state']!;
-                _pincodeController.text = data['pincode']!;
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('GPS Location applied to delivery address!'),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-            },
-            icon: const Icon(Icons.my_location_rounded, color: Colors.white, size: 16),
-            label: const Text('Apply Address', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLocationErrorDialog(String errorMsg) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.white,
-        title: const Row(
-          children: [
-            Icon(Icons.location_off_rounded, color: Color(0xFFEF4444), size: 26),
-            SizedBox(width: 10),
-            Text('Location Notice', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(errorMsg, style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.35)),
-            const SizedBox(height: 10),
-            const Text('You can type your delivery address manually in the form fields.', style: TextStyle(fontSize: 11.5, color: AppColors.textHint)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Enter Manually', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              _fetchGpsCurrentLocation();
-            },
-            child: const Text('Retry GPS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // UPI App Navigation & Deep Link Execution
-  Future<void> _processUpiPayment({
-    required String appName,
-    required String upiId,
-    required double totalAmount,
-    required List<CartItemEntity> items,
-  }) async {
-    final encodedTitle = Uri.encodeComponent('BEE BEYOND Wellness');
-    final upiUriString =
-        'upi://pay?pa=$upiId&pn=$encodedTitle&am=${totalAmount.toStringAsFixed(2)}&cu=INR&tn=${Uri.encodeComponent("Order Payment")}';
-
-    final uri = Uri.parse(upiUriString);
-
-    bool launched = false;
-    try {
-      if (await canLaunchUrl(uri)) {
-        launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    } catch (_) {
-      launched = false;
-    }
-
-    if (!launched && mounted) {
-      _showUpiProcessingModal(
-        appName: appName,
-        upiId: upiId,
-        totalAmount: totalAmount,
-        items: items,
-      );
-    } else if (launched && mounted) {
-      _completeOrderSuccess(paymentMethod: '$appName (UPI)', items: items, totalAmount: totalAmount);
-    }
-  }
-
-  void _showUpiProcessingModal({
-    required String appName,
-    required String upiId,
-    required double totalAmount,
-    required List<CartItemEntity> items,
-  }) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => _UpiPaymentDialog(
-        appName: appName,
-        upiId: upiId,
-        totalAmount: totalAmount,
-        onSuccess: () {
-          Navigator.pop(ctx);
-          _completeOrderSuccess(
-            paymentMethod: '$appName (UPI)',
-            items: items,
-            totalAmount: totalAmount,
-          );
-        },
-      ),
-    );
-  }
-
-  void _completeOrderSuccess({
-    required String paymentMethod,
-    required List<CartItemEntity> items,
-    required double totalAmount,
-  }) {
-    final randomId = (1000 + math.Random().nextInt(8999)).toString();
-    final receiptId = 'REC-2025-$randomId';
-    final orderId = 'ORD-2025-$randomId';
-
-    final addressStr =
-        '${_addressController.text.trim()}, ${_cityController.text.trim()}, ${_stateController.text.trim()} - ${_pincodeController.text.trim()}';
-
-    final subtotal = items.isEmpty ? totalAmount : items.subtotal;
-
-    final receiptItems = items.isEmpty
-        ? [ReceiptItem(name: 'Bee Beyond Order Items', quantity: 1, unitPrice: subtotal)]
-        : items.map((i) => ReceiptItem(name: i.title, quantity: i.quantity, unitPrice: i.price)).toList();
-
-    final newReceipt = ReceiptEntity(
-      receiptId: receiptId,
-      orderId: orderId,
-      title: items.isNotEmpty ? items.first.title : 'Bee Beyond Order',
-      type: 'PRODUCT',
-      customerName: _nameController.text.trim(),
-      customerPhone: _phoneController.text.trim(),
-      customerEmail: _emailController.text.trim(),
-      deliveryAddress: addressStr,
-      items: receiptItems,
-      subtotal: subtotal,
-      gstRate: 0.18,
-      deliveryFee: subtotal > 999 ? 0.0 : 99.0,
-      discount: 100.0,
-      paymentMethod: paymentMethod,
-      date: DateTime.now(),
-    );
-
-    ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
-    ref.read(cartManagerProvider.notifier).clearCart();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Payment Successful! Generating Tax Invoice...'),
-        backgroundColor: AppColors.success,
-      ),
-    );
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
-      ),
-    );
-  }
-
-  void _handlePayOrder(List<CartItemEntity> cartItems, double totalAmount) async {
+  void _onProcessCheckout() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all required shipping details correctly.'),
-          backgroundColor: AppColors.error,
-        ),
+        const SnackBar(content: Text('Please complete all required shipping fields correctly.')),
       );
       return;
     }
 
+    final cartItems = ref.read(cartManagerProvider).value ?? [];
+    final totalPayable = cartItems.totalPayable;
+
     if (_paymentCategory == 'upi') {
-      final selectedApp = _upiApps.firstWhere((a) => a['id'] == _selectedUpiApp);
+      final selectedApp = _upiApps.firstWhere((a) => a['id'] == _selectedUpiApp, orElse: () => _upiApps.first);
       final appName = selectedApp['name']!;
       String upiId = selectedApp['vpa']!;
 
       if (_selectedUpiApp == 'custom') {
-        upiId = _upiIdController.text.trim();
+        upiId = _vpaController.text.trim();
         if (upiId.isEmpty || !upiId.contains('@')) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please enter a valid UPI VPA ID (e.g. name@upi).'),
-              backgroundColor: AppColors.error,
-            ),
+            const SnackBar(content: Text('Please enter a valid UPI VPA ID (e.g. user@upi)')),
           );
           return;
         }
@@ -413,8 +113,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
       _processUpiPayment(
         appName: appName,
-        upiId: upiId.isEmpty ? 'beebeyond@upi' : upiId,
-        totalAmount: totalAmount,
+        upiId: upiId.isEmpty ? 'beebeeyond@upi' : upiId,
+        totalAmount: totalPayable,
         items: cartItems,
       );
     } else if (_paymentCategory == 'card') {
@@ -422,82 +122,190 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           _cardExpiryController.text.trim().isEmpty ||
           _cardCvvController.text.trim().length < 3) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please enter valid Credit/Debit Card details.'),
-            backgroundColor: AppColors.error,
-          ),
+          const SnackBar(content: Text('Please enter valid Card Number, Expiry & CVV.')),
         );
         return;
       }
-
-      setState(() => _isProcessingPayment = true);
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) {
-        setState(() => _isProcessingPayment = false);
-        _completeOrderSuccess(paymentMethod: 'Credit / Debit Card', items: cartItems, totalAmount: totalAmount);
-      }
+      _executeSimulatedGatewayPayment(
+        methodName: 'Credit / Debit Card',
+        totalAmount: totalPayable,
+        items: cartItems,
+      );
     } else if (_paymentCategory == 'netbanking') {
-      setState(() => _isProcessingPayment = true);
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) {
-        setState(() => _isProcessingPayment = false);
-        _completeOrderSuccess(paymentMethod: 'NetBanking ($_selectedBank)', items: cartItems, totalAmount: totalAmount);
-      }
+      _executeSimulatedGatewayPayment(
+        methodName: 'NetBanking ($_selectedBank)',
+        totalAmount: totalPayable,
+        items: cartItems,
+      );
     } else if (_paymentCategory == 'cod') {
-      _completeOrderSuccess(paymentMethod: 'Cash on Delivery (COD)', items: cartItems, totalAmount: totalAmount);
+      _executeSimulatedGatewayPayment(
+        methodName: 'Cash / Pay on Delivery',
+        totalAmount: totalPayable,
+        items: cartItems,
+      );
     }
+  }
+
+  void _processUpiPayment({
+    required String appName,
+    required String upiId,
+    required double totalAmount,
+    required List<CartItemEntity> items,
+  }) async {
+    final encodedTitle = Uri.encodeComponent('BEE BEEYOND Wellness');
+    final upiUriString =
+        'upi://pay?pa=$upiId&pn=$encodedTitle&am=${totalAmount.toStringAsFixed(2)}&cu=INR&tn=${Uri.encodeComponent("Order Payment")}';
+
+    final uri = Uri.parse(upiUriString);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _UpiSimulationModal(
+        appName: appName,
+        upiId: upiId,
+        amount: totalAmount,
+        upiUriString: uri.toString(),
+        onSuccess: () {
+          Navigator.pop(ctx);
+          _completeOrderAndGenerateReceipt('UPI ($appName)', totalAmount, items);
+        },
+      ),
+    );
+  }
+
+  void _executeSimulatedGatewayPayment({
+    required String methodName,
+    required double totalAmount,
+    required List<CartItemEntity> items,
+  }) async {
+    setState(() => _isProcessingPayment = true);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+              SizedBox(height: 20),
+              Text(
+                'Connecting to Bank Gateway...',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Please do not close or refresh this page',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await Future.delayed(const Duration(milliseconds: 2200));
+
+    if (mounted) {
+      Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+      setState(() => _isProcessingPayment = false);
+      _completeOrderAndGenerateReceipt(methodName, totalAmount, items);
+    }
+  }
+
+  void _completeOrderAndGenerateReceipt(
+    String paymentMethod,
+    double totalAmount,
+    List<CartItemEntity> items,
+  ) {
+    final orderId = 'ORD-${100000 + DateTime.now().millisecond * 888}';
+    final receiptId = 'REC-2025-${(5000 + (orderId.hashCode % 4999)).abs()}';
+
+    final subtotal = items.subtotal;
+    final addressStr =
+        '${_streetController.text.trim()}, ${_cityController.text.trim()} - ${_pincodeController.text.trim()}';
+
+    final receiptItems = items.isEmpty
+        ? [ReceiptItem(name: 'Bee Beeyond Order Items', quantity: 1, unitPrice: subtotal)]
+        : items.map((i) => ReceiptItem(name: i.title, quantity: i.quantity, unitPrice: i.price)).toList();
+
+    final newReceipt = ReceiptEntity(
+      receiptId: receiptId,
+      orderId: orderId,
+      title: items.isNotEmpty ? items.first.title : 'Bee Beeyond Order',
+      type: 'PRODUCT',
+      customerName: _nameController.text.trim(),
+      customerPhone: _phoneController.text.trim(),
+      customerEmail: _emailController.text.trim(),
+      deliveryAddress: addressStr,
+      items: receiptItems,
+      subtotal: subtotal,
+      paymentMethod: paymentMethod,
+      date: DateTime.now(),
+    );
+
+    ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
+    ref.read(cartManagerProvider.notifier).clearCart();
+
+    context.push(
+      RoutePaths.receiptPreview,
+      extra: newReceipt,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final cartState = ref.watch(cartManagerProvider);
-    final cartItems = cartState.value ?? [];
-
-    final subtotal = cartItems.isEmpty ? 1999.0 : cartItems.subtotal;
-    final gst = subtotal * 0.18;
-    final deliveryFee = subtotal > 999 ? 0.0 : 99.0;
-    const discount = 100.0;
-    final grandTotal = subtotal + gst + deliveryFee - discount;
+    final cartItems = ref.watch(cartManagerProvider).value ?? [];
+    final subtotal = cartItems.subtotal;
+    final tax = cartItems.taxAmount;
+    final totalPayable = cartItems.totalPayable;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: 'Checkout & Payment'),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: const CustomAppBar(title: 'Express Checkout & Payment'),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // BRAND TITLE HEADER BANNER
+              // VIP CHECKOUT BANNER
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF0F0C20), Color(0xFF1E1B4B), Color(0xFF312E81)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
                   boxShadow: const [
-                    BoxShadow(color: Color(0x204B489B), blurRadius: 10, offset: Offset(0, 4)),
+                    BoxShadow(color: Color(0x300F0C20), blurRadius: 10, offset: Offset(0, 4)),
                   ],
                 ),
                 child: Row(
                   children: [
                     Image.asset(
                       AssetPaths.beeBeyondImage1,
-                      width: 42,
-                      height: 42,
-                      fit: BoxFit.contain,
+                      height: 48,
                       errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.spa_rounded, color: Colors.white, size: 36),
+                          const Icon(Icons.security_rounded, color: Colors.amberAccent, size: 36),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'BEE BEYOND',
+                            'BEE BEEYOND',
                             style: TextStyle(
                               color: Colors.amberAccent,
                               fontSize: 10,
@@ -505,18 +313,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               letterSpacing: 1.2,
                             ),
                           ),
-                          SizedBox(height: 2),
                           Text(
-                            'Secure Checkout & Payment',
+                            'Secured 256-Bit SSL Encrypted Checkout',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 16,
+                              fontSize: 13.5,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '100% Encrypted & Safe Transaction',
-                            style: TextStyle(color: Colors.white70, fontSize: 11),
+                            'Guaranteed safe transaction & genuine products',
+                            style: TextStyle(color: Color(0xFFC7D2FE), fontSize: 10.5),
                           ),
                         ],
                       ),
@@ -527,178 +334,294 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
               const SizedBox(height: 20),
 
-              // ORDER SUMMARY ACCORDION CARD
-              _buildOrderSummaryCard(
-                cartItems: cartItems,
-                subtotal: subtotal,
-                gst: gst,
-                deliveryFee: deliveryFee,
-                discount: discount,
-                grandTotal: grandTotal,
+              // SECTION 1: SHIPPING ADDRESS & CONTACT
+              _buildSectionCard(
+                title: 'Shipping & Delivery Address',
+                icon: Icons.local_shipping_outlined,
+                iconColor: const Color(0xFF6366F1),
+                children: [
+                  _buildTextField(
+                    controller: _nameController,
+                    label: 'Full Name *',
+                    hint: 'e.g. Aarav Sharma',
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Name required' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          controller: _phoneController,
+                          label: 'Phone Number *',
+                          hint: '+91 9876543210',
+                          keyboardType: TextInputType.phone,
+                          validator: (v) => v == null || v.trim().length < 10 ? 'Valid Phone required' : null,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildTextField(
+                          controller: _emailController,
+                          label: 'Email Address *',
+                          hint: 'aarav@example.com',
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) => v == null || !v.contains('@') ? 'Valid Email required' : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _streetController,
+                    label: 'Flat / House / Street Address *',
+                    hint: 'Flat 402, Green Meadows',
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Address required' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          controller: _cityController,
+                          label: 'City *',
+                          hint: 'Mumbai',
+                          validator: (v) => v == null || v.trim().isEmpty ? 'City required' : null,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildTextField(
+                          controller: _pincodeController,
+                          label: 'PIN Code *',
+                          hint: '400001',
+                          keyboardType: TextInputType.number,
+                          validator: (v) => v == null || v.trim().length < 6 ? '6-digit PIN required' : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
 
               const SizedBox(height: 20),
 
-              // SECTION 1: SHIPPING ADDRESS WITH GPS & SAVED CHIPS
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // SECTION 2: PAYMENT METHOD SELECTION
+              _buildSectionCard(
+                title: 'Select Payment Option',
+                icon: Icons.payments_outlined,
+                iconColor: const Color(0xFF10B981),
                 children: [
-                  _buildSectionHeader('1. Delivery Address', Icons.location_on_outlined),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      side: const BorderSide(color: AppColors.primary, width: 1.2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  // Payment Option Radio Tabs
+                  _buildPaymentCategoryOption(
+                    id: 'upi',
+                    title: 'UPI / Instant Mobile Payments',
+                    subtitle: 'Google Pay, PhonePe, Paytm, BHIM VPA',
+                    icon: Icons.vibration_rounded,
+                  ),
+                  _buildPaymentCategoryOption(
+                    id: 'card',
+                    title: 'Credit / Debit Card',
+                    subtitle: 'Visa, Mastercard, RuPay, Maestro',
+                    icon: Icons.credit_card_rounded,
+                  ),
+                  _buildPaymentCategoryOption(
+                    id: 'netbanking',
+                    title: 'NetBanking Portal',
+                    subtitle: 'All Major Indian Banks Supported',
+                    icon: Icons.account_balance_rounded,
+                  ),
+                  _buildPaymentCategoryOption(
+                    id: 'cod',
+                    title: 'Cash / Pay on Delivery',
+                    subtitle: 'Pay at your doorstep upon arrival',
+                    icon: Icons.handshake_rounded,
+                  ),
+
+                  const Divider(height: 24, color: Color(0xFFCBD5E1)),
+
+                  // SUB-DETAILS ACCORDING TO SELECTED CATEGORY
+                  if (_paymentCategory == 'upi') ...[
+                    const Text('Select Preferred UPI App:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary)),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _upiApps.map((app) {
+                        final isSelected = _selectedUpiApp == app['id'];
+                        return ChoiceChip(
+                          selected: isSelected,
+                          selectedColor: const Color(0xFFEEF2FF),
+                          backgroundColor: Colors.white,
+                          side: BorderSide(color: isSelected ? const Color(0xFF4338CA) : const Color(0xFFCBD5E1), width: isSelected ? 1.8 : 1.0),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(app['icon']!, style: const TextStyle(fontSize: 14)),
+                              const SizedBox(width: 6),
+                              Text(app['name']!, style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.w600, color: isSelected ? const Color(0xFF312E81) : AppColors.textPrimary)),
+                            ],
+                          ),
+                          onSelected: (_) => setState(() => _selectedUpiApp = app['id']!),
+                        );
+                      }).toList(),
                     ),
-                    onPressed: _fetchGpsCurrentLocation,
-                    icon: const Icon(Icons.my_location_rounded, color: AppColors.primary, size: 15),
-                    label: const Text('Fetch GPS Location', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                    if (_selectedUpiApp == 'custom') ...[
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _vpaController,
+                        label: 'Virtual Payment Address (VPA / UPI ID)',
+                        hint: 'username@okaxis or mobile@paytm',
+                      ),
+                    ],
+                  ] else if (_paymentCategory == 'card') ...[
+                    _buildTextField(
+                      controller: _cardNumberController,
+                      label: 'Card Number',
+                      hint: '4532 •••• •••• 8910',
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            controller: _cardExpiryController,
+                            label: 'Expiry (MM/YY)',
+                            hint: '12/28',
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildTextField(
+                            controller: _cardCvvController,
+                            label: 'CVV / CVC',
+                            hint: '•••',
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else if (_paymentCategory == 'netbanking') ...[
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedBank,
+                      decoration: InputDecoration(
+                        labelText: 'Select NetBanking Bank',
+                        labelStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.borderSubtle)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+                      ),
+                      items: _popularBanks.map((b) => DropdownMenuItem(value: b, child: Text(b, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)))).toList(),
+                      onChanged: (v) => setState(() => _selectedBank = v!),
+                    ),
+                  ] else if (_paymentCategory == 'cod') ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, color: Color(0xFFD97706), size: 20),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Cash on delivery is available for eligible pin codes. Please keep exact cash ready.',
+                              style: TextStyle(color: Color(0xFFB45309), fontSize: 11.5, height: 1.3),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // SECTION 3: ORDER ITEMS & PRICE BREAKDOWN
+              _buildSectionCard(
+                title: 'Order Summary',
+                icon: Icons.receipt_long_outlined,
+                iconColor: const Color(0xFF7C3AED),
+                children: [
+                  if (cartItems.isNotEmpty)
+                    ...cartItems.map((item) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${item.quantity}x ${item.title}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                                ),
+                              ),
+                              Text(
+                                CurrencyUtils.formatINR(item.price * item.quantity),
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                            ],
+                          ),
+                        ))
+                  else
+                    const Text('1x Bee Beeyond Healing Product Order', style: TextStyle(fontSize: 12.5, color: AppColors.textPrimary)),
+
+                  const Divider(height: 20, color: AppColors.divider),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Items Subtotal:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      Text(CurrencyUtils.formatINR(subtotal), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Taxes & Gateway Fees (3%):', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      Text(CurrencyUtils.formatINR(tax), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Delivery Charges:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      Text('FREE', style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 13)),
+                    ],
+                  ),
+                  const Divider(height: 20, color: AppColors.divider),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Grand Total Payable:', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900, fontSize: 16)),
+                      Text(CurrencyUtils.formatINR(totalPayable), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 19)),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
 
-              // SAVED ADDRESS SELECTION CHIPS
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    ..._savedAddresses.map((addr) {
-                      final isSelected = _selectedAddressId == addr['id'];
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: ChoiceChip(
-                          label: Text(addr['label']!),
-                          selected: isSelected,
-                          selectedColor: AppColors.primary,
-                          backgroundColor: const Color(0xFFF1F5F9),
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.textSecondary,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            fontSize: 12,
-                          ),
-                          onSelected: (selected) {
-                            if (selected) _applySavedAddress(addr);
-                          },
-                        ),
-                      );
-                    }),
-                    ChoiceChip(
-                      label: const Text('✏️ Custom / Edit'),
-                      selected: _selectedAddressId == 'custom',
-                      selectedColor: AppColors.primary,
-                      backgroundColor: const Color(0xFFF1F5F9),
-                      labelStyle: TextStyle(
-                        color: _selectedAddressId == 'custom' ? Colors.white : AppColors.textSecondary,
-                        fontWeight: _selectedAddressId == 'custom' ? FontWeight.bold : FontWeight.w500,
-                        fontSize: 12,
-                      ),
-                      onSelected: (selected) {
-                        if (selected) setState(() => _selectedAddressId = 'custom');
-                      },
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(height: 28),
 
-              const SizedBox(height: 12),
-
-              _buildTextField(controller: _nameController, label: 'Full Name *', validator: (v) => v == null || v.trim().isEmpty ? 'Full Name required' : null),
-              const SizedBox(height: 10),
-
-              Row(
-                children: [
-                  Expanded(child: _buildTextField(controller: _phoneController, label: 'Mobile Phone *', keyboardType: TextInputType.phone, validator: (v) => v == null || v.trim().length < 10 ? 'Valid Phone required' : null)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _buildTextField(controller: _emailController, label: 'Email ID *', keyboardType: TextInputType.emailAddress, validator: (v) => v == null || !v.contains('@') ? 'Valid Email required' : null)),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              _buildTextField(controller: _addressController, label: 'Flat / Street / Landmark Address *', validator: (v) => v == null || v.trim().isEmpty ? 'Address required' : null),
-              const SizedBox(height: 10),
-
-              Row(
-                children: [
-                  Expanded(child: _buildTextField(controller: _cityController, label: 'City *', validator: (v) => v == null || v.trim().isEmpty ? 'City required' : null)),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildTextField(controller: _stateController, label: 'State *', validator: (v) => v == null || v.trim().isEmpty ? 'State required' : null)),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildTextField(controller: _pincodeController, label: 'PIN Code *', keyboardType: TextInputType.number, validator: (v) => v == null || v.trim().length < 6 ? 'Pincode required' : null)),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // SECTION 2: PAYMENT METHOD SELECTION
-              _buildSectionHeader('2. Select Payment Option', Icons.payment_rounded),
-              const SizedBox(height: 12),
-
-              // PAYMENT CATEGORY TABS
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-                ),
-                child: Column(
-                  children: [
-                    _buildPaymentCategoryTile(
-                      id: 'upi',
-                      title: 'UPI Payment Apps (Instant)',
-                      subtitle: 'Google Pay, PhonePe, Paytm, BHIM UPI',
-                      icon: Icons.qr_code_scanner_rounded,
-                      iconColor: const Color(0xFF059669),
-                    ),
-                    const Divider(height: 1, color: AppColors.divider),
-                    _buildPaymentCategoryTile(
-                      id: 'card',
-                      title: 'Credit / Debit Cards',
-                      subtitle: 'Visa, MasterCard, RuPay, Maestro',
-                      icon: Icons.credit_card_rounded,
-                      iconColor: const Color(0xFF4338CA),
-                    ),
-                    const Divider(height: 1, color: AppColors.divider),
-                    _buildPaymentCategoryTile(
-                      id: 'netbanking',
-                      title: 'Net Banking',
-                      subtitle: 'HDFC, ICICI, SBI, Axis & all major banks',
-                      icon: Icons.account_balance_rounded,
-                      iconColor: const Color(0xFFD97706),
-                    ),
-                    const Divider(height: 1, color: AppColors.divider),
-                    _buildPaymentCategoryTile(
-                      id: 'cod',
-                      title: 'Cash on Delivery (COD)',
-                      subtitle: 'Pay at your doorstep upon receipt',
-                      icon: Icons.payments_rounded,
-                      iconColor: const Color(0xFF0288D1),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // PAYMENT CATEGORY SUB-OPTIONS PANEL
-              if (_paymentCategory == 'upi') _buildUpiOptionsPanel(grandTotal),
-              if (_paymentCategory == 'card') _buildCardOptionsPanel(),
-              if (_paymentCategory == 'netbanking') _buildNetBankingPanel(),
-              if (_paymentCategory == 'cod') _buildCodPanel(),
-
-              const SizedBox(height: 32),
-
-              // PAY & CONFIRM BUTTON
+              // SUBMIT ORDER BUTTON
               SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 54,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
-                  onPressed: _isProcessingPayment ? null : () => _handlePayOrder(cartItems, grandTotal),
+                  onPressed: _isProcessingPayment ? null : _onProcessCheckout,
                   child: _isProcessingPayment
                       ? const SizedBox(
                           width: 24,
@@ -708,11 +631,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.lock_outline_rounded, color: Colors.white, size: 20),
+                            const Icon(Icons.lock_rounded, color: Colors.amberAccent, size: 20),
                             const SizedBox(width: 8),
                             Text(
-                              'PAY ${CurrencyUtils.formatINR(grandTotal)} NOW →',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white),
+                              'PAY ${CurrencyUtils.formatINR(totalPayable)} SECURELY',
+                              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                             ),
                           ],
                         ),
@@ -727,295 +650,84 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  Widget _buildOrderSummaryCard({
-    required List<CartItemEntity> cartItems,
-    required double subtotal,
-    required double gst,
-    required double deliveryFee,
-    required double discount,
-    required double grandTotal,
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required List<Widget> children,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
         boxShadow: const [
-          BoxShadow(color: Color(0x0C4B489B), blurRadius: 8, offset: Offset(0, 3)),
+          BoxShadow(color: Color(0x0C000000), blurRadius: 8, offset: Offset(0, 3)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Order Items Summary', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.primary)),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.badgeBg,
+                  color: iconColor.withAlpha(30),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  '${cartItems.isEmpty ? 1 : cartItems.length} Item(s)',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
-                ),
+                child: Icon(icon, color: iconColor, size: 20),
               ),
-            ],
-          ),
-          const Divider(height: 20, color: AppColors.divider),
-
-          if (cartItems.isNotEmpty)
-            ...cartItems.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${item.quantity}x ${item.title}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary),
-                        ),
-                      ),
-                      Text(
-                        CurrencyUtils.formatINR(item.price * item.quantity),
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                      ),
-                    ],
-                  ),
-                ))
-          else
-            const Text('1x Bee Beyond Healing Product Order', style: TextStyle(fontSize: 12.5, color: AppColors.textPrimary)),
-
-          const Divider(height: 20, color: AppColors.divider),
-
-          _buildCostRow('Subtotal', CurrencyUtils.formatINR(subtotal)),
-          const SizedBox(height: 4),
-          _buildCostRow('18% GST (CGST + SGST)', CurrencyUtils.formatINR(gst)),
-          const SizedBox(height: 4),
-          _buildCostRow('Delivery Fee', deliveryFee > 0 ? CurrencyUtils.formatINR(deliveryFee) : 'FREE'),
-          if (discount > 0) ...[
-            const SizedBox(height: 4),
-            _buildCostRow('Welcome Discount', '-${CurrencyUtils.formatINR(discount)}', isDiscount: true),
-          ],
-          const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1, color: AppColors.divider)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('TOTAL PAYABLE', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
-              Text(
-                CurrencyUtils.formatINR(grandTotal),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primary),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUpiOptionsPanel(double totalAmount) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF059669).withAlpha(100), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Select Your Preferred UPI App:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          const SizedBox(height: 12),
-          ..._upiApps.map((app) {
-            final isSelected = _selectedUpiApp == app['id'];
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFECFDF5) : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSelected ? const Color(0xFF059669) : const Color(0xFFE2E8F0)),
-              ),
-              child: RadioListTile<String>(
-                value: app['id']!,
-                groupValue: _selectedUpiApp,
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedUpiApp = val);
-                },
-                activeColor: const Color(0xFF059669),
-                title: Row(
-                  children: [
-                    Text(app['icon']!, style: const TextStyle(fontSize: 18)),
-                    const SizedBox(width: 10),
-                    Text(app['name']!, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  ],
-                ),
-              ),
-            );
-          }),
-
-          if (_selectedUpiApp == 'custom') ...[
-            const SizedBox(height: 8),
-            _buildTextField(
-              controller: _upiIdController,
-              label: 'Enter UPI ID / VPA *',
-              hint: 'e.g. mobile@upi or username@ybl',
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCardOptionsPanel() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withAlpha(100), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Enter Card Information:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-              Text('💳 Visa / MasterCard / RuPay', style: TextStyle(fontSize: 11, color: AppColors.textHint)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildTextField(controller: _cardNumberController, label: 'Card Number *', hint: '1234 5678 9012 3456', keyboardType: TextInputType.number),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(child: _buildTextField(controller: _cardExpiryController, label: 'Expiry Date *', hint: 'MM/YY', keyboardType: TextInputType.datetime)),
               const SizedBox(width: 10),
-              Expanded(child: _buildTextField(controller: _cardCvvController, label: 'CVV / CVC *', hint: '***', obscureText: true, keyboardType: TextInputType.number)),
+              Text(
+                title,
+                style: AppTextStyles.titleMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
-          const SizedBox(height: 10),
-          _buildTextField(controller: _cardHolderController, label: 'Name on Card *', hint: 'As printed on card'),
+          const SizedBox(height: 14),
+          ...children,
         ],
       ),
     );
   }
 
-  Widget _buildNetBankingPanel() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD97706).withAlpha(100), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Select Your Bank for NetBanking:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _selectedBank,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            items: _banks.map((b) => DropdownMenuItem(value: b, child: Text(b, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)))).toList(),
-            onChanged: (val) {
-              if (val != null) setState(() => _selectedBank = val);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCodPanel() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF10B981)),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.verified_rounded, color: Color(0xFF059669), size: 28),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Cash on Delivery Available', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
-                SizedBox(height: 2),
-                Text('Pay with cash or UPI QR code at the time of doorstep delivery.', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentCategoryTile({
+  Widget _buildPaymentCategoryOption({
     required String id,
     required String title,
     required String subtitle,
     required IconData icon,
-    required Color iconColor,
   }) {
     final isSelected = _paymentCategory == id;
-
-    return RadioListTile<String>(
-      value: id,
-      groupValue: _paymentCategory,
-      onChanged: (val) {
-        if (val != null) setState(() => _paymentCategory = val);
-      },
-      activeColor: AppColors.primary,
-      title: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: isSelected ? AppColors.primary : AppColors.textPrimary)),
-                Text(subtitle, style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary)),
-              ],
+    return InkWell(
+      onTap: () => setState(() => _paymentCategory = id),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFF5F3FF) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0), width: isSelected ? 1.6 : 1.0),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? AppColors.primary : AppColors.textSecondary, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isSelected ? AppColors.primary : AppColors.textPrimary)),
+                  Text(subtitle, style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary)),
+                ],
+              ),
             ),
-          ),
-        ],
+            Icon(isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: isSelected ? AppColors.primary : const Color(0xFF94A3B8), size: 20),
+          ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, color: AppColors.primary, size: 22),
-        const SizedBox(width: 8),
-        Text(title, style: AppTextStyles.titleMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-
-  Widget _buildCostRow(String label, String value, {bool isDiscount = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-        Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDiscount ? const Color(0xFF10B981) : AppColors.textPrimary)),
-      ],
     );
   }
 
@@ -1023,13 +735,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     required TextEditingController controller,
     required String label,
     String? hint,
-    bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
-      obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
       style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
@@ -1039,7 +749,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         hintText: hint,
         hintStyle: const TextStyle(fontSize: 11.5, color: AppColors.textHint),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color(0xFFF8FAFC),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.borderSubtle)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
@@ -1048,133 +758,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 }
 
-// REALISTIC GPS LOCATION FETCHER MODAL
-class _GpsLocationFetcherModal extends StatefulWidget {
-  final Function(Map<String, String>) onSuccess;
-  final Function(String) onError;
-
-  const _GpsLocationFetcherModal({
-    required this.onSuccess,
-    required this.onError,
-  });
-
-  @override
-  State<_GpsLocationFetcherModal> createState() => _GpsLocationFetcherModalState();
-}
-
-class _GpsLocationFetcherModalState extends State<_GpsLocationFetcherModal> {
-  int _seconds = 0;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) setState(() => _seconds++);
-      if (_seconds == 2) {
-        _timer?.cancel();
-        widget.onSuccess({
-          'address': 'Unit 204, Crystal Plaza, New Link Rd',
-          'city': 'Mumbai',
-          'state': 'Maharashtra',
-          'pincode': '400053',
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Color(0xFFEEF2FF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.my_location_rounded, color: AppColors.primary, size: 36),
-            ),
-            const SizedBox(height: 16),
-            const Text('Fetching GPS Location...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            const SizedBox(height: 6),
-            const Text('Connecting to satellite GPS to resolve street, city & pincode...', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
-            const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: () {
-                _timer?.cancel();
-                widget.onError('GPS Location search cancelled. Please enter your address manually.');
-              },
-              icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.error),
-              label: const Text('Cancel & Enter Manually', style: TextStyle(color: AppColors.error, fontSize: 12)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// REALISTIC INTERACTIVE UPI PAYMENT PROCESSING DIALOG
-class _UpiPaymentDialog extends StatefulWidget {
+// UPI SIMULATION MODAL BOTTOM SHEET
+class _UpiSimulationModal extends StatelessWidget {
   final String appName;
   final String upiId;
-  final double totalAmount;
+  final double amount;
+  final String upiUriString;
   final VoidCallback onSuccess;
 
-  const _UpiPaymentDialog({
+  const _UpiSimulationModal({
     required this.appName,
     required this.upiId,
-    required this.totalAmount,
+    required this.amount,
+    required this.upiUriString,
     required this.onSuccess,
   });
 
   @override
-  State<_UpiPaymentDialog> createState() => _UpiPaymentDialogState();
-}
-
-class _UpiPaymentDialogState extends State<_UpiPaymentDialog> {
-  int _countdown = 3;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_countdown > 1) {
-        if (mounted) setState(() => _countdown--);
-      } else {
-        _timer?.cancel();
-        widget.onSuccess();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1186,23 +794,38 @@ class _UpiPaymentDialogState extends State<_UpiPaymentDialog> {
               errorBuilder: (context, error, stackTrace) => const Icon(Icons.spa_rounded, color: AppColors.primary, size: 48),
             ),
             const SizedBox(height: 16),
-            const Text('BEE BEYOND', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.amber, letterSpacing: 1.2)),
+            const Text('BEE BEEYOND', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.amber, letterSpacing: 1.2)),
             const SizedBox(height: 4),
-            Text('Paying via ${widget.appName}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            Text('Paying via $appName', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(10)),
-              child: Text('VPA ID: ${widget.upiId}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF059669), fontWeight: FontWeight.bold)),
+              child: Text('VPA ID: $upiId', style: const TextStyle(color: Color(0xFF059669), fontSize: 11.5, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 20),
-            Text(CurrencyUtils.formatINR(widget.totalAmount), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.primary)),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
-            const SizedBox(height: 16),
-            Text('Processing payment in 00:0$_countdown...', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            const Text('Please do not press back or close the app.', style: TextStyle(fontSize: 10, color: AppColors.textHint)),
+            Text(CurrencyUtils.formatINR(amount), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.primary)),
+            const SizedBox(height: 28),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF059669),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                onPressed: onSuccess,
+                icon: const Icon(Icons.check_circle_rounded, color: Colors.white),
+                label: const Text('SIMULATE SUCCESSFUL PAYMENT ✓', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13.5)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel Transaction', style: TextStyle(color: AppColors.textSecondary)),
+            ),
           ],
         ),
       ),
