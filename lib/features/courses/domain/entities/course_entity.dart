@@ -61,10 +61,10 @@ class CourseEntity extends Equatable {
   });
 
   bool get isNewCourse {
-    if (createdAt == null) return false;
+    if (createdAt == null) return true;
     final now = DateTime.now();
-    final diffInHours = now.difference(createdAt!).inHours;
-    return diffInHours >= 0 && diffInHours <= 48;
+    final diffInDays = now.difference(createdAt!).inDays.abs();
+    return diffInDays <= 30;
   }
 
   @override
