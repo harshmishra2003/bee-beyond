@@ -612,7 +612,15 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
   Widget _buildPlaceholder() {
     return Container(
       height: 85,
-      color: const Color(0xFFEEF2FF),
+      width: double.infinity,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: const Center(
         child: Icon(Icons.school_rounded, size: 30, color: Color(0xFF4338CA)),
       ),
