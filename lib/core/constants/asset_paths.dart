@@ -1,7 +1,8 @@
 class AssetPaths {
-  static const String logo = 'assets/images/bee beeyond2.png';
-  static const String beeBeyondImage1 = 'assets/images/bee beeyond.png';
-  static const String beeBeyondImage2 = 'assets/images/bee beeyond2.png';
+  static const String logo = 'assets/images/Bee Beeyond.png';
+  static const String beeBeyondImage1 = 'assets/images/Bee Beeyond.png';
+  static const String beeBeyondImage2 = 'assets/images/Bee Beeyond.png';
+  static const String beeBeyondEmblem = 'assets/images/bee beeyond2.png';
   static const String vastu = 'assets/images/vastu.png';
   static const String ancientHealing = 'assets/images/Ancient Healing Mastery.png';
   static const String bachFlower = 'assets/images/bach flower therapy.png';
