@@ -13,6 +13,8 @@ class CourseModel extends CourseEntity {
     required super.duration,
     required super.rating,
     required super.modulesCount,
+    super.learnings = const [],
+    super.modulesList = const [],
   });
 
   static String _formatUrl(String? url) {
@@ -26,6 +28,9 @@ class CourseModel extends CourseEntity {
     if (trimmed.startsWith('/')) {
       return 'https://metricstestingapp.xyz$trimmed';
     }
+    if (trimmed.startsWith('uploads/') || trimmed.startsWith('admin/')) {
+      return 'https://metricstestingapp.xyz/$trimmed';
+    }
     return 'https://metricstestingapp.xyz/api/$trimmed';
   }
 
@@ -33,11 +38,22 @@ class CourseModel extends CourseEntity {
     final rawImageUrl = json['imageUrl']?.toString() ??
         json['image_url']?.toString() ??
         json['image']?.toString() ??
-        json['thumbnail']?.toString() ??
-        json['thumb']?.toString() ??
         json['course_image']?.toString() ??
+        json['course_img']?.toString() ??
+        json['course_photo']?.toString() ??
+        json['photo']?.toString() ??
+        json['cover_image']?.toString() ??
+        json['cover']?.toString() ??
+        json['thumbnail']?.toString() ??
+        json['thumbnail_url']?.toString() ??
+        json['course_thumb']?.toString() ??
+        json['thumb']?.toString() ??
+        json['thumb_url']?.toString() ??
         json['banner']?.toString() ??
         json['poster']?.toString() ??
+        json['img']?.toString() ??
+        json['file_path']?.toString() ??
+        json['media_url']?.toString() ??
         '';
 
     final rawTrailerUrl = json['trailerUrl']?.toString() ??
@@ -47,6 +63,75 @@ class CourseModel extends CourseEntity {
         json['video']?.toString() ??
         json['demo_video']?.toString() ??
         '';
+
+    List<String> parsedLearnings = [];
+    final rawLearnings = json['learnings'] ??
+        json['outcomes'] ??
+        json['what_you_will_learn'] ??
+        json['highlights'] ??
+        json['key_points'] ??
+        json['points'];
+
+    if (rawLearnings is List) {
+      parsedLearnings = rawLearnings.map((e) => e.toString()).toList();
+    } else if (rawLearnings is String && rawLearnings.trim().isNotEmpty) {
+      parsedLearnings = rawLearnings
+          .split(RegExp(r'[\r\n;•|]+'))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+
+    List<ModuleItemEntity> parsedModules = [];
+    final rawModules = json['modulesList'] ??
+        json['modules'] ??
+        json['curriculum'] ??
+        json['lessons'] ??
+        json['lectures'] ??
+        json['contents'];
+
+    if (rawModules is List) {
+      parsedModules = rawModules.map((item) {
+        if (item is Map<String, dynamic>) {
+          final media = _formatUrl(
+            item['media_url']?.toString() ??
+                item['mediaUrl']?.toString() ??
+                item['file_url']?.toString() ??
+                item['video_url']?.toString() ??
+                item['pdf_url']?.toString() ??
+                item['url']?.toString() ??
+                item['file']?.toString() ??
+                '',
+          );
+
+          String detectedType = item['type']?.toString().toLowerCase() ?? '';
+          if (detectedType.isEmpty) {
+            if (media.toLowerCase().contains('.pdf') || media.contains('/pdf')) {
+              detectedType = 'pdf';
+            } else {
+              detectedType = 'video';
+            }
+          }
+
+          return ModuleItemEntity(
+            id: item['id']?.toString() ?? '',
+            title: item['title']?.toString() ?? item['name']?.toString() ?? 'Module Lecture',
+            type: detectedType,
+            mediaUrl: media,
+            durationOrSize: item['duration']?.toString() ??
+                item['size']?.toString() ??
+                (detectedType == 'pdf' ? 'PDF Study Guide' : 'Video Lecture'),
+          );
+        }
+        return ModuleItemEntity(
+          id: '',
+          title: item.toString(),
+          type: 'video',
+          mediaUrl: '',
+          durationOrSize: 'Video Lecture',
+        );
+      }).toList();
+    }
 
     return CourseModel(
       id: json['id']?.toString() ??
@@ -90,7 +175,9 @@ class CourseModel extends CourseEntity {
           (json['modules'] as num?)?.toInt() ??
           int.tryParse(json['modules_count']?.toString() ?? '') ??
           int.tryParse(json['modules']?.toString() ?? '') ??
-          10,
+          (parsedModules.isNotEmpty ? parsedModules.length : 10),
+      learnings: parsedLearnings,
+      modulesList: parsedModules,
     );
   }
 
@@ -107,6 +194,7 @@ class CourseModel extends CourseEntity {
       'duration': duration,
       'rating': rating,
       'modulesCount': modulesCount,
+      'learnings': learnings,
     };
   }
 }
