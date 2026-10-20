@@ -12,10 +12,10 @@ class ApiEndpoints {
   static const String categories = '/categories';
   static const String banners = '/banners';
 
-  // Courses
-  static const String courses = '/courses';
+  // Courses APIs
+  static const String courses = '/courses.php';
+  static const String courseDetail = '/course_details.php';
   static const String joinedCourses = '/courses/joined';
-  static const String courseDetail = '/courses/';
 
   // Library & Media
   static const String library = '/library';
