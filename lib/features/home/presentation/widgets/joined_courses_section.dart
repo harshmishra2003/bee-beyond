@@ -610,5 +610,4 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
       child: const Icon(Icons.school_rounded, color: Color(0xFF4338CA), size: 30),
     );
   }
-  }
 }
