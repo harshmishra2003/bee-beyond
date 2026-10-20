@@ -25,7 +25,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
   late Animation<double> _dotsOpacityAnim;
 
   // Typewriter Letter State
-  final String _targetText = "Bee Beyonnd";
+  final String _targetText = "Bee Beeyond";
   int _visibleLetterCount = 0;
 
   @override
