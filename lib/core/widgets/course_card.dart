@@ -27,6 +27,36 @@ class CourseCard extends StatelessWidget {
     this.onJoinGroup,
   });
 
+  Widget _buildPlaceholder() {
+    return Container(
+      height: 130,
+      width: double.infinity,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.school_rounded, size: 36, color: AppColors.primary),
+          SizedBox(height: 4),
+          Text(
+            'Bee Beeyond Academy',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCourseImage(String url) {
     if (url.startsWith('assets/')) {
       return Image.asset(
@@ -34,6 +64,7 @@ class CourseCard extends StatelessWidget {
         height: 130,
         width: double.infinity,
         fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
       );
     } else if (url.startsWith('http')) {
       return CachedNetworkImage(
@@ -43,21 +74,14 @@ class CourseCard extends StatelessWidget {
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
           height: 130,
+          width: double.infinity,
           color: AppColors.surfaceVariant,
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         ),
-        errorWidget: (context, url, error) => Container(
-          height: 130,
-          color: AppColors.surfaceVariant,
-          child: const Icon(Icons.school, size: 40, color: AppColors.textHint),
-        ),
+        errorWidget: (context, url, error) => _buildPlaceholder(),
       );
     } else {
-      return Container(
-        height: 130,
-        color: AppColors.surfaceVariant,
-        child: const Icon(Icons.school, size: 40, color: AppColors.textHint),
-      );
+      return _buildPlaceholder();
     }
   }
 
