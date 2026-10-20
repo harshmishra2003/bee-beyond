@@ -1,6 +1,9 @@
-import 'dart:math' as math;
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:printing/printing.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -17,46 +20,15 @@ class MaterialScreen extends ConsumerStatefulWidget {
 
 class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   String _selectedCategory = 'All';
-  final Set<String> _downloadedBookIds = {};
   final Set<String> _bookmarkedIds = {};
 
   void _openBookViewer(BookItem book) {
     Navigator.of(context).push(
       buildSmoothPageRoute(
-        page: _FlipBookViewerScreen(book: book),
+        page: _BookPdfReaderScreen(book: book),
         type: AppTransitionType.slideUp,
       ),
     );
-  }
-
-  void _downloadBook(BookItem book) {
-    if (_downloadedBookIds.contains(book.id)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"${book.title}" is already downloaded in your offline library.')),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Downloading "${book.title}" (${book.size})...'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
-
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _downloadedBookIds.add(book.id);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('"${book.title}" downloaded successfully! Saved to offline storage.'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    });
   }
 
   void _toggleBookmark(String bookId) {
@@ -176,7 +148,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
               const SizedBox(height: 12),
 
-              // BOOKS LIST
+              // DYNAMIC BOOKS LIST
               Expanded(
                 child: filteredBooks.isEmpty
                     ? Center(
@@ -192,10 +164,9 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                         separatorBuilder: (context, index) => const SizedBox(height: 14),
                         itemBuilder: (context, index) {
                           final book = filteredBooks[index];
-                          final isDownloaded = _downloadedBookIds.contains(book.id);
                           final isBookmarked = _bookmarkedIds.contains(book.id);
 
-                          return _buildBookCard(book, isDownloaded, isBookmarked);
+                          return _buildBookCard(book, isBookmarked);
                         },
                       ),
               ),
@@ -208,9 +179,22 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
         error: (err, stack) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Text(
-              'Error loading books: $err',
-              style: const TextStyle(color: AppColors.error),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.red, size: 48),
+                const SizedBox(height: 12),
+                Text(
+                  'Error loading books: $err',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.invalidate(booksAndMaterialsProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
             ),
           ),
         ),
@@ -265,7 +249,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   }
 
   // BOOK CARD BUILDER
-  Widget _buildBookCard(BookItem book, bool isDownloaded, bool isBookmarked) {
+  Widget _buildBookCard(BookItem book, bool isBookmarked) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -289,7 +273,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Book Cover Vector Box
+                // Book Cover Box
                 Container(
                   width: 70,
                   height: 95,
@@ -377,42 +361,24 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                       ),
                       const SizedBox(height: 10),
 
-                      // Action Buttons Row: READ BOOK & DOWNLOAD
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 34,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  elevation: 0,
-                                ),
-                                onPressed: () => _openBookViewer(book),
-                                icon: const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 16),
-                                label: const Text(
-                                  'READ BOOK',
-                                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ),
+                      // READ BOOK BUTTON
+                      SizedBox(
+                        height: 36,
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            elevation: 0,
                           ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xFFF2F0FC),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            icon: Icon(
-                              isDownloaded ? Icons.file_download_done_rounded : Icons.file_download_rounded,
-                              color: isDownloaded ? AppColors.success : AppColors.primary,
-                              size: 18,
-                            ),
-                            onPressed: () => _downloadBook(book),
+                          onPressed: () => _openBookViewer(book),
+                          icon: const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 16),
+                          label: const Text(
+                            'READ BOOK',
+                            style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
@@ -426,70 +392,122 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   }
 }
 
-// REALISTIC 3D FLIP BOOK READER SCREEN
-class _FlipBookViewerScreen extends StatefulWidget {
+// IN-APP DYNAMIC PDF BOOK READER SCREEN
+class _BookPdfReaderScreen extends StatefulWidget {
   final BookItem book;
 
-  const _FlipBookViewerScreen({required this.book});
+  const _BookPdfReaderScreen({required this.book});
 
   @override
-  State<_FlipBookViewerScreen> createState() => _FlipBookViewerScreenState();
+  State<_BookPdfReaderScreen> createState() => _BookPdfReaderScreenState();
 }
 
-class _FlipBookViewerScreenState extends State<_FlipBookViewerScreen> {
-  late PageController _pageController;
-  int _currentPage = 0;
-  bool _isDarkMode = false;
-  double _fontSize = 14.5;
+class _BookPdfReaderScreenState extends State<_BookPdfReaderScreen> {
+  static const String _fallbackPdfUrl =
+      'https://cdn.syncfusion.com/content/PDFViewer/flutter-succinctly.pdf';
+
+  Uint8List? _pdfBytes;
+  bool _isLoadingPdf = true;
+  String? _errorMessage;
+  bool _isUsingFallback = false;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    _downloadPdfBytes(widget.book.pdfUrl);
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
+  Future<void> _downloadPdfBytes(String rawUrl) async {
+    final url = rawUrl.trim();
+    final targetUrl = (url.isNotEmpty && url.startsWith('http'))
+        ? url
+        : _fallbackPdfUrl;
 
-  void _nextPage() {
-    if (widget.book.samplePagesContent.isNotEmpty &&
-        _currentPage < widget.book.samplePagesContent.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeOutCubic,
-      );
+    if (targetUrl == _fallbackPdfUrl) {
+      _isUsingFallback = true;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoadingPdf = true;
+        _errorMessage = null;
+      });
+    }
+
+    try {
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        responseType: ResponseType.bytes,
+      ));
+
+      final response = await dio.get<List<int>>(targetUrl);
+      if (response.statusCode == 200 && response.data != null) {
+        final bytes = Uint8List.fromList(response.data!);
+        if (bytes.length >= 100) {
+          if (mounted) {
+            setState(() {
+              _pdfBytes = bytes;
+              _isLoadingPdf = false;
+            });
+          }
+          return;
+        }
+      }
+
+      if (!_isUsingFallback) {
+        _isUsingFallback = true;
+        _downloadPdfBytes(_fallbackPdfUrl);
+      } else {
+        if (mounted) {
+          setState(() {
+            _pdfBytes = null;
+            _isLoadingPdf = false;
+            _errorMessage = 'The file at this URL is not a valid PDF document.';
+          });
+        }
+      }
+    } catch (e) {
+      if (!_isUsingFallback) {
+        _isUsingFallback = true;
+        _downloadPdfBytes(_fallbackPdfUrl);
+      } else {
+        if (mounted) {
+          setState(() {
+            _pdfBytes = null;
+            _isLoadingPdf = false;
+            _errorMessage =
+                'Could not download PDF document. Please check network connection.';
+          });
+        }
+      }
     }
   }
 
-  void _previousPage() {
-    if (_currentPage > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeOutCubic,
-      );
+  Future<void> _openExternalBrowser() async {
+    final url = widget.book.pdfUrl.trim().isNotEmpty
+        ? widget.book.pdfUrl.trim()
+        : _fallbackPdfUrl;
+
+    if (url.isNotEmpty && (url.startsWith('http://') || url.startsWith('https://'))) {
+      final uri = Uri.parse(url);
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      } catch (_) {}
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final pages = widget.book.samplePagesContent.isNotEmpty
-        ? widget.book.samplePagesContent
-        : ['Sample content preview for this book will be available once uploaded.'];
-
-    final bgColor = _isDarkMode ? const Color(0xFF1E1E2E) : const Color(0xFFFAF8F5);
-    final paperColor = _isDarkMode ? const Color(0xFF28283D) : const Color(0xFFFFFDF9);
-    final textColor = _isDarkMode ? const Color(0xFFCDD6F4) : const Color(0xFF2C2A54);
-
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: _isDarkMode ? const Color(0xFF181825) : Colors.white,
+        backgroundColor: Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: _isDarkMode ? Colors.white : AppColors.primary),
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.primary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -499,246 +517,170 @@ class _FlipBookViewerScreenState extends State<_FlipBookViewerScreen> {
               widget.book.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: _isDarkMode ? Colors.white : AppColors.primary,
+                color: AppColors.primary,
               ),
             ),
             Text(
-              'Page ${_currentPage + 1} of ${pages.length}',
-              style: TextStyle(
+              '${widget.book.author} • ${widget.book.category}',
+              style: const TextStyle(
                 fontSize: 11,
-                color: _isDarkMode ? Colors.white70 : AppColors.textSecondary,
+                color: AppColors.textSecondary,
               ),
             ),
           ],
         ),
         actions: [
-          // Font Size Decrease
           IconButton(
-            icon: Icon(Icons.text_decrease_rounded, color: _isDarkMode ? Colors.white : AppColors.primary, size: 20),
-            onPressed: () {
-              if (_fontSize > 12) setState(() => _fontSize -= 1.0);
-            },
-          ),
-          // Font Size Increase
-          IconButton(
-            icon: Icon(Icons.text_increase_rounded, color: _isDarkMode ? Colors.white : AppColors.primary, size: 20),
-            onPressed: () {
-              if (_fontSize < 22) setState(() => _fontSize += 1.0);
-            },
-          ),
-          // Dark Mode Toggle
-          IconButton(
-            icon: Icon(
-              _isDarkMode ? Icons.wb_sunny_rounded : Icons.nightlight_round,
-              color: _isDarkMode ? Colors.amber : AppColors.primary,
-              size: 20,
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
+            icon: const Icon(Icons.open_in_new_rounded, color: AppColors.primary, size: 20),
+            tooltip: 'Open in Browser',
+            onPressed: _openExternalBrowser,
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // 3D FLIPPING PAGE VIEW CONTAINER
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: pages.length,
-                onPageChanged: (pageIndex) {
-                  setState(() {
-                    _currentPage = pageIndex;
-                  });
-                },
-                itemBuilder: (context, index) {
-                  return AnimatedBuilder(
-                    animation: _pageController,
-                    builder: (context, child) {
-                      double pageOffset = 0.0;
-                      if (_pageController.position.haveDimensions) {
-                        pageOffset = _pageController.page! - index;
-                      } else {
-                        pageOffset = (_currentPage - index).toDouble();
-                      }
-
-                      // Clamp between -1.0 and 1.0 for smooth rotation
-                      pageOffset = pageOffset.clamp(-1.0, 1.0);
-
-                      // REALISTIC 3D PAGE TURN MATRIX
-                      final isRight = pageOffset > 0;
-                      final angle = pageOffset * (math.pi / 2.2);
-
-                      final matrix = Matrix4.identity()
-                        ..setEntry(3, 2, 0.001) // perspective
-                        ..rotateY(angle);
-
-                      return Transform(
-                        transform: matrix,
-                        alignment: isRight ? Alignment.centerLeft : Alignment.centerRight,
-                        child: child,
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                        color: paperColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _isDarkMode ? const Color(0xFF313244) : const Color(0xFFE2E0D8),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(_isDarkMode ? 80 : 25),
-                            blurRadius: 12,
-                            offset: const Offset(4, 6),
-                          ),
-                        ],
-                      ),
+      body: _isLoadingPdf
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: AppColors.primary),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading & Rendering Book PDF...',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'Downloading document into reader',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                ],
+              ),
+            )
+          : (_pdfBytes != null
+              ? PdfPreview(
+                  build: (format) async => _pdfBytes!,
+                  useActions: true,
+                  allowPrinting: true,
+                  allowSharing: true,
+                  canChangeOrientation: false,
+                  pdfFileName: '${widget.book.title}.pdf',
+                  loadingWidget: const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                  onError: (context, error) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Header Book Page Bar
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'BEE BEYOND PUBLISHING',
-                                style: TextStyle(
-                                  color: widget.book.categoryColor,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.0,
-                                ),
-                              ),
-                              Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color: textColor.withAlpha(120),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Divider(color: _isDarkMode ? Colors.white24 : const Color(0xFFE2E0D8), height: 20),
-
-                          // Page Content Text
-                          Expanded(
-                            child: SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              child: Text(
-                                pages[index],
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: _fontSize,
-                                  height: 1.6,
-                                  letterSpacing: 0.2,
-                                  fontFamily: 'serif',
-                                ),
-                              ),
+                          const Icon(Icons.picture_as_pdf_rounded,
+                              color: Color(0xFFEF4444), size: 48),
+                          const SizedBox(height: 16),
+                          Text(
+                            widget.book.title,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
                             ),
                           ),
-
-                          // Footer Watermark
-                          const Divider(height: 20, color: Colors.black12),
-                          Center(
-                            child: Text(
-                              'Tap left or right / Swipe to flip pages',
+                          const SizedBox(height: 8),
+                          Text(
+                            'Could not render PDF: $error',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12.5),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                            ),
+                            onPressed: _openExternalBrowser,
+                            icon: const Icon(Icons.open_in_new_rounded,
+                                color: Colors.white, size: 18),
+                            label: const Text(
+                              'Open PDF in Browser',
                               style: TextStyle(
-                                color: textColor.withAlpha(100),
-                                fontSize: 10,
-                                fontStyle: FontStyle.italic,
-                              ),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ),
-
-          // BOTTOM CONTROL BAR FOR PAGE FLIPPING
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: _isDarkMode ? const Color(0xFF181825) : Colors.white,
-              border: Border(top: BorderSide(color: _isDarkMode ? Colors.white12 : AppColors.borderSubtle)),
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  // Previous Page Button
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios_rounded, color: _currentPage > 0 ? AppColors.primary : AppColors.textHint),
-                    onPressed: _currentPage > 0 ? _previousPage : null,
                   ),
-
-                  // Page Progress Indicator & Slider
-                  Expanded(
+                )
+              : Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 3,
-                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                            activeTrackColor: AppColors.primary,
-                            inactiveTrackColor: AppColors.borderSubtle,
-                            thumbColor: AppColors.primary,
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFEF2F2),
+                            shape: BoxShape.circle,
                           ),
-                          child: Slider(
-                            value: _currentPage.toDouble(),
-                            min: 0,
-                            max: (pages.length - 1).toDouble(),
-                            divisions: math.max(1, pages.length - 1),
-                            onChanged: (val) {
-                              final page = val.round();
-                              _pageController.animateToPage(
-                                page,
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeOutCubic,
-                              );
-                            },
+                          child: const Icon(Icons.picture_as_pdf_rounded,
+                              color: Color(0xFFEF4444), size: 48),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          widget.book.title,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
                           ),
                         ),
+                        const SizedBox(height: 8),
                         Text(
-                          'Page ${_currentPage + 1} of ${pages.length}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: _isDarkMode ? Colors.white70 : AppColors.textSecondary,
+                          _errorMessage ?? 'Book PDF document unavailable.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: AppColors.textSecondary, fontSize: 12.5),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                          ),
+                          onPressed: _openExternalBrowser,
+                          icon: const Icon(Icons.open_in_new_rounded,
+                              color: Colors.white, size: 18),
+                          label: const Text(
+                            'Open PDF in Browser',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13),
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                  // Next Page Button
-                  IconButton(
-                    icon: Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: _currentPage < pages.length - 1 ? AppColors.primary : AppColors.textHint,
-                    ),
-                    onPressed: _currentPage < pages.length - 1 ? _nextPage : null,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+                )),
     );
   }
 }
