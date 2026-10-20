@@ -58,6 +58,7 @@ class FeaturedCoursesSection extends StatelessWidget {
             price: course['price'] as double,
             duration: course['duration'] as String,
             rating: course['rating'] as double,
+            isNew: true,
             onTap: () => onCourseTap(course['id'] as String),
             onJoinGroup: () => onJoinGroup?.call(course['id'] as String),
           );
