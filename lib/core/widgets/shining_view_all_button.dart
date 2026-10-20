@@ -115,32 +115,34 @@ class _ShiningViewAllButtonState extends State<ShiningViewAllButton>
               ),
 
               // Dynamic Periodic Shining Glint Light Beam
-              AnimatedBuilder(
-                animation: _shineAnimation,
-                builder: (context, child) {
-                  return Positioned.fill(
-                    child: FractionalTranslation(
-                      translation: Offset(_shineAnimation.value, 0),
-                      child: Transform.rotate(
-                        angle: 0.4,
-                        child: Container(
-                          width: 32,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.white.withValues(alpha: 0.0),
-                                Colors.white.withValues(alpha: 0.95),
-                                Colors.amberAccent.withValues(alpha: 0.7),
-                                Colors.white.withValues(alpha: 0.0),
-                              ],
-                              stops: const [0.0, 0.4, 0.6, 1.0],
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedBuilder(
+                    animation: _shineAnimation,
+                    builder: (context, child) {
+                      return FractionalTranslation(
+                        translation: Offset(_shineAnimation.value, 0),
+                        child: Transform.rotate(
+                          angle: 0.4,
+                          child: Container(
+                            width: 32,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withValues(alpha: 0.0),
+                                  Colors.white.withValues(alpha: 0.95),
+                                  Colors.amberAccent.withValues(alpha: 0.7),
+                                  Colors.white.withValues(alpha: 0.0),
+                                ],
+                                stops: const [0.0, 0.4, 0.6, 1.0],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),
