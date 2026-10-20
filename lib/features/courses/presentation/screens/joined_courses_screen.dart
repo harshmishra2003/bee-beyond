@@ -349,23 +349,11 @@ class _JoinedCoursesScreenState extends ConsumerState<JoinedCoursesScreen> {
                         Positioned(
                           top: 4,
                           right: 4,
-                          child: Container(
-                            padding: const EdgeInsets.all(1.5),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(color: Colors.black26, blurRadius: 3),
-                              ],
-                            ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                AssetPaths.beeBeyondImage2,
-                                width: 16,
-                                height: 16,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                          child: Image.asset(
+                            AssetPaths.beeBeyondEmblem,
+                            width: 22,
+                            height: 22,
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ],
