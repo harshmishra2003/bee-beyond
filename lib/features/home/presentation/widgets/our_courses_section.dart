@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/widgets/animated_clock_icon.dart';
 import '../../../../core/widgets/shining_view_all_button.dart';
@@ -239,6 +240,14 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
     final badge = widget.course['badge'] as String;
     final image = widget.course['image'] as String;
 
+    final rawDate = widget.course['created_at']?.toString() ?? widget.course['createdAt']?.toString();
+    DateTime? createdAt;
+    if (rawDate != null && rawDate.isNotEmpty) {
+      try { createdAt = DateTime.tryParse(rawDate); } catch (_) {}
+    }
+    final bool isNewFlag = (widget.course['is_new'] == true || widget.course['is_new']?.toString() == '1');
+    final bool showNewLottie = isNewFlag || (createdAt != null && DateTime.now().difference(createdAt).inHours <= 48);
+
     return Container(
       width: 240,
       margin: const EdgeInsets.only(right: 12),
@@ -307,41 +316,42 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
-                            ),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            badge,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 7.5,
+                        if (showNewLottie) ...[
+                          SizedBox(
+                            width: 38,
+                            height: 22,
+                            child: Lottie.asset(
+                              AssetPaths.lottieNewBadge,
+                              fit: BoxFit.contain,
+                              repeat: true,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 3),
-                        Container(
-                          padding: const EdgeInsets.all(1.5),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(color: Colors.black26, blurRadius: 3),
-                            ],
-                          ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              AssetPaths.beeBeyondImage2,
-                              width: 17,
-                              height: 17,
-                              fit: BoxFit.cover,
+                          const SizedBox(width: 3),
+                        ] else ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                              ),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              badge,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 7.5,
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 3),
+                        ],
+                        Image.asset(
+                          AssetPaths.beeBeyondEmblem,
+                          width: 22,
+                          height: 22,
+                          fit: BoxFit.contain,
                         ),
                       ],
                     ),
