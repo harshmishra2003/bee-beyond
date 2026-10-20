@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/services/whatsapp_service.dart';
 import '../../../../core/widgets/animated_clock_icon.dart';
+import '../../../../core/widgets/shining_join_group_button.dart';
 import '../../../../core/widgets/shining_view_all_button.dart';
 import '../../../courses/presentation/providers/course_provider.dart';
 
@@ -502,8 +503,13 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
                         // Join WhatsApp Study Group Button
                         Expanded(
                           flex: 5,
-                          child: GestureDetector(
-                            onTap: () async {
+                          child: ShiningJoinGroupButton(
+                            text: 'Study Group',
+                            fontSize: 8.5,
+                            iconSize: 11,
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            isLoading: _isJoining,
+                            onPressed: () async {
                               setState(() => _isJoining = true);
                               await WhatsAppService.joinWhatsAppGroup(
                                 context: context,
@@ -515,45 +521,6 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
                                 widget.onJoinGroupTap(id);
                               }
                             },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF25D366),
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x2025D366),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: _isJoining
-                                  ? const SizedBox(
-                                      height: 11,
-                                      width: 11,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 1.5,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.groups_rounded, color: Colors.white, size: 11),
-                                        SizedBox(width: 3),
-                                        Text(
-                                          'Study Group',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 8.5,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                            ),
                           ),
                         ),
                       ],
