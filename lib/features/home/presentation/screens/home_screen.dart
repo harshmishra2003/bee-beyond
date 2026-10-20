@@ -116,7 +116,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const Icon(Icons.spa_rounded, color: AppColors.primary, size: 24),
                     const SizedBox(width: 6),
                     Text(
-                      'Bee Beyonnd',
+                      'Bee Beeyond',
                       style: AppTextStyles.titleLarge.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w900,
