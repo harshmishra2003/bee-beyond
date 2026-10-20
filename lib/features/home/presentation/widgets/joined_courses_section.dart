@@ -290,21 +290,7 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
                 children: [
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: image.startsWith('http')
-                        ? CachedNetworkImage(
-                            imageUrl: image,
-                            width: double.infinity,
-                            height: 90,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(color: const Color(0xFFF1F5F9)),
-                            errorWidget: (context, url, error) => Image.asset(AssetPaths.ancientHealing, fit: BoxFit.cover),
-                          )
-                        : Image.asset(
-                            image,
-                            width: double.infinity,
-                            height: 90,
-                            fit: BoxFit.cover,
-                          ),
+                    child: _buildCourseImage(image),
                   ),
 
                   // TOP GRADIENT OVERLAY
