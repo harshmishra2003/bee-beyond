@@ -23,7 +23,12 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     final dio = _dioClient;
     if (dio != null) {
       try {
-        final response = await dio.get(ApiEndpoints.courses);
+        final response = await dio.get(
+          ApiEndpoints.courses,
+          queryParameters: {
+            '_t': DateTime.now().millisecondsSinceEpoch,
+          },
+        );
         if (response.statusCode == 200 && response.data != null) {
           dynamic rawData = response.data;
           if (rawData is String) {
@@ -52,7 +57,10 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       try {
         final response = await dio.get(
           ApiEndpoints.courseDetail,
-          queryParameters: {'id': id},
+          queryParameters: {
+            'id': id,
+            '_t': DateTime.now().millisecondsSinceEpoch,
+          },
         );
         if (response.statusCode == 200 && response.data != null) {
           dynamic rawData = response.data;
