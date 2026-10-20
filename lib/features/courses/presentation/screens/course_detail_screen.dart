@@ -786,8 +786,8 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.9),
                                 shape: BoxShape.circle,
-                                boxShadow: const [
-                                  BoxShadow(color: Colors.black48, blurRadius: 12),
+                                boxShadow: [
+                                  BoxShadow(color: Colors.black.withAlpha(120), blurRadius: 12),
                                 ],
                               ),
                               child: Icon(
