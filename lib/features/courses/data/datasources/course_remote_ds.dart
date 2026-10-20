@@ -25,17 +25,20 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       try {
         final response = await dio.get(ApiEndpoints.courses);
         if (response.statusCode == 200 && response.data != null) {
-          final data = response.data;
-          final List<dynamic> list = data is Map
-              ? (data['data'] ?? data['courses'] ?? [])
-              : (data is List ? data : []);
+          dynamic rawData = response.data;
+          if (rawData is String) {
+            rawData = jsonDecode(rawData);
+          }
+
+          final List<dynamic> list = rawData is Map
+              ? (rawData['data'] ?? rawData['courses'] ?? [])
+              : (rawData is List ? rawData : []);
 
           return list
               .map((json) => CourseModel.fromJson(json as Map<String, dynamic>))
               .toList();
         }
       } catch (_) {
-        // Return empty list if endpoint is not live or encounters network issue
         return [];
       }
     }
@@ -47,12 +50,23 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     final dio = _dioClient;
     if (dio != null) {
       try {
-        final response = await dio.get('${ApiEndpoints.courseDetail}$id');
+        final response = await dio.get(
+          ApiEndpoints.courseDetail,
+          queryParameters: {'id': id},
+        );
         if (response.statusCode == 200 && response.data != null) {
-          final data = response.data;
-          final Map<String, dynamic> json =
-              data is Map ? (data['data'] ?? data) : {};
-          return CourseModel.fromJson(json);
+          dynamic rawData = response.data;
+          if (rawData is String) {
+            rawData = jsonDecode(rawData);
+          }
+
+          final Map<String, dynamic> json = rawData is Map
+              ? (rawData['data'] is Map ? rawData['data'] : rawData)
+              : {};
+
+          if (json.isNotEmpty) {
+            return CourseModel.fromJson(json);
+          }
         }
       } catch (_) {}
     }
