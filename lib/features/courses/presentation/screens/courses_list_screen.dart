@@ -180,36 +180,42 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
 
               // Course List or Empty Placeholder
               Expanded(
-                child: filteredCourses.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: filteredCourses.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 16),
-                        itemBuilder: (context, index) {
-                          final course = filteredCourses[index];
-                          return SizedBox(
-                            width: double.infinity,
-                            child: CourseCard(
-                              title: course.title,
-                              category: course.subCategory ?? course.category,
-                              imageUrl: course.imageUrl,
-                              price: course.price,
-                              duration: course.duration,
-                              rating: course.rating,
-                              createdAt: course.createdAt,
-                              isNew: course.isNewCourse,
-                              onTap: () => context.push('${RoutePaths.courseDetail}?id=${course.id}'),
-                              onJoinGroup: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Joined study group!')),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                child: RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    ref.invalidate(allCoursesProvider);
+                  },
+                  child: filteredCourses.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                          itemCount: filteredCourses.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 16),
+                          itemBuilder: (context, index) {
+                            final course = filteredCourses[index];
+                            return SizedBox(
+                              width: double.infinity,
+                              child: CourseCard(
+                                title: course.title,
+                                category: course.subCategory ?? course.category,
+                                imageUrl: course.imageUrl,
+                                price: course.price,
+                                duration: course.duration,
+                                rating: course.rating,
+                                createdAt: course.createdAt,
+                                isNew: course.isNewCourse,
+                                onTap: () => context.push('${RoutePaths.courseDetail}?id=${course.id}'),
+                                onJoinGroup: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Joined study group!')),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                ),
               ),
             ],
           );
@@ -272,7 +278,7 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
