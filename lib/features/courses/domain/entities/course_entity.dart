@@ -7,6 +7,7 @@ class CourseEntity extends Equatable {
   final String category;
   final String? subCategory;
   final String imageUrl;
+  final String trailerUrl;
   final double price;
   final String duration;
   final double rating;
@@ -19,6 +20,7 @@ class CourseEntity extends Equatable {
     required this.category,
     this.subCategory,
     required this.imageUrl,
+    this.trailerUrl = '',
     required this.price,
     required this.duration,
     required this.rating,
@@ -26,5 +28,17 @@ class CourseEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, title, description, category, subCategory, imageUrl, price, duration, rating, modulesCount];
+  List<Object?> get props => [
+        id,
+        title,
+        description,
+        category,
+        subCategory,
+        imageUrl,
+        trailerUrl,
+        price,
+        duration,
+        rating,
+        modulesCount,
+      ];
 }
