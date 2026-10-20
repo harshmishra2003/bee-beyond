@@ -19,4 +19,5 @@ class AssetPaths {
   static const String lottieLoading = 'assets/lottie/loading.json';
   static const String lottieSuccess = 'assets/lottie/success.json';
   static const String lottieEmpty = 'assets/lottie/empty.json';
+  static const String lottieNewBadge = 'assets/lottie/New badge.json';
 }
