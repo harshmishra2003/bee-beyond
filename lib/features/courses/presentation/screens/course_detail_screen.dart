@@ -17,8 +17,8 @@ class CourseDetailScreen extends ConsumerWidget {
 
   const CourseDetailScreen({super.key, required this.courseId});
 
-  static const List<String> moduleTitles = [
-    'Introduction & 38 Bach Essences Overview',
+  static const List<String> defaultModuleTitles = [
+    'Introduction & Course Foundations',
     'Remedy Selection, Preparation & Prescriptions',
     'Clinical Case Studies & Diagnostic Therapy',
     'Emotional Balance, Panic & Mind Release',
@@ -43,6 +43,22 @@ class CourseDetailScreen extends ConsumerWidget {
     );
   }
 
+  void _openPdfViewerModal(
+    BuildContext context, {
+    required String pdfTitle,
+    required String pdfUrl,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _CoursePdfViewerModal(
+        pdfTitle: pdfTitle,
+        pdfUrl: pdfUrl,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final courseAsync = ref.watch(courseDetailProvider(courseId));
@@ -50,184 +66,192 @@ class CourseDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: const CustomAppBar(title: 'Course Details'),
       body: courseAsync.when(
-        data: (course) => SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Hero Image Banner with Badges & Play Trailer Overlay
-              GestureDetector(
-                onTap: () => _openTrailerModal(
-                  context,
-                  courseTitle: course.title,
-                  imageUrl: course.imageUrl,
-                  trailerUrl: course.trailerUrl,
-                ),
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
-                      child: course.imageUrl.startsWith('http')
-                          ? CachedNetworkImage(
-                              imageUrl: course.imageUrl,
-                              width: double.infinity,
-                              height: 230,
-                              fit: BoxFit.cover,
-                              errorWidget: (context, url, error) => Container(
-                                height: 230,
-                                color: AppColors.surfaceVariant,
-                                child: const Icon(Icons.school, size: 64, color: AppColors.primary),
-                              ),
-                            )
-                          : Container(
-                              height: 230,
-                              color: AppColors.primaryDark,
-                              child: const Icon(Icons.school, size: 64, color: Colors.white),
-                            ),
-                    ),
+        data: (course) {
+          final learningsList = course.learnings.isNotEmpty
+              ? course.learnings
+              : [
+                  'Comprehensive ${course.title} study & practical application',
+                  'Practical clinical diagnosis & case study analysis',
+                  'Official Certificate of Completion with Student ID',
+                  'Direct 24x7 WhatsApp Study Group Access',
+                ];
 
-                    // Dark Overlay Gradient
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.black.withValues(alpha: 0.5),
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.65),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
+          final hasCustomModules = course.modulesList.isNotEmpty;
+          final totalModulesCount =
+              hasCustomModules ? course.modulesList.length : course.modulesCount;
+
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Hero Image Banner with Badges & Play Trailer Overlay
+                GestureDetector(
+                  onTap: () => _openTrailerModal(
+                    context,
+                    courseTitle: course.title,
+                    imageUrl: course.imageUrl,
+                    trailerUrl: course.trailerUrl,
+                  ),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.vertical(bottom: Radius.circular(24)),
+                        child: course.imageUrl.startsWith('http')
+                            ? CachedNetworkImage(
+                                imageUrl: course.imageUrl,
+                                width: double.infinity,
+                                height: 230,
+                                fit: BoxFit.cover,
+                                errorWidget: (context, url, error) => Container(
+                                  height: 230,
+                                  color: AppColors.surfaceVariant,
+                                  child: const Icon(Icons.school,
+                                      size: 64, color: AppColors.primary),
+                                ),
+                              )
+                            : Container(
+                                height: 230,
+                                color: AppColors.primaryDark,
+                                child: const Icon(Icons.school,
+                                    size: 64, color: Colors.white),
+                              ),
+                      ),
+
+                      // Dark Overlay Gradient
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                              bottom: Radius.circular(24)),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.5),
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.65),
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
 
-                    // Top Right Tag: ONLINE CERTIFIED COURSE & Logo Emblem
-                    Positioned(
-                      top: 12,
-                      right: 14,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEF4444),
-                              borderRadius: BorderRadius.circular(6),
-                              boxShadow: const [
-                                BoxShadow(color: Colors.black26, blurRadius: 4),
-                              ],
-                            ),
-                            child: const Text(
-                              'ONLINE CERTIFIED COURSE',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 9.5,
-                                letterSpacing: 0.4,
+                      // Top Right Tag: ONLINE CERTIFIED COURSE & Logo Emblem
+                      Positioned(
+                        top: 12,
+                        right: 14,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEF4444),
+                                borderRadius: BorderRadius.circular(6),
+                                boxShadow: const [
+                                  BoxShadow(
+                                      color: Colors.black26, blurRadius: 4),
+                                ],
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(color: Colors.black26, blurRadius: 4),
-                              ],
-                            ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                AssetPaths.beeBeyondImage2,
-                                width: 24,
-                                height: 24,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Center Video Preview Play Button
-                    Positioned.fill(
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.92),
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: const [
-                              BoxShadow(color: Colors.black38, blurRadius: 10, offset: Offset(0, 4)),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.play_circle_fill_rounded, color: AppColors.primary, size: 24),
-                              SizedBox(width: 8),
-                              Text(
-                                'Watch HD Trailer',
+                              child: const Text(
+                                'ONLINE CERTIFIED COURSE',
                                 style: TextStyle(
-                                  color: AppColors.primary,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 13,
+                                  fontSize: 9.5,
+                                  letterSpacing: 0.4,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: Colors.black26, blurRadius: 4),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  AssetPaths.beeBeyondImage2,
+                                  width: 24,
+                                  height: 24,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
 
-              Padding(
-                padding: const EdgeInsets.all(18.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Category Badge
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: const [
-                              BoxShadow(color: Color(0x1A4B489B), blurRadius: 6),
-                            ],
-                          ),
-                          child: Text(
-                            course.category,
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
+                      // Center Video Preview Play Button
+                      Positioned.fill(
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.92),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: const [
+                                BoxShadow(
+                                    color: Colors.black38,
+                                    blurRadius: 10,
+                                    offset: Offset(0, 4)),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.play_circle_fill_rounded,
+                                    color: AppColors.primary, size: 24),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Watch HD Trailer',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        if (course.subCategory != null && course.subCategory!.isNotEmpty) ...[
-                          const SizedBox(width: 8),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.all(18.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Category Badge
+                      Row(
+                        children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 5),
                             decoration: BoxDecoration(
-                              color: AppColors.secondary,
+                              color: AppColors.primary,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: const [
-                                BoxShadow(color: Color(0x1A4B489B), blurRadius: 6),
+                                BoxShadow(
+                                    color: Color(0x1A4B489B), blurRadius: 6),
                               ],
                             ),
                             child: Text(
-                              course.subCategory!,
+                              course.category,
                               style: AppTextStyles.labelSmall.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -235,192 +259,375 @@ class CourseDetailScreen extends ConsumerWidget {
                               ),
                             ),
                           ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Course Title
-                    Text(
-                      course.title,
-                      style: AppTextStyles.headlineMedium.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 21,
-                        height: 1.25,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Metrics Card
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF2F0FC),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildMetricItem(Icons.star_rounded, '${course.rating} Rating', Colors.amber),
-                          _buildMetricDivider(),
-                          _buildMetricItem(Icons.access_time_rounded, course.duration, AppColors.primary),
-                          _buildMetricDivider(),
-                          _buildMetricItem(Icons.menu_book_rounded, '${course.modulesCount} Modules', AppColors.primary),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // About Course
-                    Text(
-                      'About Course',
-                      style: AppTextStyles.titleLarge.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      course.description,
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: AppColors.textSecondary,
-                        height: 1.45,
-                        fontSize: 13.5,
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // What You Will Learn Box
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-                        boxShadow: const [
-                          BoxShadow(color: Color(0x0C4B489B), blurRadius: 8, offset: Offset(0, 3)),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.verified_rounded, color: AppColors.primary, size: 20),
-                              SizedBox(width: 8),
-                              Text(
-                                'What You Will Learn',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          _buildCheckItem('38 Bach Flower Remedies selection & dosage'),
-                          _buildCheckItem('Practical clinical diagnosis & case study analysis'),
-                          _buildCheckItem('Official Certificate of Completion with Student ID'),
-                          _buildCheckItem('Direct 24x7 WhatsApp Study Group Access'),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Curriculum Header
-                    Text(
-                      'Course Curriculum & Modules',
-                      style: AppTextStyles.titleLarge.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Modules List
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: course.modulesCount,
-                      itemBuilder: (context, index) {
-                        final modTitle = moduleTitles[index % moduleTitles.length];
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-                            boxShadow: const [
-                              BoxShadow(color: Color(0x0A4B489B), blurRadius: 6, offset: Offset(0, 2)),
-                            ],
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            onTap: () => _openTrailerModal(
-                              context,
-                              courseTitle: 'Module ${index + 1}: $modTitle',
-                              imageUrl: course.imageUrl,
-                              trailerUrl: course.trailerUrl,
-                            ),
-                            leading: Container(
-                              width: 38,
-                              height: 38,
-                              alignment: Alignment.center,
+                          if (course.subCategory != null &&
+                              course.subCategory!.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 5),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.12),
-                                shape: BoxShape.circle,
+                                color: AppColors.secondary,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: const [
+                                  BoxShadow(
+                                      color: Color(0x1A4B489B), blurRadius: 6),
+                                ],
                               ),
                               child: Text(
-                                '${index + 1}',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 14,
+                                course.subCategory!,
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
                                 ),
                               ),
                             ),
-                            title: Text(
-                              'Module ${index + 1}: $modTitle',
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13.5,
-                              ),
-                            ),
-                            subtitle: const Row(
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Course Title
+                      Text(
+                        course.title,
+                        style: AppTextStyles.headlineMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 21,
+                          height: 1.25,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Metrics Card
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2F0FC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                              color: AppColors.borderSubtle, width: 1.2),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildMetricItem(
+                                Icons.star_rounded,
+                                '${course.rating} Rating',
+                                Colors.amber),
+                            _buildMetricDivider(),
+                            _buildMetricItem(Icons.access_time_rounded,
+                                course.duration, AppColors.primary),
+                            _buildMetricDivider(),
+                            _buildMetricItem(Icons.menu_book_rounded,
+                                '$totalModulesCount Modules', AppColors.primary),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // About Course
+                      Text(
+                        'About Course',
+                        style: AppTextStyles.titleLarge.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        course.description,
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.45,
+                          fontSize: 13.5,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // DYNAMIC WHAT YOU WILL LEARN BOX
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                              color: AppColors.borderSubtle, width: 1.2),
+                          boxShadow: const [
+                            BoxShadow(
+                                color: Color(0x0C4B489B),
+                                blurRadius: 8,
+                                offset: Offset(0, 3)),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
                               children: [
-                                Icon(Icons.ondemand_video_rounded, size: 13, color: AppColors.textSecondary),
-                                SizedBox(width: 4),
+                                Icon(Icons.verified_rounded,
+                                    color: AppColors.primary, size: 20),
+                                SizedBox(width: 8),
                                 Text(
-                                  'Video Lecture + PDF Study Guide',
-                                  style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                                  'What You Will Learn',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14.5,
+                                  ),
                                 ),
                               ],
                             ),
-                            trailing: const Icon(
-                              Icons.play_circle_fill_rounded,
-                              color: AppColors.primary,
-                              size: 30,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                            const SizedBox(height: 10),
+                            ...learningsList.map((item) => _buildCheckItem(item)),
+                          ],
+                        ),
+                      ),
 
-                    const SizedBox(height: 110),
-                  ],
+                      const SizedBox(height: 24),
+
+                      // Curriculum Header
+                      Text(
+                        'Course Curriculum & Modules',
+                        style: AppTextStyles.titleLarge.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // DYNAMIC MODULES LIST (SUPPORTS VIDEO LECTURES & PDF STUDY GUIDES)
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: totalModulesCount,
+                        itemBuilder: (context, index) {
+                          if (hasCustomModules) {
+                            final module = course.modulesList[index];
+                            final isPdf = module.type.toLowerCase() == 'pdf';
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                    color: AppColors.borderSubtle, width: 1.2),
+                                boxShadow: const [
+                                  BoxShadow(
+                                      color: Color(0x0A4B489B),
+                                      blurRadius: 6,
+                                      offset: Offset(0, 2)),
+                                ],
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 6),
+                                onTap: () {
+                                  if (isPdf) {
+                                    _openPdfViewerModal(
+                                      context,
+                                      pdfTitle: module.title,
+                                      pdfUrl: module.mediaUrl,
+                                    );
+                                  } else {
+                                    _openTrailerModal(
+                                      context,
+                                      courseTitle: module.title,
+                                      imageUrl: course.imageUrl,
+                                      trailerUrl: module.mediaUrl.isNotEmpty
+                                          ? module.mediaUrl
+                                          : course.trailerUrl,
+                                    );
+                                  }
+                                },
+                                leading: Container(
+                                  width: 38,
+                                  height: 38,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: isPdf
+                                        ? const Color(0xFFFEF2F2)
+                                        : AppColors.primary.withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    isPdf
+                                        ? Icons.picture_as_pdf_rounded
+                                        : Icons.ondemand_video_rounded,
+                                    color: isPdf
+                                        ? const Color(0xFFEF4444)
+                                        : AppColors.primary,
+                                    size: 20,
+                                  ),
+                                ),
+                                title: Text(
+                                  'Module ${index + 1}: ${module.title}',
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.5,
+                                  ),
+                                ),
+                                subtitle: Row(
+                                  children: [
+                                    Icon(
+                                      isPdf
+                                          ? Icons.menu_book_rounded
+                                          : Icons.play_circle_outline_rounded,
+                                      size: 13,
+                                      color: isPdf
+                                          ? const Color(0xFFEF4444)
+                                          : AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      isPdf
+                                          ? 'PDF Study Guide • ${module.durationOrSize}'
+                                          : 'Video Lecture • ${module.durationOrSize}',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: isPdf
+                                            ? const Color(0xFFEF4444)
+                                            : AppColors.textSecondary,
+                                        fontWeight:
+                                            isPdf ? FontWeight.bold : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                trailing: Icon(
+                                  isPdf
+                                      ? Icons.file_download_rounded
+                                      : Icons.play_circle_fill_rounded,
+                                  color: isPdf
+                                      ? const Color(0xFFEF4444)
+                                      : AppColors.primary,
+                                  size: 30,
+                                ),
+                              ),
+                            );
+                          }
+
+                          // Fallback Default Module Items
+                          final modTitle =
+                              defaultModuleTitles[index % defaultModuleTitles.length];
+                          final isPdfModule = (index % 3) == 1;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                  color: AppColors.borderSubtle, width: 1.2),
+                              boxShadow: const [
+                                BoxShadow(
+                                    color: Color(0x0A4B489B),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2)),
+                              ],
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 6),
+                              onTap: () {
+                                if (isPdfModule) {
+                                  _openPdfViewerModal(
+                                    context,
+                                    pdfTitle: 'Module ${index + 1} Reference PDF',
+                                    pdfUrl: '',
+                                  );
+                                } else {
+                                  _openTrailerModal(
+                                    context,
+                                    courseTitle: 'Module ${index + 1}: $modTitle',
+                                    imageUrl: course.imageUrl,
+                                    trailerUrl: course.trailerUrl,
+                                  );
+                                }
+                              },
+                              leading: Container(
+                                width: 38,
+                                height: 38,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: isPdfModule
+                                      ? const Color(0xFFFEF2F2)
+                                      : AppColors.primary.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  isPdfModule
+                                      ? Icons.picture_as_pdf_rounded
+                                      : Icons.ondemand_video_rounded,
+                                  color: isPdfModule
+                                      ? const Color(0xFFEF4444)
+                                      : AppColors.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(
+                                'Module ${index + 1}: $modTitle',
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
+                                ),
+                              ),
+                              subtitle: Row(
+                                children: [
+                                  Icon(
+                                    isPdfModule
+                                        ? Icons.menu_book_rounded
+                                        : Icons.play_circle_outline_rounded,
+                                    size: 13,
+                                    color: isPdfModule
+                                        ? const Color(0xFFEF4444)
+                                        : AppColors.textSecondary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isPdfModule
+                                        ? 'PDF Study Guide & Reference Chart'
+                                        : 'Video Lecture + Study Notes',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: isPdfModule
+                                          ? const Color(0xFFEF4444)
+                                          : AppColors.textSecondary,
+                                      fontWeight: isPdfModule
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              trailing: Icon(
+                                isPdfModule
+                                    ? Icons.file_download_rounded
+                                    : Icons.play_circle_fill_rounded,
+                                color: isPdfModule
+                                    ? const Color(0xFFEF4444)
+                                    : AppColors.primary,
+                                size: 30,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 110),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
+              ],
+            ),
+          );
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error loading course: $err')),
       ),
@@ -471,9 +678,11 @@ class CourseDetailScreen extends ConsumerWidget {
                       child: ThreeDButton(
                         text: 'Enroll Now →',
                         fontSize: 14.5,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                         onPressed: () {
-                          context.push('${RoutePaths.courseEnrollment}?id=${course.id}');
+                          context.push(
+                              '${RoutePaths.courseEnrollment}?id=${course.id}');
                         },
                       ),
                     ),
@@ -519,7 +728,8 @@ class CourseDetailScreen extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle_outline_rounded, color: AppColors.success, size: 16),
+          const Icon(Icons.check_circle_outline_rounded,
+              color: AppColors.success, size: 16),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -528,6 +738,201 @@ class CourseDetailScreen extends ConsumerWidget {
                 fontSize: 12,
                 color: AppColors.textSecondary,
                 height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// IN-APP SMOOTH PDF READER MODAL
+class _CoursePdfViewerModal extends StatelessWidget {
+  final String pdfTitle;
+  final String pdfUrl;
+
+  const _CoursePdfViewerModal({
+    required this.pdfTitle,
+    required this.pdfUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.82,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 10),
+          Container(
+            width: 38,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.picture_as_pdf_rounded,
+                      color: Color(0xFFEF4444), size: 22),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pdfTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const Text(
+                        'Bee Beeyond Study Material PDF Guide',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: AppColors.primary),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.borderSubtle),
+
+          // PDF Reader Mock Document View
+          Expanded(
+            child: Container(
+              color: const Color(0xFFF8FAFC),
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
+                  boxShadow: const [
+                    BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 8,
+                        offset: Offset(0, 3)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'BEE BEEYOND OFFICIAL GUIDE',
+                          style: TextStyle(
+                            color: Color(0xFFEF4444),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'CONFIDENTIAL',
+                            style: TextStyle(
+                              color: Color(0xFFEF4444),
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 16, color: AppColors.borderSubtle),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Text(
+                          '${pdfTitle.toUpperCase()}\n\n'
+                          '1. STUDY OVERVIEW & OBJECTIVES\n'
+                          'Welcome to the official PDF study guide for this module. This handbook contains comprehensive reference charts, practical case studies, and step-by-step diagnostic workflows.\n\n'
+                          '2. KEY ESSENCES & CLINICAL APPLICATION\n'
+                          '• Essence Selection: Identify the core emotional imbalance rather than external symptoms.\n'
+                          '• Dosage Formulation: 4 drops, 4 times daily in spring water.\n'
+                          '• Patient Assessment: Follow the structured diagnostic questions provided in Chapter 3.\n\n'
+                          '3. PRACTICAL EXERCISES & HOMEWORK\n'
+                          'Review Case Study #A4 and submit your dosage recommendation in the student forum before next week\'s live webinar.',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.6,
+                            color: AppColors.textPrimary,
+                            fontFamily: 'serif',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Bottom Actions
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEF4444),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Downloading "$pdfTitle" PDF...'),
+                      backgroundColor: AppColors.primary,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.file_download_rounded,
+                    color: Colors.white, size: 20),
+                label: const Text(
+                  'Download PDF Guide to Device',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13),
+                ),
               ),
             ),
           ),
@@ -550,7 +955,8 @@ class _CourseTrailerPlayerModal extends StatefulWidget {
   });
 
   @override
-  State<_CourseTrailerPlayerModal> createState() => _CourseTrailerPlayerModalState();
+  State<_CourseTrailerPlayerModal> createState() =>
+      _CourseTrailerPlayerModalState();
 }
 
 class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
@@ -560,11 +966,15 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
   double _progress = 0.35;
   String _selectedQuality = '1080p HD';
 
-  final List<String> _qualityOptions = ['1080p HD', '720p HD', '480p SD', 'Auto'];
+  final List<String> _qualityOptions = [
+    '1080p HD',
+    '720p HD',
+    '480p SD',
+    'Auto'
+  ];
 
   @override
   void dispose() {
-    // Always restore portrait orientation when player closes
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     super.dispose();
   }
@@ -611,10 +1021,12 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.movie_filter_rounded, color: Colors.amberAccent, size: 20),
+                    const Icon(Icons.movie_filter_rounded,
+                        color: Colors.amberAccent, size: 20),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
@@ -630,7 +1042,8 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                     IconButton(
                       icon: const Icon(Icons.close_rounded, color: Colors.white),
                       onPressed: () {
-                        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+                        SystemChrome.setPreferredOrientations(
+                            [DeviceOrientation.portraitUp]);
                         Navigator.pop(context);
                       },
                     ),
@@ -650,12 +1063,14 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                             fit: BoxFit.cover,
                             errorWidget: (context, url, error) => Container(
                               color: AppColors.primaryDark,
-                              child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 64),
+                              child: const Icon(Icons.ondemand_video_rounded,
+                                  color: Colors.white, size: 64),
                             ),
                           )
                         : Container(
                             color: AppColors.primaryDark,
-                            child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 64),
+                            child: const Icon(Icons.ondemand_video_rounded,
+                                color: Colors.white, size: 64),
                           ),
                   ),
 
@@ -676,7 +1091,7 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                     ),
                   ),
 
-                  // Top Video Info Bar (Title, Quality Badge, Mute Button)
+                  // Top Video Info Bar
                   Positioned(
                     top: 12,
                     left: 14,
@@ -702,15 +1117,19 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                         PopupMenuButton<String>(
                           initialValue: _selectedQuality,
                           color: const Color(0xFF1E1B4B),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          onSelected: (val) => setState(() => _selectedQuality = val),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          onSelected: (val) =>
+                              setState(() => _selectedQuality = val),
                           itemBuilder: (ctx) => _qualityOptions
                               .map((q) => PopupMenuItem(
                                     value: q,
                                     child: Text(
                                       q,
                                       style: TextStyle(
-                                        color: _selectedQuality == q ? Colors.amberAccent : Colors.white,
+                                        color: _selectedQuality == q
+                                            ? Colors.amberAccent
+                                            : Colors.white,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -718,14 +1137,16 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                                   ))
                               .toList(),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: Colors.amberAccent,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.hd_rounded, size: 14, color: Color(0xFF1E1B4B)),
+                                const Icon(Icons.hd_rounded,
+                                    size: 14, color: Color(0xFF1E1B4B)),
                                 const SizedBox(width: 4),
                                 Text(
                                   _selectedQuality,
@@ -753,7 +1174,9 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                               border: Border.all(color: Colors.white38),
                             ),
                             child: Icon(
-                              _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+                              _isMuted
+                                  ? Icons.volume_off_rounded
+                                  : Icons.volume_up_rounded,
                               color: Colors.white,
                               size: 18,
                             ),
@@ -771,7 +1194,8 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                         children: [
                           IconButton(
                             iconSize: 36,
-                            icon: const Icon(Icons.replay_10_rounded, color: Colors.white),
+                            icon: const Icon(Icons.replay_10_rounded,
+                                color: Colors.white),
                             onPressed: () {
                               setState(() {
                                 _progress = (_progress - 0.1).clamp(0.0, 1.0);
@@ -787,11 +1211,15 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                                 color: Colors.white.withValues(alpha: 0.9),
                                 shape: BoxShape.circle,
                                 boxShadow: [
-                                  BoxShadow(color: Colors.black.withAlpha(120), blurRadius: 12),
+                                  BoxShadow(
+                                      color: Colors.black.withAlpha(120),
+                                      blurRadius: 12),
                                 ],
                               ),
                               child: Icon(
-                                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                _isPlaying
+                                    ? Icons.pause_rounded
+                                    : Icons.play_arrow_rounded,
                                 color: AppColors.primary,
                                 size: 44,
                               ),
@@ -800,7 +1228,8 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                           const SizedBox(width: 20),
                           IconButton(
                             iconSize: 36,
-                            icon: const Icon(Icons.forward_10_rounded, color: Colors.white),
+                            icon: const Icon(Icons.forward_10_rounded,
+                                color: Colors.white),
                             onPressed: () {
                               setState(() {
                                 _progress = (_progress + 0.1).clamp(0.0, 1.0);
@@ -823,7 +1252,8 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                         SliderTheme(
                           data: SliderTheme.of(context).copyWith(
                             trackHeight: 3.5,
-                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                            thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 6),
                             activeTrackColor: Colors.amberAccent,
                             inactiveTrackColor: Colors.white24,
                             thumbColor: Colors.amberAccent,
@@ -840,14 +1270,18 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                             children: [
                               Text(
                                 '${(_progress * 15).toInt()}:12 / 15:00',
-                                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold),
                               ),
 
                               // Screen Rotation / Fullscreen Toggle Button
                               GestureDetector(
                                 onTap: _toggleOrientation,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withAlpha(40),
                                     borderRadius: BorderRadius.circular(8),
@@ -856,14 +1290,21 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                                   child: Row(
                                     children: [
                                       Icon(
-                                        _isLandscape ? Icons.screen_lock_portrait_rounded : Icons.screen_rotation_rounded,
+                                        _isLandscape
+                                            ? Icons.screen_lock_portrait_rounded
+                                            : Icons.screen_rotation_rounded,
                                         color: Colors.white,
                                         size: 15,
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        _isLandscape ? 'Portrait Mode' : 'Rotate Screen',
-                                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                        _isLandscape
+                                            ? 'Portrait Mode'
+                                            : 'Rotate Screen',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
