@@ -251,7 +251,7 @@ class EnrollmentReceiptScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Bee Beyond Holistic Learning Academy', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                                Text('Bee Beeyond Holistic Learning Academy', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
                                 Text('Certified Wellness & E-Learning Portal • GSTIN: 27BEEB1234F1Z0', style: TextStyle(fontSize: 9.5, color: AppColors.textSecondary)),
                               ],
                             ),
