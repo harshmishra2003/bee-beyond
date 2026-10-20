@@ -484,7 +484,6 @@ class _MusicScreenState extends ConsumerState<MusicScreen> with SingleTickerProv
   Widget _buildTrackTile(HealingAudioTrack track, bool isPlayingThis, bool isFavorite) {
     return Container(
       decoration: BoxDecoration(
-        color: isPlayingThis ? const Color(0xFFEEF2FF) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isPlayingThis ? AppColors.primary : AppColors.borderSubtle,
@@ -494,7 +493,11 @@ class _MusicScreenState extends ConsumerState<MusicScreen> with SingleTickerProv
           BoxShadow(color: Color(0x08000000), blurRadius: 6, offset: Offset(0, 3)),
         ],
       ),
-      child: ListTile(
+      child: Material(
+        color: isPlayingThis ? const Color(0xFFEEF2FF) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         leading: Stack(
           alignment: Alignment.center,
@@ -576,7 +579,8 @@ class _MusicScreenState extends ConsumerState<MusicScreen> with SingleTickerProv
         ),
         onTap: () => _playTrack(track),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildMiniPlayerBar(List<HealingAudioTrack> tracks) {
