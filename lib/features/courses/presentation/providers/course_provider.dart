@@ -12,7 +12,7 @@ final courseRepositoryProvider = Provider<CourseRepository>((ref) {
   );
 });
 
-final allCoursesProvider = FutureProvider<List<CourseEntity>>((ref) async {
+final allCoursesProvider = FutureProvider.autoDispose<List<CourseEntity>>((ref) async {
   return await ref.watch(courseRepositoryProvider).getAllCourses();
 });
 
@@ -66,6 +66,6 @@ class JoinedCoursesNotifier extends StateNotifier<AsyncValue<List<JoinedCourseEn
   }
 }
 
-final courseDetailProvider = FutureProvider.family<CourseEntity, String>((ref, id) async {
+final courseDetailProvider = FutureProvider.family.autoDispose<CourseEntity, String>((ref, id) async {
   return await ref.watch(courseRepositoryProvider).getCourseById(id);
 });
