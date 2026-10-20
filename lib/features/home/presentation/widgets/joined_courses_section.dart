@@ -567,4 +567,48 @@ class _JoinedCourseCardState extends State<_JoinedCourseCard> {
       ),
     );
   }
+
+  Widget _buildCourseImage(String imageUrl) {
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        height: 90,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+      );
+    } else if (imageUrl.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
+        height: 90,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          height: 90,
+          width: double.infinity,
+          color: const Color(0xFFF1F5F9),
+        ),
+        errorWidget: (context, url, error) => _buildPlaceholder(),
+      );
+    } else {
+      return _buildPlaceholder();
+    }
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      height: 90,
+      width: double.infinity,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Icon(Icons.school_rounded, color: Color(0xFF4338CA), size: 30),
+    );
+  }
+  }
 }
