@@ -748,7 +748,7 @@ class _CourseTrailerPlayerModalState extends State<_CourseTrailerPlayerModal> {
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.black48,
+                              color: Colors.black.withAlpha(120),
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white38),
                             ),
