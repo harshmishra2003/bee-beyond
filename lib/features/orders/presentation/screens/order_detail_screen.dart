@@ -7,6 +7,7 @@ import '../../../../core/services/whatsapp_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/order_entity.dart';
 import '../../domain/entities/receipt_entity.dart';
 import '../providers/order_provider.dart';
@@ -16,20 +17,28 @@ class OrderDetailScreen extends ConsumerWidget {
 
   const OrderDetailScreen({super.key, required this.orderId});
 
-  ReceiptEntity _getReceiptForOrder(OrderEntity order) {
+  ReceiptEntity _getReceiptForOrder(WidgetRef ref, OrderEntity order) {
+    final currentUser = ref.watch(authStateProvider).user;
+    final name = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Customer';
+    final phone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : 'Customer Portal';
+    final email = currentUser?.email.isNotEmpty == true ? currentUser!.email : 'customer@beebeeyond.com';
+
     final subtotal = order.totalAmount / 1.18;
     return ReceiptEntity(
       receiptId: 'REC-2025-${order.orderId.replaceAll("ORD-", "")}',
       orderId: order.orderId,
-      title: 'Bee Beeyond Order ${order.orderId}',
+      title: 'Order ${order.orderId}',
       type: 'PRODUCT',
-      customerName: 'Aarav Sharma',
-      customerPhone: '+91 9876543210',
-      customerEmail: 'aarav@example.com',
-      deliveryAddress: 'Flat 302, Green Heights, MG Road, Mumbai, Maharashtra - 400001',
-      items: const [
-        ReceiptItem(name: 'Original Bach Rescue Remedy Drops (20ml)', quantity: 2, unitPrice: 450.0),
-        ReceiptItem(name: 'Aura Cleansing Essential Oil (50ml)', quantity: 1, unitPrice: 398.0),
+      customerName: name,
+      customerPhone: phone,
+      customerEmail: email,
+      deliveryAddress: 'Delivery Address on File (${order.orderId})',
+      items: [
+        ReceiptItem(
+          name: 'Bee Beeyond Order (${order.totalItems} Items)',
+          quantity: order.totalItems,
+          unitPrice: subtotal / (order.totalItems > 0 ? order.totalItems : 1),
+        ),
       ],
       subtotal: subtotal,
       gstRate: 0.18,
@@ -40,12 +49,12 @@ class OrderDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _downloadInvoice(BuildContext context, OrderEntity order) {
-    ReceiptPdfService.downloadAndSaveReceiptPdf(context, _getReceiptForOrder(order));
+  void _downloadInvoice(BuildContext context, WidgetRef ref, OrderEntity order) {
+    ReceiptPdfService.downloadAndSaveReceiptPdf(context, _getReceiptForOrder(ref, order));
   }
 
-  void _shareInvoice(BuildContext context, OrderEntity order) {
-    ReceiptPdfService.shareReceipt(context, _getReceiptForOrder(order));
+  void _shareInvoice(BuildContext context, WidgetRef ref, OrderEntity order) {
+    ReceiptPdfService.shareReceipt(context, _getReceiptForOrder(ref, order));
   }
 
   void _contactSupport(BuildContext context, OrderEntity order) {
@@ -68,7 +77,7 @@ class OrderDetailScreen extends ConsumerWidget {
             icon: const Icon(Icons.download_rounded, color: AppColors.primary),
             onPressed: () {
               final order = orderAsync.value;
-              if (order != null) _downloadInvoice(context, order);
+              if (order != null) _downloadInvoice(context, ref, order);
             },
             tooltip: 'Download Invoice',
           ),
@@ -76,7 +85,7 @@ class OrderDetailScreen extends ConsumerWidget {
             icon: const Icon(Icons.share_rounded, color: AppColors.primary),
             onPressed: () {
               final order = orderAsync.value;
-              if (order != null) _shareInvoice(context, order);
+              if (order != null) _shareInvoice(context, ref, order);
             },
             tooltip: 'Share Receipt',
           ),
@@ -189,7 +198,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 const SizedBox(height: 18),
 
                 // 4. SHIPPING & DELIVERY ADDRESS CARD
-                _buildShippingAddressCard(),
+                _buildShippingAddressCard(ref, order),
 
                 const SizedBox(height: 18),
 
@@ -214,7 +223,7 @@ class OrderDetailScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           elevation: 0,
                         ),
-                        onPressed: () => _downloadInvoice(context, order),
+                        onPressed: () => _downloadInvoice(context, ref, order),
                         icon: const Icon(Icons.download_rounded, color: Colors.white, size: 18),
                         label: const Text('DOWNLOAD INVOICE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                       ),
@@ -398,8 +407,14 @@ class OrderDetailScreen extends ConsumerWidget {
   }
 
   // ADDRESS CARD
-  Widget _buildShippingAddressCard() {
+  Widget _buildShippingAddressCard(WidgetRef ref, OrderEntity order) {
+    final currentUser = ref.watch(authStateProvider).user;
+    final name = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Customer';
+    final phone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : '';
+    final email = currentUser?.email.isNotEmpty == true ? currentUser!.email : '';
+
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -409,16 +424,16 @@ class OrderDetailScreen extends ConsumerWidget {
           BoxShadow(color: Color(0x0C000000), blurRadius: 8, offset: Offset(0, 3)),
         ],
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('DELIVERY ADDRESS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.textHint, letterSpacing: 0.8)),
-          SizedBox(height: 8),
-          Text('Aarav Sharma', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          SizedBox(height: 2),
-          Text('+91 9876543210 • aarav@example.com', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-          SizedBox(height: 4),
-          Text('Flat 302, Green Heights, MG Road, Mumbai, Maharashtra - 400001', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3)),
+          const Text('DELIVERY ADDRESS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.textHint, letterSpacing: 0.8)),
+          const SizedBox(height: 8),
+          Text(name, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          const SizedBox(height: 2),
+          Text('$phone ${email.isNotEmpty ? "• $email" : ""}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+          const SizedBox(height: 4),
+          Text('Registered Delivery Address for Order ${order.orderId}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3)),
         ],
       ),
     );
