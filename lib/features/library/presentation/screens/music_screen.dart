@@ -396,6 +396,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'Healing Music & Audios'),
       body: audioAsync.when(
+        skipLoadingOnRefresh: true,
         data: (allTracks) {
           if (allTracks.isEmpty) {
             return _buildEmptyState();
