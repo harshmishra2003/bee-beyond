@@ -20,7 +20,6 @@ class ProductsListScreen extends ConsumerStatefulWidget {
 class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
   String _selectedCategory = 'All';
   String _searchQuery = '';
-  String _categorySearchInSheet = '';
 
   static const List<Map<String, dynamic>> _categoryData = [
     {'name': 'All', 'icon': Icons.apps_rounded, 'color': Color(0xFF4338CA)},
@@ -44,202 +43,161 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
   ];
 
   void _openCategoryFilterSheet() {
-    setState(() => _categorySearchInSheet = '');
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          final filteredSheetCategories = _categoryData.where((cat) {
-            if (_categorySearchInSheet.isEmpty) return true;
-            return (cat['name'] as String)
-                .toLowerCase()
-                .contains(_categorySearchInSheet.toLowerCase());
-          }).toList();
-
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.82,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.72,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-                // Sheet Header Card
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+            // Sheet Header Card
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.amberAccent.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.tune_rounded, color: Colors.amberAccent, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Product Categories',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Select holistic category filter',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: Color(0xFFC7D2FE),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.amberAccent.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.tune_rounded, color: Colors.amberAccent, size: 22),
+                  if (_selectedCategory != 'All')
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Product Categories',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Select holistic category filter',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: Color(0xFFC7D2FE),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (_selectedCategory != 'All')
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.white.withValues(alpha: 0.2),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          onPressed: () {
-                            setState(() => _selectedCategory = 'All');
-                            Navigator.pop(ctx);
-                          },
-                          child: const Text('Reset',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                        ),
-                    ],
-                  ),
-                ),
+                      onPressed: () {
+                        setState(() => _selectedCategory = 'All');
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Reset',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                    ),
+                ],
+              ),
+            ),
 
-                const SizedBox(height: 14),
+            const SizedBox(height: 14),
 
-                // Sheet Inner Search Input
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextField(
-                    onChanged: (val) {
-                      setSheetState(() => _categorySearchInSheet = val.trim());
+            // Categories List
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                physics: const BouncingScrollPhysics(),
+                itemCount: _categoryData.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final item = _categoryData[index];
+                  final catName = item['name'] as String;
+                  final icon = item['icon'] as IconData;
+                  final color = item['color'] as Color;
+                  final isSelected =
+                      _selectedCategory.toLowerCase() == catName.toLowerCase();
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedCategory = catName;
+                      });
+                      Navigator.pop(ctx);
                     },
-                    decoration: InputDecoration(
-                      hintText: 'Search category (e.g. Reiki, DMIT)...',
-                      hintStyle: const TextStyle(fontSize: 12.5, color: AppColors.textHint),
-                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+                          width: isSelected ? 1.8 : 1.0,
+                        ),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(icon, color: color, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              catName,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            const Icon(Icons.check_circle_rounded,
+                                color: AppColors.primary, size: 22)
+                          else
+                            const Icon(Icons.chevron_right_rounded,
+                                color: AppColors.textHint, size: 18),
+                        ],
                       ),
                     ),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Categories List
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: filteredSheetCategories.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final item = filteredSheetCategories[index];
-                      final catName = item['name'] as String;
-                      final icon = item['icon'] as IconData;
-                      final color = item['color'] as Color;
-                      final isSelected =
-                          _selectedCategory.toLowerCase() == catName.toLowerCase();
-
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedCategory = catName;
-                          });
-                          Navigator.pop(ctx);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
-                              width: isSelected ? 1.8 : 1.0,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: color.withValues(alpha: 0.12),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(icon, color: color, size: 20),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  catName,
-                                  style: TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                    color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              if (isSelected)
-                                const Icon(Icons.check_circle_rounded,
-                                    color: AppColors.primary, size: 22)
-                              else
-                                const Icon(Icons.chevron_right_rounded,
-                                    color: AppColors.textHint, size: 18),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
