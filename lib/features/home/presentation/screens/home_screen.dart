@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/expiry_alert_banner.dart';
 import '../../../../core/widgets/shining_view_all_button.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../cart/presentation/managers/cart_manager.dart';
@@ -313,7 +314,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+
+              // EXPIRY ALERT BANNER OVERLAY
+              const ExpiryAlertBanner(),
+
+              const SizedBox(height: 8),
 
               // KPI Action Buttons Grid surrounded by Single Multicolour Combination Frame
               KPIActionGrid(
