@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,6 +11,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../home/presentation/providers/home_provider.dart';
 import '../../domain/entities/video_workshop_item.dart';
 import '../providers/library_provider.dart';
 
@@ -32,11 +34,26 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
     );
   }
 
-  List<String> _extractCategories(List<VideoWorkshopItem> workshops) {
+  List<String> _extractCategories(List<VideoWorkshopItem> workshops, WidgetRef ref) {
     final Set<String> cats = {'All'};
+
+    // 1. Official Course Categories from Home Data
+    final homeAsync = ref.watch(homeDataProvider);
+    homeAsync.whenData((homeData) {
+      for (var c in homeData.categories) {
+        if (c.name.isNotEmpty) {
+          cats.add(c.name.trim());
+        }
+      }
+    });
+
+    // 2. Dynamic Video Categories from API
     for (var w in workshops) {
-      if (w.category.isNotEmpty) cats.add(w.category);
+      if (w.category.isNotEmpty) {
+        cats.add(w.category.trim());
+      }
     }
+
     return cats.toList();
   }
 
@@ -59,10 +76,20 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
             orElse: () => allWorkshops.first,
           );
 
-          final categories = _extractCategories(allWorkshops);
+          final categories = _extractCategories(allWorkshops, ref);
+
           final filteredWorkshops = allWorkshops.where((w) {
             if (_selectedCategory == 'All') return true;
-            return w.category.toLowerCase() == _selectedCategory.toLowerCase();
+            final selLower = _selectedCategory.toLowerCase();
+            final catLower = w.category.toLowerCase();
+            final titleLower = w.title.toLowerCase();
+            final descLower = w.description.toLowerCase();
+
+            return catLower == selLower ||
+                catLower.contains(selLower) ||
+                selLower.contains(catLower) ||
+                titleLower.contains(selLower) ||
+                descLower.contains(selLower);
           }).toList();
 
           return RefreshIndicator(
@@ -162,18 +189,35 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
 
                   const SizedBox(height: 12),
 
-                  // WORKSHOPS LIST
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: filteredWorkshops.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 14),
-                    itemBuilder: (context, index) {
-                      final workshop = filteredWorkshops[index];
-                      return _buildWorkshopCard(workshop);
-                    },
-                  ),
+                  // WORKSHOPS LIST OR CATEGORY EMPTY STATE
+                  filteredWorkshops.isNotEmpty
+                      ? ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: filteredWorkshops.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 14),
+                          itemBuilder: (context, index) {
+                            final workshop = filteredWorkshops[index];
+                            return _buildWorkshopCard(workshop);
+                          },
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                const Icon(Icons.video_camera_back_outlined, size: 48, color: AppColors.textHint),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No video workshops published under "$_selectedCategory" yet.',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
 
                   const SizedBox(height: 32),
                 ],
@@ -760,6 +804,15 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
       allowFullScreen: true,
       allowMuting: true,
       showControls: true,
+      showControlsOnInitialize: true,
+      deviceOrientationsOnEnterFullScreen: const [
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.portraitUp,
+      ],
+      deviceOrientationsAfterFullScreen: const [
+        DeviceOrientation.portraitUp,
+      ],
       materialProgressColors: ChewieProgressColors(
         playedColor: AppColors.primary,
         handleColor: AppColors.primary,
