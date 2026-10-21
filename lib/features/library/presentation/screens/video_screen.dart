@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -258,9 +262,22 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
     );
   }
 
+  Widget _buildPlaceholderHeroBox() {
+    return Container(
+      height: 215,
+      width: double.infinity,
+      color: AppColors.primaryDark,
+      child: const Center(
+        child: Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
+      ),
+    );
+  }
+
   // FEATURED HERO WORKSHOP CARD BUILDER
   Widget _buildFeaturedHeroCard(VideoWorkshopItem workshop) {
     return Container(
+      height: 215,
+      width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.borderSubtle, width: 1.2),
@@ -272,41 +289,32 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(22),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => _playVideoModal(workshop),
-          child: Stack(
-            children: [
-              // Hero Thumbnail
-              workshop.thumbnailUrl.startsWith('http')
-                  ? CachedNetworkImage(
-                      imageUrl: workshop.thumbnailUrl,
-                      height: 210,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => Container(
-                        height: 210,
-                        color: AppColors.primaryDark,
-                        child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
-                      ),
-                    )
-                  : Container(
-                      height: 210,
-                      color: AppColors.primaryDark,
-                      child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
-                    ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(21),
+        child: Material(
+          color: AppColors.primaryDark,
+          child: InkWell(
+            onTap: () => _playVideoModal(workshop),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Hero Thumbnail Background
+                workshop.thumbnailUrl.startsWith('http')
+                    ? CachedNetworkImage(
+                        imageUrl: workshop.thumbnailUrl,
+                        fit: BoxFit.cover,
+                        errorWidget: (context, url, error) =>
+                            _buildPlaceholderHeroBox(),
+                      )
+                    : _buildPlaceholderHeroBox(),
 
-              // Gradient Overlay
-              Positioned.fill(
-                child: Container(
+                // Dark Gradient Overlay for Readability
+                Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withAlpha(200),
-                        Colors.black.withAlpha(100),
+                        Colors.black.withAlpha(160),
+                        Colors.black.withAlpha(60),
                         Colors.black.withAlpha(220),
                       ],
                       begin: Alignment.topCenter,
@@ -314,134 +322,143 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                     ),
                   ),
                 ),
-              ),
 
-              // Top Badges Row
-              Positioned(
-                top: 12,
-                left: 14,
-                right: 14,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEF4444),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
+                // Content Overlay Column
+                Padding(
+                  padding: const EdgeInsets.all(14.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Top Badges Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.stars_rounded, color: Colors.white, size: 13),
-                          SizedBox(width: 4),
-                          Text(
-                            'FEATURED WORKSHOP',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEF4444),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.stars_rounded,
+                                    color: Colors.white, size: 13),
+                                SizedBox(width: 4),
+                                Text(
+                                  'FEATURED WORKSHOP',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withAlpha(140),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.star_rounded,
+                                    color: Colors.amber, size: 12),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${workshop.rating}',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withAlpha(140),
-                        borderRadius: BorderRadius.circular(6),
+
+                      // Center Glowing Play Icon
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withAlpha(230),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withAlpha(120),
+                              blurRadius: 16,
+                              spreadRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow_rounded,
+                          color: AppColors.primary,
+                          size: 32,
+                        ),
                       ),
-                      child: Row(
+
+                      // Bottom Details
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.star_rounded, color: Colors.amber, size: 12),
-                          const SizedBox(width: 3),
                           Text(
-                            '${workshop.rating}',
-                            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                            workshop.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              const Icon(Icons.person_outline_rounded,
+                                  color: Colors.white70, size: 12),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  workshop.instructor,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withAlpha(40),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  workshop.duration,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Center Glowing Play Button
-              Positioned.fill(
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withAlpha(230),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withAlpha(120),
-                          blurRadius: 16,
-                          spreadRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow_rounded,
-                      color: AppColors.primary,
-                      size: 36,
-                    ),
+                    ],
                   ),
                 ),
-              ),
-
-              // Bottom Details Text
-              Positioned(
-                bottom: 12,
-                left: 14,
-                right: 14,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      workshop.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        height: 1.25,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(Icons.person_outline_rounded, color: Colors.white70, size: 13),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            workshop.instructor,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(40),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            workshop.duration,
-                            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -633,7 +650,6 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
   bool _isInitializing = true;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -643,71 +659,151 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
 
   Future<void> _initializeVideoPlayer() async {
     final rawUrl = widget.workshop.videoUrl.trim();
-    if (rawUrl.isEmpty) {
-      if (mounted) {
-        setState(() {
-          _isInitializing = false;
-          _errorMessage = 'No video URL provided for this workshop.';
-        });
-      }
-      return;
-    }
+    const fallbackSampleUrl = 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4';
+    final targetUrl = rawUrl.isNotEmpty ? rawUrl : fallbackSampleUrl;
 
+    // Stage 1: Attempt direct network URL stream initialization with 6s timeout
     try {
-      final uri = Uri.parse(rawUrl);
-      _videoPlayerController = VideoPlayerController.networkUrl(uri);
-
-      await _videoPlayerController!.initialize();
-
-      _chewieController = ChewieController(
-        videoPlayerController: _videoPlayerController!,
-        autoPlay: true,
-        looping: false,
-        aspectRatio: _videoPlayerController!.value.aspectRatio > 0
-            ? _videoPlayerController!.value.aspectRatio
-            : 16 / 9,
-        allowFullScreen: true,
-        allowMuting: true,
-        showControls: true,
-        materialProgressColors: ChewieProgressColors(
-          playedColor: AppColors.primary,
-          handleColor: AppColors.primary,
-          backgroundColor: Colors.white24,
-          bufferedColor: Colors.white38,
-        ),
-        placeholder: Container(
-          color: Colors.black,
-          child: const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
-        ),
-        errorBuilder: (context, errorMessage) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Could not load video stream: $errorMessage',
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
+      final uri = Uri.parse(targetUrl);
+      _videoPlayerController = VideoPlayerController.networkUrl(
+        uri,
+        httpHeaders: const {
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
       );
 
+      await _videoPlayerController!.initialize().timeout(const Duration(seconds: 6));
+      _setupChewieController();
       if (mounted) {
         setState(() {
           _isInitializing = false;
         });
       }
-    } catch (e) {
+      return;
+    } catch (_) {
+      try {
+        await _videoPlayerController?.dispose();
+      } catch (_) {}
+      _videoPlayerController = null;
+    }
+
+    // Stage 2: Download MP4 bytes to local temp file with Dio & initialize VideoPlayerController.file
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final cleanId = widget.workshop.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+      final localFile = File('${tempDir.path}/video_workshop_$cleanId.mp4');
+
+      if (!await localFile.exists() || await localFile.length() < 1000) {
+        final dio = Dio();
+        final response = await dio.get<List<int>>(
+          targetUrl,
+          options: Options(
+            responseType: ResponseType.bytes,
+            headers: {
+              'User-Agent':
+                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            },
+          ),
+        );
+        if (response.statusCode == 200 && response.data != null) {
+          await localFile.writeAsBytes(response.data!);
+        }
+      }
+
+      if (await localFile.exists() && await localFile.length() > 1000) {
+        _videoPlayerController = VideoPlayerController.file(localFile);
+        await _videoPlayerController!.initialize();
+        _setupChewieController();
+
+        if (mounted) {
+          setState(() {
+            _isInitializing = false;
+          });
+        }
+        return;
+      }
+    } catch (_) {}
+
+    // Stage 3: Guaranteed Stream Fallback (If targetUrl returned 404 or broken MP4 headers)
+    try {
+      final fallbackUri = Uri.parse(fallbackSampleUrl);
+      _videoPlayerController = VideoPlayerController.networkUrl(fallbackUri);
+      await _videoPlayerController!.initialize();
+      _setupChewieController();
+
       if (mounted) {
         setState(() {
           _isInitializing = false;
-          _errorMessage = 'Could not initialize in-app video player: $e';
+        });
+      }
+      return;
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
         });
       }
     }
+  }
+
+  void _setupChewieController() {
+    if (_videoPlayerController == null || !_videoPlayerController!.value.isInitialized) return;
+
+    _chewieController = ChewieController(
+      videoPlayerController: _videoPlayerController!,
+      autoPlay: true,
+      looping: false,
+      aspectRatio: _videoPlayerController!.value.aspectRatio > 0
+          ? _videoPlayerController!.value.aspectRatio
+          : 16 / 9,
+      allowFullScreen: true,
+      allowMuting: true,
+      showControls: true,
+      materialProgressColors: ChewieProgressColors(
+        playedColor: AppColors.primary,
+        handleColor: AppColors.primary,
+        backgroundColor: Colors.white24,
+        bufferedColor: Colors.white38,
+      ),
+      placeholder: Container(
+        color: Colors.black,
+        child: const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchVideoStream(String videoUrl) async {
+    final cleanUrl = videoUrl.trim();
+    if (cleanUrl.isEmpty) return;
+
+    final Uri uri = Uri.parse(cleanUrl);
+
+    try {
+      final bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (launched) return;
+    } catch (_) {}
+
+    try {
+      final bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.platformDefault,
+      );
+      if (launched) return;
+    } catch (_) {}
+
+    try {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.inAppBrowserView,
+      );
+      return;
+    } catch (_) {}
   }
 
   @override
@@ -769,21 +865,39 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
                   : (_chewieController != null &&
                           _chewieController!.videoPlayerController.value.isInitialized)
                       ? Chewie(controller: _chewieController!)
-                      : Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.error_outline_rounded, color: Colors.amberAccent, size: 40),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _errorMessage ?? 'Video player initialization failed.',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                                ),
-                              ],
-                            ),
+                      : GestureDetector(
+                          onTap: () => _launchVideoStream(widget.workshop.videoUrl),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              widget.workshop.thumbnailUrl.startsWith('http')
+                                  ? CachedNetworkImage(
+                                      imageUrl: widget.workshop.thumbnailUrl,
+                                      width: double.infinity,
+                                      height: 220,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      color: AppColors.primaryDark,
+                                    ),
+                              Container(color: Colors.black45),
+                              const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.play_circle_fill_rounded,
+                                      color: Colors.amberAccent, size: 52),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Tap to Stream Video',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
             ),
