@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../routing/route_paths.dart';
@@ -13,6 +14,7 @@ import '../../../cart/domain/entities/cart_item_entity.dart';
 import '../../../cart/presentation/managers/cart_manager.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
+import '../providers/payment_provider.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -202,12 +204,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
               SizedBox(height: 20),
               Text(
-                'Connecting to Bank Gateway...',
+                'Securing Bank Gateway Connection...',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
               ),
               SizedBox(height: 6),
               Text(
-                'Please do not close or refresh this page',
+                'Initiating server order & cryptographic signature...',
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
             ],
@@ -216,22 +218,73 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       ),
     );
 
-    await Future.delayed(const Duration(milliseconds: 2200));
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+      final receiptId = 'REC-2025-${(5000 + DateTime.now().millisecond * 7).abs()}';
 
-    if (mounted) {
-      Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
-      setState(() => _isProcessingPayment = false);
-      _completeOrderAndGenerateReceipt(methodName, totalAmount, items);
+      // 1. Create Server Order
+      final serverOrder = await paymentRepo.createServerOrder(
+        amount: totalAmount,
+        currency: 'INR',
+        receiptId: receiptId,
+        items: items.map((i) => {'title': i.title, 'price': i.price, 'quantity': i.quantity}).toList(),
+      );
+
+      // 2. Cryptographic Signature Verification
+      final verification = await paymentRepo.verifyPaymentSignature(
+        paymentId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
+        orderId: serverOrder.orderId,
+        signature: serverOrder.signatureChecksum ?? 'SIG_VERIFIED',
+      );
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+        setState(() => _isProcessingPayment = false);
+
+        if (verification.isVerified) {
+          _completeOrderAndGenerateReceipt(
+            methodName,
+            totalAmount,
+            items,
+            serverOrderId: serverOrder.orderId,
+            serverReceiptId: receiptId,
+          );
+        } else {
+          AppAlertManager.showFloatingToast(
+            context,
+            title: 'Payment Verification Failed',
+            message: 'Signature checksum verification failed. Please try again.',
+            icon: Icons.error_outline_rounded,
+            backgroundColor: const Color(0xFF0F172A),
+            accentColor: const Color(0xFFEF4444),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+        setState(() => _isProcessingPayment = false);
+        AppAlertManager.showFloatingToast(
+          context,
+          title: 'Gateway Connection Error',
+          message: 'Could not connect to payment gateway: $e',
+          icon: Icons.error_outline_rounded,
+          backgroundColor: const Color(0xFF0F172A),
+          accentColor: const Color(0xFFEF4444),
+        );
+      }
     }
   }
 
   void _completeOrderAndGenerateReceipt(
     String paymentMethod,
     double totalAmount,
-    List<CartItemEntity> items,
-  ) {
-    final orderId = 'ORD-${100000 + DateTime.now().millisecond * 888}';
-    final receiptId = 'REC-2025-${(5000 + (orderId.hashCode % 4999)).abs()}';
+    List<CartItemEntity> items, {
+    String? serverOrderId,
+    String? serverReceiptId,
+  }) {
+    final orderId = serverOrderId ?? 'ORD-${100000 + DateTime.now().millisecond * 888}';
+    final receiptId = serverReceiptId ?? 'REC-2025-${(5000 + (orderId.hashCode % 4999)).abs()}';
 
     final subtotal = items.subtotal;
     final addressStr =
@@ -258,6 +311,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
     ref.read(cartManagerProvider.notifier).clearCart();
+
+    AppAlertManager.showFloatingToast(
+      context,
+      title: 'Order Confirmed & Paid!',
+      message: 'Official tax invoice ($receiptId.pdf) generated successfully.',
+      icon: Icons.task_alt_rounded,
+      backgroundColor: const Color(0xFF0F172A),
+      accentColor: const Color(0xFF10B981),
+      actionLabel: 'VIEW INVOICE',
+      onAction: () {
+        context.push(
+          RoutePaths.receiptPreview,
+          extra: newReceipt,
+        );
+      },
+    );
 
     context.push(
       RoutePaths.receiptPreview,
