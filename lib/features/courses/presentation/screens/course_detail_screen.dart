@@ -802,32 +802,54 @@ class _CourseHeroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 220,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFEEF2FF),
+            Color(0xFFE0E7FF),
+            Color(0xFFC7D2FE),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF818CF8), width: 2.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x254F46E5),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: ClipRRect(
-        borderRadius:
-            const BorderRadius.vertical(bottom: Radius.circular(24)),
-        child: course.imageUrl.startsWith('http')
-            ? CachedNetworkImage(
-                imageUrl: course.imageUrl,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-                errorWidget: (context, url, error) =>
-                    _buildPlaceholderPoster(),
-              )
-            : _buildPlaceholderPoster(),
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          height: 230,
+          width: double.infinity,
+          color: const Color(0xFF0F172A),
+          child: course.imageUrl.startsWith('http')
+              ? CachedNetworkImage(
+                  imageUrl: course.imageUrl,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.contain, // FULL COURSE IMAGE VISIBLE WITHOUT CUT OFF
+                  placeholder: (context, url) => const SizedBox(
+                    height: 230,
+                    child: Center(child: CircularProgressIndicator(color: Colors.amberAccent)),
+                  ),
+                  errorWidget: (context, url, error) => _buildPlaceholderPoster(),
+                )
+              : _buildPlaceholderPoster(),
+        ),
       ),
     );
   }
 
   Widget _buildPlaceholderPoster() {
     return Container(
-      height: 220,
+      height: 230,
       width: double.infinity,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
