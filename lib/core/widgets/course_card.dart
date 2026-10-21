@@ -37,10 +37,10 @@ class CourseCard extends StatelessWidget {
   bool get _shouldShowNewBadge {
     if (isNew) return true;
     if (createdAt != null) {
-      final diffInDays = DateTime.now().difference(createdAt!).inDays.abs();
-      return diffInDays <= 30;
+      final diffInHours = DateTime.now().difference(createdAt!).inHours;
+      return diffInHours >= 0 && diffInHours <= 48; // Disappears after 48 hours (2 days)
     }
-    return true;
+    return false;
   }
 
   Widget _buildPlaceholder() {
@@ -157,50 +157,18 @@ class CourseCard extends StatelessWidget {
                           fit: BoxFit.contain,
                         ),
                       ),
-                      // Top Left "NEW" Lottie Animated Badge Overlay
+                      // Top Left "NEW" Lottie Animated Badge (Visible for 2 days from creation)
                       if (_shouldShowNewBadge)
                         Positioned(
-                          top: 4,
-                          left: 4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xCC0F172A),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.7), width: 1),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x40EF4444),
-                                  blurRadius: 6,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: SizedBox(
-                              width: 38,
-                              height: 22,
-                              child: Lottie.asset(
-                                AssetPaths.lottieNewBadge,
-                                fit: BoxFit.contain,
-                                repeat: true,
-                                errorBuilder: (context, error, stackTrace) => Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
-                                    ),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: const Text(
-                                    'NEW',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8.5,
-                                      fontWeight: FontWeight.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                          top: 2,
+                          left: 2,
+                          child: SizedBox(
+                            width: 38,
+                            height: 24,
+                            child: Lottie.asset(
+                              AssetPaths.lottieNewBadge,
+                              fit: BoxFit.contain,
+                              repeat: true,
                             ),
                           ),
                         ),
