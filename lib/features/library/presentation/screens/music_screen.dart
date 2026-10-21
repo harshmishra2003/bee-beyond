@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -44,6 +47,21 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
     );
 
     _audioPlayer = AudioPlayer();
+
+    _audioPlayer.setAudioContext(
+      AudioContext(
+        android: const AudioContextAndroid(
+          stayAwake: true,
+          contentType: AndroidContentType.music,
+          usageType: AndroidUsageType.media,
+          audioFocus: AndroidAudioFocus.gain,
+        ),
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+          options: const {},
+        ),
+      ),
+    );
 
     _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) {
@@ -102,31 +120,57 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
 
     setState(() {
       _currentTrack = track;
+      _isPlaying = true;
     });
+    _rotationController.repeat();
 
     final url = track.audioUrl.trim();
-    if (url.isNotEmpty) {
+    if (url.isEmpty) return;
+
+    try {
+      await _audioPlayer.stop();
+      await _audioPlayer.setVolume(1.0);
+
+      // Stage 1: Attempt direct URL streaming
       try {
-        await _audioPlayer.stop();
         await _audioPlayer.play(UrlSource(url));
-        if (mounted) {
-          setState(() {
-            _isPlaying = true;
-          });
-          _rotationController.repeat();
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Could not stream audio: ${track.title}'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+        return;
+      } catch (_) {}
+
+      // Stage 2: Download MP3 file to local temp directory & play via DeviceFileSource
+      final tempDir = await getTemporaryDirectory();
+      final cleanId = track.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+      final localFile = File('${tempDir.path}/track_$cleanId.mp3');
+
+      if (!await localFile.exists() || await localFile.length() < 100) {
+        final dio = Dio();
+        final response = await dio.get<List<int>>(
+          url,
+          options: Options(
+            responseType: ResponseType.bytes,
+            headers: {
+              'User-Agent':
+                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            },
+          ),
+        );
+        if (response.statusCode == 200 && response.data != null) {
+          await localFile.writeAsBytes(response.data!);
         }
       }
-    } else {
-      _togglePlayPause();
+
+      if (await localFile.exists() && await localFile.length() > 100) {
+        await _audioPlayer.play(DeviceFileSource(localFile.path));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not play "${track.title}": $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -136,20 +180,10 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
     if (_currentTrack?.id == track.id && _isPlaying) return;
 
     setState(() {
-      _currentTrack = track;
-      _isPlaying = true;
       _isSpinningUp = true;
     });
 
-    _rotationController.repeat();
-
-    final url = track.audioUrl.trim();
-    if (url.isNotEmpty) {
-      try {
-        await _audioPlayer.stop();
-        await _audioPlayer.play(UrlSource(url));
-      } catch (_) {}
-    }
+    _playTrack(track);
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
