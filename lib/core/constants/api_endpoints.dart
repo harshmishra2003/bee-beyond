@@ -33,7 +33,7 @@ class ApiEndpoints {
 
   // Cart & Orders
   static const String cart = '/cart';
-  static const String orders = '/orders';
+  static const String orders = '/orders.php';
   static const String checkout = '/checkout';
 
   // Profile
