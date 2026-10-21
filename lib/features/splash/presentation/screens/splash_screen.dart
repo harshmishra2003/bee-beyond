@@ -1,9 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../routing/route_paths.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -86,6 +90,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
           setState(() {
             _visibleLetterCount = count;
           });
+        }
+      }
+    });
+
+    // Auto-navigate after entrance animation completes
+    _entranceController.addStatusListener((status) async {
+      if (status == AnimationStatus.completed) {
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (mounted) {
+          final authState = ref.read(authStateProvider);
+          if (authState.status == AuthStatus.authenticated) {
+            context.go(RoutePaths.home);
+          } else if (!authState.hasSeenOnboarding) {
+            context.go(RoutePaths.onboarding);
+          } else {
+            context.go(RoutePaths.login);
+          }
         }
       }
     });
