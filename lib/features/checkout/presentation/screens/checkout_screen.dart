@@ -61,10 +61,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   void initState() {
     super.initState();
-    // Prefill user details if available
-    _nameController.text = 'Aarav Sharma';
-    _emailController.text = 'aarav.sharma@example.com';
-    _phoneController.text = '+91 9876543210';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final currentUser = ref.read(authStateProvider).user;
+        if (currentUser != null) {
+          if (currentUser.name.isNotEmpty) _nameController.text = currentUser.name;
+          if (currentUser.email.isNotEmpty) _emailController.text = currentUser.email;
+          if (currentUser.phone.isNotEmpty) _phoneController.text = currentUser.phone;
+        }
+      }
+    });
     _streetController.text = 'Flat 402, Green Meadows, MG Road';
     _cityController.text = 'Mumbai';
     _pincodeController.text = '400001';
