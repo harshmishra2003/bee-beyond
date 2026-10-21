@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/three_d_button.dart';
 import '../../domain/entities/video_workshop_item.dart';
 import '../providers/library_provider.dart';
 
@@ -59,123 +61,108 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
             return w.category.toLowerCase() == _selectedCategory.toLowerCase();
           }).toList();
 
-          return SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 12),
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              ref.invalidate(videoWorkshopsProvider);
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
 
-                // FEATURED HERO WORKSHOP BANNER
-                if (allWorkshops.isNotEmpty)
+                  // FEATURED HERO WORKSHOP BANNER
+                  if (allWorkshops.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: _buildFeaturedHeroCard(featuredWorkshop),
+                    ),
+
+                  const SizedBox(height: 20),
+
+                  // CATEGORY FILTER CHIPS
+                  if (categories.length > 1)
+                    SizedBox(
+                      height: 38,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categories.length,
+                        separatorBuilder: (context, index) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final cat = categories[index];
+                          final isSelected = _selectedCategory == cat;
+
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedCategory = cat;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppColors.primary : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected ? AppColors.primary : AppColors.borderSubtle,
+                                  width: 1.5,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: AppColors.primary.withAlpha(60),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        )
+                                      ]
+                                    : null,
+                              ),
+                              child: Text(
+                                cat,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
+
+                  // WORKSHOPS LIST HEADER
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: _buildFeaturedHeroCard(featuredWorkshop),
-                  ),
-
-                const SizedBox(height: 20),
-
-                // CATEGORY FILTER CHIPS
-                if (categories.length > 1)
-                  SizedBox(
-                    height: 38,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      scrollDirection: Axis.horizontal,
-                      itemCount: categories.length,
-                      separatorBuilder: (context, index) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final cat = categories[index];
-                        final isSelected = _selectedCategory == cat;
-
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedCategory = cat;
-                            });
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: isSelected ? AppColors.primary : Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected ? AppColors.primary : AppColors.borderSubtle,
-                                width: 1.5,
-                              ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: AppColors.primary.withAlpha(60),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
-                                      )
-                                    ]
-                                  : null,
-                            ),
-                            child: Text(
-                              cat,
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : AppColors.textSecondary,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                fontSize: 13,
-                              ),
-                            ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '$_selectedCategory Videos (${filteredWorkshops.length})',
+                          style: AppTextStyles.titleLarge.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
                           ),
-                        );
-                      },
-                    ),
-                  ),
-
-                const SizedBox(height: 16),
-
-                // WORKSHOPS LIST HEADER
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '$_selectedCategory Workshops (${filteredWorkshops.length})',
-                        style: AppTextStyles.titleLarge.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      const Row(
-                        children: [
-                          Icon(Icons.filter_list_rounded, size: 18, color: AppColors.textHint),
-                          SizedBox(width: 4),
-                          Text(
-                            'Recent',
-                            style: TextStyle(color: AppColors.textHint, fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // WORKSHOPS LIST
-                if (filteredWorkshops.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Center(
-                      child: Text(
-                        'No video workshops found in $_selectedCategory category.',
-                        style: const TextStyle(color: AppColors.textHint, fontSize: 14),
-                      ),
+                        const Icon(Icons.ondemand_video_rounded, color: AppColors.primary, size: 22),
+                      ],
                     ),
-                  )
-                else
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // WORKSHOPS LIST
                   ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: filteredWorkshops.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 14),
                     itemBuilder: (context, index) {
@@ -184,8 +171,9 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                     },
                   ),
 
-                const SizedBox(height: 32),
-              ],
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           );
         },
@@ -195,7 +183,8 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
         error: (err, stack) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Text('Error loading video workshops: $err', style: const TextStyle(color: AppColors.error)),
+            child: Text('Error loading video workshops: $err',
+                style: const TextStyle(color: AppColors.error)),
           ),
         ),
       ),
@@ -203,46 +192,67 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEEF2FF),
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFC7D2FE)),
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () async {
+        ref.invalidate(videoWorkshopsProvider);
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        child: Container(
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.75),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFC7D2FE)),
+                ),
+                child: const Icon(
+                  Icons.ondemand_video_rounded,
+                  size: 56,
+                  color: AppColors.primary,
+                ),
               ),
-              child: const Icon(
-                Icons.ondemand_video_rounded,
-                size: 56,
-                color: AppColors.primary,
+              const SizedBox(height: 20),
+              const Text(
+                'No Guided Video Workshops Uploaded Yet',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'No Video Workshops Available Yet',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+              const SizedBox(height: 8),
+              const Text(
+                'Video workshops uploaded from the Admin panel will appear here automatically. Pull down to refresh!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Our video team is editing masterclasses and practical workshops. New videos will appear here soon!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-                height: 1.4,
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => ref.invalidate(videoWorkshopsProvider),
+                icon: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
+                label: const Text('Refresh Videos',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -250,24 +260,27 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
 
   // FEATURED HERO WORKSHOP CARD BUILDER
   Widget _buildFeaturedHeroCard(VideoWorkshopItem workshop) {
-    return GestureDetector(
-      onTap: () => _playVideoModal(workshop),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x204B489B),
-              blurRadius: 12,
-              offset: Offset(0, 5),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x301E1B4B),
+            blurRadius: 12,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _playVideoModal(workshop),
           child: Stack(
             children: [
-              // Background Image
+              // Hero Thumbnail
               workshop.thumbnailUrl.startsWith('http')
                   ? CachedNetworkImage(
                       imageUrl: workshop.thumbnailUrl,
@@ -403,11 +416,15 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                       children: [
                         const Icon(Icons.person_outline_rounded, color: Colors.white70, size: 13),
                         const SizedBox(width: 4),
-                        Text(
-                          workshop.instructor,
-                          style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600),
+                        Expanded(
+                          child: Text(
+                            workshop.instructor,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600),
+                          ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
@@ -616,10 +633,53 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
   bool _isPlaying = true;
   double _sliderValue = 0.25;
 
+  Future<void> _launchVideoStream(String videoUrl) async {
+    final cleanUrl = videoUrl.trim();
+    if (cleanUrl.isEmpty) return;
+
+    final Uri uri = Uri.parse(cleanUrl);
+
+    // Attempt 1: Launch in external video player / browser
+    try {
+      final bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (launched) return;
+    } catch (_) {}
+
+    // Attempt 2: Fallback to platform default launch mode
+    try {
+      final bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.platformDefault,
+      );
+      if (launched) return;
+    } catch (_) {}
+
+    // Attempt 3: In-App Browser View
+    try {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.inAppBrowserView,
+      );
+      return;
+    } catch (_) {}
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Opening video stream: ${widget.workshop.title}'),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.82,
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -639,108 +699,132 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
           const SizedBox(height: 12),
 
           // Video Player Screen Container
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            height: 210,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 10),
-              ],
+          GestureDetector(
+            onTap: () => _launchVideoStream(widget.workshop.videoUrl),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              height: 210,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black26, blurRadius: 10),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: widget.workshop.thumbnailUrl.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: widget.workshop.thumbnailUrl,
+                            width: double.infinity,
+                            height: 210,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: double.infinity,
+                            height: 210,
+                            color: AppColors.primaryDark,
+                            child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
+                          ),
+                  ),
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.black.withAlpha(100),
+                      ),
+                    ),
+                  ),
+
+                  // Play / Pause Overlay Button
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withAlpha(220),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black38, blurRadius: 12),
+                        ],
+                      ),
+                      child: Icon(
+                        _isPlaying ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                        color: AppColors.primary,
+                        size: 40,
+                      ),
+                    ),
+                  ),
+
+                  // Video Progress Bar Controls
+                  Positioned(
+                    bottom: 8,
+                    left: 12,
+                    right: 12,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            trackHeight: 3,
+                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                            overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                            activeTrackColor: AppColors.primary,
+                            inactiveTrackColor: Colors.white30,
+                            thumbColor: Colors.white,
+                          ),
+                          child: Slider(
+                            value: _sliderValue,
+                            onChanged: (val) {
+                              setState(() {
+                                _sliderValue = val;
+                              });
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${(_sliderValue * 10).toInt()}:00 / ${widget.workshop.duration}',
+                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                              Row(
+                                children: [
+                                  const Icon(Icons.hd_rounded, color: Colors.white, size: 16),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    icon: const Icon(Icons.fullscreen_rounded, color: Colors.white, size: 20),
+                                    onPressed: () => _launchVideoStream(widget.workshop.videoUrl),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: widget.workshop.thumbnailUrl.startsWith('http')
-                      ? CachedNetworkImage(
-                          imageUrl: widget.workshop.thumbnailUrl,
-                          width: double.infinity,
-                          height: 210,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(
-                          width: double.infinity,
-                          height: 210,
-                          color: AppColors.primaryDark,
-                          child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
-                        ),
-                ),
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.black.withAlpha(100),
-                    ),
-                  ),
-                ),
+          ),
 
-                // Play / Pause Overlay Button
-                Center(
-                  child: IconButton(
-                    iconSize: 54,
-                    icon: Icon(
-                      _isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPlaying = !_isPlaying;
-                      });
-                    },
-                  ),
-                ),
+          const SizedBox(height: 14),
 
-                // Video Progress Bar Controls
-                Positioned(
-                  bottom: 8,
-                  left: 12,
-                  right: 12,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          trackHeight: 3,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                          activeTrackColor: AppColors.primary,
-                          inactiveTrackColor: Colors.white30,
-                          thumbColor: Colors.white,
-                        ),
-                        child: Slider(
-                          value: _sliderValue,
-                          onChanged: (val) {
-                            setState(() {
-                              _sliderValue = val;
-                            });
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '07:15 / ${widget.workshop.duration}',
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
-                            const Row(
-                              children: [
-                                Icon(Icons.hd_rounded, color: Colors.white, size: 16),
-                                SizedBox(width: 8),
-                                Icon(Icons.fullscreen_rounded, color: Colors.white, size: 18),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          // Direct 1-Tap Play Video Stream Button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: ThreeDButton(
+              text: 'Play Full Video Stream ▶',
+              fontSize: 13,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              onPressed: () => _launchVideoStream(widget.workshop.videoUrl),
             ),
           ),
 
@@ -811,7 +895,9 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    widget.workshop.description,
+                    widget.workshop.description.isNotEmpty
+                        ? widget.workshop.description
+                        : 'Comprehensive guided video workshop covering practical application, clinical case studies, and holistic wellness practices.',
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
@@ -865,34 +951,6 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
                         ],
                       ),
                     ),
-
-                  const SizedBox(height: 20),
-
-                  // Download Study Notes PDF Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        elevation: 0,
-                      ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Downloading Workshop Study Notes PDF...'),
-                            backgroundColor: AppColors.primary,
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 20),
-                      label: const Text(
-                        'Download Workshop Notes & Chart (PDF)',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
