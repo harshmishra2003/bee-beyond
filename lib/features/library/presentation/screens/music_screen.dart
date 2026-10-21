@@ -412,11 +412,12 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                   ),
                 ),
               ),
+            ),
 
-              // MINI BOTTOM AUDIO PLAYER BAR
-              if (_currentTrack != null) _buildMiniPlayerBar(allTracks),
-            ],
-          );
+            // MINI BOTTOM AUDIO PLAYER BAR
+            if (_currentTrack != null) _buildMiniPlayerBar(allTracks),
+          ],
+        );
         },
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.primary),
@@ -441,7 +442,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         child: Container(
-          minHeight: MediaQuery.of(context).size.height * 0.75,
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.75),
           alignment: Alignment.center,
           padding: const EdgeInsets.all(32.0),
           child: Column(
@@ -494,20 +495,6 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-            const Text(
-              'Our audio studio is recording certified frequency tracks, chakra resonances, and binaural sleep audio. Stay tuned!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
-            ),
-          ],
         ),
       ),
     );
