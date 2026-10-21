@@ -20,7 +20,7 @@ class ApiEndpoints {
   // Library & Media
   static const String library = '/library';
   static const String books = '/library/books';
-  static const String music = '/library/music';
+  static const String music = '/music.php';
   static const String video = '/library/video';
 
   // Services & Membership
