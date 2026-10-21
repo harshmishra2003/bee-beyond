@@ -280,9 +280,14 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
           return Column(
             children: [
               Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
+                child: RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    ref.invalidate(audioTracksProvider);
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 12),
@@ -428,36 +433,71 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEEF2FF),
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFC7D2FE)),
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () async {
+        ref.invalidate(audioTracksProvider);
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        child: Container(
+          minHeight: MediaQuery.of(context).size.height * 0.75,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFC7D2FE)),
+                ),
+                child: const Icon(
+                  Icons.music_note_rounded,
+                  size: 56,
+                  color: AppColors.primary,
+                ),
               ),
-              child: const Icon(
-                Icons.music_note_rounded,
-                size: 56,
-                color: AppColors.primary,
+              const SizedBox(height: 20),
+              const Text(
+                'No Healing Audio Tracks Uploaded Yet',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'No Healing Audio Tracks Available Yet',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+              const SizedBox(height: 8),
+              const Text(
+                'Audio tracks uploaded from the Admin panel will appear here automatically. Pull down to refresh.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => ref.invalidate(audioTracksProvider),
+                icon: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
+                label: const Text('Refresh Audios',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
             const Text(
               'Our audio studio is recording certified frequency tracks, chakra resonances, and binaural sleep audio. Stay tuned!',
               textAlign: TextAlign.center,
