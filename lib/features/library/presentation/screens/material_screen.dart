@@ -6,6 +6,7 @@ import 'package:printing/printing.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_pdf_book_viewer.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../routing/page_transitions.dart';
 import '../../domain/entities/book_item.dart';
@@ -23,11 +24,13 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   final Set<String> _bookmarkedIds = {};
 
   void _openBookViewer(BookItem book) {
-    Navigator.of(context).push(
-      buildSmoothPageRoute(
-        page: _BookPdfReaderScreen(book: book),
-        type: AppTransitionType.slideUp,
-      ),
+    AppPdfBookViewer.show(
+      context,
+      title: book.title,
+      pdfUrl: book.pdfUrl,
+      subtitle: '${book.author} • ${book.category}',
+      description: book.description,
+      samplePagesContent: book.samplePagesContent,
     );
   }
 
