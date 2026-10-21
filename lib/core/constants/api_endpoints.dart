@@ -24,7 +24,7 @@ class ApiEndpoints {
   static const String video = '/library/video';
 
   // Services & Membership
-  static const String services = '/services';
+  static const String services = '/services.php';
   static const String membershipPlans = '/membership.php';
 
   // Products
