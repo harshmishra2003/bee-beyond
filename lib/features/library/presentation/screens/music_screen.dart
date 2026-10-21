@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +19,7 @@ class MusicScreen extends ConsumerStatefulWidget {
 class _MusicScreenState extends ConsumerState<MusicScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _rotationController;
+  late AudioPlayer _audioPlayer;
 
   String _selectedCategory = 'All';
   String _searchQuery = '';
@@ -26,7 +28,9 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
   bool _isSpinningUp = false;
   bool _isShuffle = false;
   bool _isRepeat = false;
-  double _playbackProgress = 0.28;
+  double _playbackProgress = 0.0;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
 
   final Set<String> _favoriteTrackIds = {};
   final Set<String> _downloadedTrackIds = {};
@@ -38,21 +42,92 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
       vsync: this,
       duration: const Duration(seconds: 12),
     );
+
+    _audioPlayer = AudioPlayer();
+
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
+        if (state == PlayerState.playing) {
+          _rotationController.repeat();
+        } else {
+          _rotationController.stop();
+        }
+      }
+    });
+
+    _audioPlayer.onDurationChanged.listen((d) {
+      if (mounted) {
+        setState(() {
+          _duration = d;
+        });
+      }
+    });
+
+    _audioPlayer.onPositionChanged.listen((p) {
+      if (mounted) {
+        setState(() {
+          _position = p;
+          if (_duration.inMilliseconds > 0) {
+            _playbackProgress =
+                (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0);
+          }
+        });
+      }
+    });
+
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = false;
+          _playbackProgress = 0.0;
+          _position = Duration.zero;
+        });
+        _rotationController.stop();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _audioPlayer.dispose();
     _rotationController.dispose();
     super.dispose();
   }
 
-  void _playTrack(HealingAudioTrack track) {
+  Future<void> _playTrack(HealingAudioTrack track) async {
     HapticFeedback.mediumImpact();
+
     setState(() {
       _currentTrack = track;
-      _isPlaying = true;
     });
-    _rotationController.repeat();
+
+    final url = track.audioUrl.trim();
+    if (url.isNotEmpty) {
+      try {
+        await _audioPlayer.stop();
+        await _audioPlayer.play(UrlSource(url));
+        if (mounted) {
+          setState(() {
+            _isPlaying = true;
+          });
+          _rotationController.repeat();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not stream audio: ${track.title}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } else {
+      _togglePlayPause();
+    }
   }
 
   void _playFeaturedTrackWithSpinUp(HealingAudioTrack track) async {
@@ -67,6 +142,14 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
     });
 
     _rotationController.repeat();
+
+    final url = track.audioUrl.trim();
+    if (url.isNotEmpty) {
+      try {
+        await _audioPlayer.stop();
+        await _audioPlayer.play(UrlSource(url));
+      } catch (_) {}
+    }
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -103,16 +186,43 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
     }
   }
 
-  void _togglePlayPause() {
+  Future<void> _togglePlayPause() async {
     HapticFeedback.mediumImpact();
-    setState(() {
-      _isPlaying = !_isPlaying;
-      if (_isPlaying) {
-        _rotationController.repeat();
-      } else {
+    if (_isPlaying) {
+      await _audioPlayer.pause();
+      if (mounted) {
+        setState(() {
+          _isPlaying = false;
+        });
         _rotationController.stop();
       }
-    });
+    } else {
+      if (_currentTrack != null && _currentTrack!.audioUrl.isNotEmpty) {
+        await _audioPlayer.resume();
+        if (mounted) {
+          setState(() {
+            _isPlaying = true;
+          });
+          _rotationController.repeat();
+        }
+      } else {
+        setState(() {
+          _isPlaying = !_isPlaying;
+        });
+        if (_isPlaying) {
+          _rotationController.repeat();
+        } else {
+          _rotationController.stop();
+        }
+      }
+    }
+  }
+
+  Future<void> _seekAudio(double progressVal) async {
+    if (_duration.inMilliseconds > 0) {
+      final targetMs = (progressVal * _duration.inMilliseconds).toInt();
+      await _audioPlayer.seek(Duration(milliseconds: targetMs));
+    }
   }
 
   void _nextTrack(List<HealingAudioTrack> tracks) {
