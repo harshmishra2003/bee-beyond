@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/asset_paths.dart';
+import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
@@ -61,11 +62,21 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
     ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Subscribed to ${plan.displayName} successfully!'),
-        backgroundColor: const Color(0xFF10B981),
-      ),
+    AppAlertManager.showFloatingToast(
+      context,
+      title: 'VIP Pass Activated!',
+      message: 'Subscribed to ${plan.displayName} successfully',
+      icon: Icons.stars_rounded,
+      backgroundColor: const Color(0xFF0F172A),
+      accentColor: const Color(0xFF10B981),
+      actionLabel: 'RECEIPT',
+      onAction: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
+          ),
+        );
+      },
     );
 
     Navigator.of(context).push(
