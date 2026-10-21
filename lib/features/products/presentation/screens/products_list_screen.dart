@@ -19,124 +19,330 @@ class ProductsListScreen extends ConsumerStatefulWidget {
 
 class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
   String _selectedCategory = 'All';
+  String _searchQuery = '';
+  String _categorySearchInSheet = '';
 
-  static const List<String> _productCategories = [
-    'All',
-    'Ayurvedic Upchar',
-    'Counselling Services',
-    'Life Coaching',
-    'Alternative Drugless Medicine',
-    'Nutrition',
-    'Graphology',
-    'Psychotherapy Modalities',
-    'DMIT',
-    'Reiki',
-    'Astrology',
-    'Jain Mantra Urja',
-    'Buddhism',
-    'Mind & Body Balance Modalities',
-    'Spiritual Holistic Healing',
-    'Health Wealth and Happiness Remedy',
-    'Aromatherapy Courses',
-    'Personality & Motivational',
+  static const List<Map<String, dynamic>> _categoryData = [
+    {'name': 'All', 'icon': Icons.apps_rounded, 'color': Color(0xFF4338CA)},
+    {'name': 'Ayurvedic Upchar', 'icon': Icons.spa_outlined, 'color': Color(0xFF059669)},
+    {'name': 'Counselling Services', 'icon': Icons.support_agent_outlined, 'color': Color(0xFF4338CA)},
+    {'name': 'Life Coaching', 'icon': Icons.psychology_outlined, 'color': Color(0xFF7C3AED)},
+    {'name': 'Alternative Drugless Medicine', 'icon': Icons.medication_liquid_outlined, 'color': Color(0xFF0288D1)},
+    {'name': 'Nutrition', 'icon': Icons.restaurant_outlined, 'color': Color(0xFFD97706)},
+    {'name': 'Graphology', 'icon': Icons.edit_note_outlined, 'color': Color(0xFF4338CA)},
+    {'name': 'Psychotherapy Modalities', 'icon': Icons.self_improvement_outlined, 'color': Color(0xFF7C3AED)},
+    {'name': 'DMIT', 'icon': Icons.fingerprint_outlined, 'color': Color(0xFF0288D1)},
+    {'name': 'Reiki', 'icon': Icons.auto_awesome_outlined, 'color': Color(0xFFD97706)},
+    {'name': 'Astrology', 'icon': Icons.brightness_7_outlined, 'color': Color(0xFF7C3AED)},
+    {'name': 'Jain Mantra Urja', 'icon': Icons.brightness_high_outlined, 'color': Color(0xFFD97706)},
+    {'name': 'Buddhism', 'icon': Icons.filter_vintage_outlined, 'color': Color(0xFF059669)},
+    {'name': 'Mind & Body Balance Modalities', 'icon': Icons.balance_outlined, 'color': Color(0xFF0288D1)},
+    {'name': 'Spiritual Holistic Healing', 'icon': Icons.nature_people_outlined, 'color': Color(0xFF059669)},
+    {'name': 'Health Wealth and Happiness Remedy', 'icon': Icons.card_giftcard_outlined, 'color': Color(0xFFD97706)},
+    {'name': 'Aromatherapy Courses', 'icon': Icons.local_florist_outlined, 'color': Color(0xFF059669)},
+    {'name': 'Personality & Motivational', 'icon': Icons.emoji_events_outlined, 'color': Color(0xFF4338CA)},
   ];
 
   void _openCategoryFilterSheet() {
+    setState(() => _categorySearchInSheet = '');
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(context).size.height * 0.75,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final filteredSheetCategories = _categoryData.where((cat) {
+            if (_categorySearchInSheet.isEmpty) return true;
+            return (cat['name'] as String)
+                .toLowerCase()
+                .contains(_categorySearchInSheet.toLowerCase());
+          }).toList();
+
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.82,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Row(
-                  children: [
-                    Icon(Icons.tune_rounded, color: AppColors.primary, size: 22),
-                    SizedBox(width: 8),
-                    Text(
-                      'Filter Products by Category',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                const SizedBox(height: 12),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Sheet Header Card
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.amberAccent.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.tune_rounded, color: Colors.amberAccent, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Product Categories',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Select holistic category filter',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: Color(0xFFC7D2FE),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_selectedCategory != 'All')
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(alpha: 0.2),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () {
+                            setState(() => _selectedCategory = 'All');
+                            Navigator.pop(ctx);
+                          },
+                          child: const Text('Reset',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                        ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // Sheet Inner Search Input
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    onChanged: (val) {
+                      setSheetState(() => _categorySearchInSheet = val.trim());
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search category (e.g. Reiki, DMIT)...',
+                      hintStyle: const TextStyle(fontSize: 12.5, color: AppColors.textHint),
+                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                       ),
                     ),
-                  ],
-                ),
-                if (_selectedCategory != 'All')
-                  TextButton(
-                    onPressed: () {
-                      setState(() => _selectedCategory = 'All');
-                      Navigator.pop(ctx);
-                    },
-                    child: const Text('Reset',
-                        style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold)),
                   ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Categories List
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: filteredSheetCategories.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final item = filteredSheetCategories[index];
+                      final catName = item['name'] as String;
+                      final icon = item['icon'] as IconData;
+                      final color = item['color'] as Color;
+                      final isSelected =
+                          _selectedCategory.toLowerCase() == catName.toLowerCase();
+
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategory = catName;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+                              width: isSelected ? 1.8 : 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(icon, color: color, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  catName,
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check_circle_rounded,
+                                    color: AppColors.primary, size: 22)
+                              else
+                                const Icon(Icons.chevron_right_rounded,
+                                    color: AppColors.textHint, size: 18),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
-            const Divider(height: 20),
-            Expanded(
-              child: ListView.separated(
-                physics: const BouncingScrollPhysics(),
-                itemCount: _productCategories.length,
-                separatorBuilder: (context, index) =>
-                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                itemBuilder: (context, index) {
-                  final cat = _productCategories[index];
-                  final isSelected =
-                      _selectedCategory.toLowerCase() == cat.toLowerCase();
+          );
+        },
+      ),
+    );
+  }
 
-                  return ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    title: Text(
-                      cat,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                      ),
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: TextField(
+        onChanged: (val) {
+          setState(() => _searchQuery = val.trim());
+        },
+        style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+        decoration: InputDecoration(
+          hintText: 'Search organic remedies, teas, Bach drops...',
+          hintStyle: const TextStyle(fontSize: 12.5, color: AppColors.textHint),
+          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear_rounded, color: AppColors.textHint, size: 18),
+                  onPressed: () {
+                    setState(() => _searchQuery = '');
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChipsBar() {
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: _categoryData.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final item = _categoryData[index];
+          final catName = item['name'] as String;
+          final icon = item['icon'] as IconData;
+          final isSelected =
+              _selectedCategory.toLowerCase() == catName.toLowerCase();
+
+          return GestureDetector(
+            onTap: () {
+              setState(() => _selectedCategory = catName);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
+                  width: isSelected ? 1.8 : 1.2,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        )
+                      ]
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: isSelected ? Colors.amberAccent : AppColors.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    catName,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontSize: 12,
                     ),
-                    trailing: isSelected
-                        ? const Icon(Icons.check_circle_rounded,
-                            color: AppColors.primary, size: 22)
-                        : const Icon(Icons.chevron_right_rounded,
-                            color: AppColors.textHint, size: 18),
-                    onTap: () {
-                      setState(() {
-                        _selectedCategory = cat;
-                      });
-                      Navigator.pop(ctx);
-                    },
-                  );
-                },
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -152,7 +358,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.menu_rounded, color: AppColors.primary, size: 26),
-            tooltip: 'Filter Categories',
+            tooltip: 'All Categories',
             onPressed: _openCategoryFilterSheet,
           ),
           const SizedBox(width: 8),
@@ -166,16 +372,19 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
           }
 
           final filteredProducts = products.where((p) {
-            if (_selectedCategory == 'All') return true;
-            final selLower = _selectedCategory.toLowerCase();
-            final titleLower = p.title.toLowerCase();
-            final descLower = p.description.toLowerCase();
-            final catLower = p.category.toLowerCase();
+            final matchesCategory = _selectedCategory == 'All' ||
+                p.category.toLowerCase().contains(_selectedCategory.toLowerCase()) ||
+                _selectedCategory.toLowerCase().contains(p.category.toLowerCase()) ||
+                p.title.toLowerCase().contains(_selectedCategory.toLowerCase()) ||
+                p.description.toLowerCase().contains(_selectedCategory.toLowerCase());
 
-            return catLower.contains(selLower) ||
-                selLower.contains(catLower) ||
-                titleLower.contains(selLower) ||
-                descLower.contains(selLower);
+            final q = _searchQuery.toLowerCase();
+            final matchesQuery = q.isEmpty ||
+                p.title.toLowerCase().contains(q) ||
+                p.description.toLowerCase().contains(q) ||
+                p.category.toLowerCase().contains(q);
+
+            return matchesCategory && matchesQuery;
           }).toList();
 
           return RefreshIndicator(
@@ -189,71 +398,13 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hamburger Filter Bar Trigger Banner
-                  GestureDetector(
-                    onTap: _openCategoryFilterSheet,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x0A000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.menu_rounded, color: AppColors.primary, size: 22),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Product Category Filter',
-                                  style: TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textHint,
-                                  ),
-                                ),
-                                const SizedBox(height: 1),
-                                Text(
-                                  _selectedCategory,
-                                  style: const TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEEF2FF),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFC7D2FE)),
-                            ),
-                            child: const Text(
-                              'SELECT ☰',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // SEARCH BAR
+                  _buildSearchBar(),
+
+                  const SizedBox(height: 14),
+
+                  // HORIZONTAL CATEGORY CHIPS BAR
+                  _buildCategoryChipsBar(),
 
                   const SizedBox(height: 16),
 
@@ -261,21 +412,48 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '$_selectedCategory Products (${filteredProducts.length})',
-                        style: AppTextStyles.titleLarge.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            '$_selectedCategory Products',
+                            style: AppTextStyles.titleLarge.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEEF2FF),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFC7D2FE)),
+                            ),
+                            child: Text(
+                              '${filteredProducts.length}',
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      if (_selectedCategory != 'All')
+                      if (_selectedCategory != 'All' || _searchQuery.isNotEmpty)
                         GestureDetector(
-                          onTap: () => setState(() => _selectedCategory = 'All'),
+                          onTap: () {
+                            setState(() {
+                              _selectedCategory = 'All';
+                              _searchQuery = '';
+                            });
+                          },
                           child: const Row(
                             children: [
                               Icon(Icons.clear_rounded, size: 16, color: AppColors.textHint),
                               SizedBox(width: 4),
-                              Text('Clear Filter',
+                              Text('Reset All',
                                   style: TextStyle(
                                       fontSize: 12,
                                       color: AppColors.textHint,
@@ -351,7 +529,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                                     size: 48, color: AppColors.textHint),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'No healing products found under "$_selectedCategory" yet.',
+                                  'No healing products found matching your search.',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                       color: AppColors.textSecondary,
