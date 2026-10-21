@@ -243,6 +243,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       body: homeDataAsync.when(
+        skipLoadingOnRefresh: true,
         data: (data) => RefreshIndicator(
           color: AppColors.primary,
           onRefresh: () async {
