@@ -14,8 +14,10 @@ class OrderRepositoryImpl implements OrderRepository {
 
   @override
   Future<OrderEntity> getOrderById(String id) async {
-    final dynamic res = await remoteDataSource.getOrderById(id);
-    if (res is OrderEntity) return res;
+    final res = await remoteDataSource.getOrderById(id);
+    if (res != null) {
+      return res;
+    }
     return OrderEntity(
       orderId: id,
       status: 'Processing',
