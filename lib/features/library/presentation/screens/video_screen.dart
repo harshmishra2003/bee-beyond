@@ -1,11 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
-import '../../../../core/widgets/three_d_button.dart';
 import '../../domain/entities/video_workshop_item.dart';
 import '../providers/library_provider.dart';
 
@@ -619,7 +619,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
   }
 }
 
-// INTERACTIVE VIDEO PLAYER MODAL BOTTOM SHEET
+// IN-APP NATIVE VIDEO PLAYER MODAL BOTTOM SHEET
 class _VideoPlayerModal extends StatefulWidget {
   final VideoWorkshopItem workshop;
 
@@ -630,56 +630,97 @@ class _VideoPlayerModal extends StatefulWidget {
 }
 
 class _VideoPlayerModalState extends State<_VideoPlayerModal> {
-  bool _isPlaying = true;
-  double _sliderValue = 0.25;
+  VideoPlayerController? _videoPlayerController;
+  ChewieController? _chewieController;
+  bool _isInitializing = true;
+  String? _errorMessage;
 
-  Future<void> _launchVideoStream(String videoUrl) async {
-    final cleanUrl = videoUrl.trim();
-    if (cleanUrl.isEmpty) return;
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideoPlayer();
+  }
 
-    final Uri uri = Uri.parse(cleanUrl);
-
-    // Attempt 1: Launch in external video player / browser
-    try {
-      final bool launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-      if (launched) return;
-    } catch (_) {}
-
-    // Attempt 2: Fallback to platform default launch mode
-    try {
-      final bool launched = await launchUrl(
-        uri,
-        mode: LaunchMode.platformDefault,
-      );
-      if (launched) return;
-    } catch (_) {}
-
-    // Attempt 3: In-App Browser View
-    try {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.inAppBrowserView,
-      );
+  Future<void> _initializeVideoPlayer() async {
+    final rawUrl = widget.workshop.videoUrl.trim();
+    if (rawUrl.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+          _errorMessage = 'No video URL provided for this workshop.';
+        });
+      }
       return;
-    } catch (_) {}
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Opening video stream: ${widget.workshop.title}'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
     }
+
+    try {
+      final uri = Uri.parse(rawUrl);
+      _videoPlayerController = VideoPlayerController.networkUrl(uri);
+
+      await _videoPlayerController!.initialize();
+
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController!,
+        autoPlay: true,
+        looping: false,
+        aspectRatio: _videoPlayerController!.value.aspectRatio > 0
+            ? _videoPlayerController!.value.aspectRatio
+            : 16 / 9,
+        allowFullScreen: true,
+        allowMuting: true,
+        showControls: true,
+        materialProgressColors: ChewieProgressColors(
+          playedColor: AppColors.primary,
+          handleColor: AppColors.primary,
+          backgroundColor: Colors.white24,
+          bufferedColor: Colors.white38,
+        ),
+        placeholder: Container(
+          color: Colors.black,
+          child: const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        ),
+        errorBuilder: (context, errorMessage) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Could not load video stream: $errorMessage',
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+          _errorMessage = 'Could not initialize in-app video player: $e';
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _chewieController?.dispose();
+    _videoPlayerController?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.88,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -698,135 +739,57 @@ class _VideoPlayerModalState extends State<_VideoPlayerModal> {
           ),
           const SizedBox(height: 12),
 
-          // Video Player Screen Container
-          GestureDetector(
-            onTap: () => _launchVideoStream(widget.workshop.videoUrl),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              height: 210,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black26, blurRadius: 10),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: widget.workshop.thumbnailUrl.startsWith('http')
-                        ? CachedNetworkImage(
-                            imageUrl: widget.workshop.thumbnailUrl,
-                            width: double.infinity,
-                            height: 210,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            width: double.infinity,
-                            height: 210,
-                            color: AppColors.primaryDark,
-                            child: const Icon(Icons.ondemand_video_rounded, color: Colors.white, size: 48),
+          // IN-APP NATIVE VIDEO PLAYER CONTAINER
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            height: 220,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: const [
+                BoxShadow(color: Colors.black38, blurRadius: 12, offset: Offset(0, 4)),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: _isInitializing
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(color: AppColors.primary),
+                          SizedBox(height: 12),
+                          Text(
+                            'Loading In-App Video Stream...',
+                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                           ),
-                  ),
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: Colors.black.withAlpha(100),
-                      ),
-                    ),
-                  ),
-
-                  // Play / Pause Overlay Button
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withAlpha(220),
-                        boxShadow: const [
-                          BoxShadow(color: Colors.black38, blurRadius: 12),
                         ],
                       ),
-                      child: Icon(
-                        _isPlaying ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                        color: AppColors.primary,
-                        size: 40,
-                      ),
-                    ),
-                  ),
-
-                  // Video Progress Bar Controls
-                  Positioned(
-                    bottom: 8,
-                    left: 12,
-                    right: 12,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 3,
-                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                            overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                            activeTrackColor: AppColors.primary,
-                            inactiveTrackColor: Colors.white30,
-                            thumbColor: Colors.white,
-                          ),
-                          child: Slider(
-                            value: _sliderValue,
-                            onChanged: (val) {
-                              setState(() {
-                                _sliderValue = val;
-                              });
-                            },
+                    )
+                  : (_chewieController != null &&
+                          _chewieController!.videoPlayerController.value.isInitialized)
+                      ? Chewie(controller: _chewieController!)
+                      : Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.error_outline_rounded, color: Colors.amberAccent, size: 40),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _errorMessage ?? 'Video player initialization failed.',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${(_sliderValue * 10).toInt()}:00 / ${widget.workshop.duration}',
-                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                              ),
-                              Row(
-                                children: [
-                                  const Icon(Icons.hd_rounded, color: Colors.white, size: 16),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    icon: const Icon(Icons.fullscreen_rounded, color: Colors.white, size: 20),
-                                    onPressed: () => _launchVideoStream(widget.workshop.videoUrl),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
 
-          const SizedBox(height: 14),
-
-          // Direct 1-Tap Play Video Stream Button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: ThreeDButton(
-              text: 'Play Full Video Stream ▶',
-              fontSize: 13,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              onPressed: () => _launchVideoStream(widget.workshop.videoUrl),
-            ),
-          ),
+          const SizedBox(height: 12),
 
           // Details Scrollable View
           Expanded(
