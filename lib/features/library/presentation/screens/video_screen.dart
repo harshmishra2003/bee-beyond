@@ -42,6 +42,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'Guided Video Workshops'),
       body: videoAsync.when(
+        skipLoadingOnRefresh: true,
         data: (allWorkshops) {
           if (allWorkshops.isEmpty) {
             return _buildEmptyState();
