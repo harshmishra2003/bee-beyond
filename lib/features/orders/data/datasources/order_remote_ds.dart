@@ -66,7 +66,6 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       } catch (_) {}
     }
 
-    // Returns empty list when user has no API orders yet (Zero dummy data)
     return [];
   }
 
@@ -91,6 +90,10 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     } catch (_) {}
 
     final orders = await getOrders();
-    return orders.firstWhere((o) => o.orderId == id, orElse: () => orders.first);
+    if (orders.isNotEmpty) {
+      return orders.firstWhere((o) => o.orderId == id, orElse: () => orders.first);
+    }
+
+    return null;
   }
 }
