@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
+import '../../../../core/widgets/app_pdf_book_viewer.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
@@ -47,15 +48,11 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
     required String pdfUrl,
     String? description,
   }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _CoursePdfViewerModal(
-        pdfTitle: pdfTitle,
-        pdfUrl: pdfUrl,
-        description: description,
-      ),
+    AppPdfBookViewer.show(
+      context,
+      title: pdfTitle,
+      pdfUrl: pdfUrl,
+      description: description,
     );
   }
 
