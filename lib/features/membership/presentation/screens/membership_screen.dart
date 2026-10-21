@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/asset_paths.dart';
+import '../../../../core/services/expiry_manager_service.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -9,6 +10,7 @@ import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
 import '../../../orders/presentation/screens/receipt_preview_screen.dart';
 import '../../domain/entities/membership_plan_entity.dart';
+import '../providers/expiry_provider.dart';
 import '../providers/membership_provider.dart';
 
 class MembershipScreen extends ConsumerStatefulWidget {
@@ -68,6 +70,14 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
     ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
 
+    // Activate the pass in ActivePassNotifier
+    ref.read(activePassProvider.notifier).activatePass(
+          passId: plan.id,
+          passName: plan.displayName,
+          slug: plan.slug,
+          durationYears: plan.accessDuration > 0 ? plan.accessDuration : 1,
+        );
+
     AppAlertManager.showFloatingToast(
       context,
       title: 'VIP Pass Activated!',
@@ -95,6 +105,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
   @override
   Widget build(BuildContext context) {
     final plansAsync = ref.watch(membershipPlansProvider);
+    final activePass = ref.watch(activePassProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -109,6 +120,9 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // ACTIVE PASS STATUS CARD
+              if (activePass != null) _buildActivePassStatusCard(activePass),
+
               // ANIMATED HEADER BANNER
               const _AnimatedHeaderBanner(),
 
@@ -139,6 +153,111 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildActivePassStatusCard(UserPassSubscription activePass) {
+    Color statusColor = const Color(0xFF10B981); // Emerald for active
+    if (activePass.status == AccessStatus.expiringSoon) {
+      statusColor = const Color(0xFFF59E0B); // Amber for expiring soon
+    } else if (activePass.isExpired) {
+      statusColor = const Color(0xFFEF4444); // Red for expired
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: statusColor.withValues(alpha: 0.5), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      activePass.isExpired ? Icons.access_time_filled_rounded : Icons.verified_rounded,
+                      color: statusColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'ACTIVE MEMBER PASS',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF64748B),
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        activePass.passName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  activePass.statusLabel,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          // Subscription Duration Progress Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: activePass.progress,
+              minHeight: 6,
+              backgroundColor: const Color(0xFFF1F5F9),
+              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+            ),
+          ),
+        ],
       ),
     );
   }
