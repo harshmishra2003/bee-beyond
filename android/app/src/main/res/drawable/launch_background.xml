@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Dark navy background matching the app's custom splash screen (#0F0C20) -->
     <item>
         <shape android:shape="rectangle">
             <solid android:color="#0F0C20" />
         </shape>
-    </item>
-
-    <!-- Centered App Icon -->
-    <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/ic_launcher" />
     </item>
 </layer-list>
