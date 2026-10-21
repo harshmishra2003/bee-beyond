@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -22,6 +23,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
   String _searchQuery = '';
   HealingAudioTrack? _currentTrack;
   bool _isPlaying = false;
+  bool _isSpinningUp = false;
   bool _isShuffle = false;
   bool _isRepeat = false;
   double _playbackProgress = 0.28;
@@ -45,6 +47,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
   }
 
   void _playTrack(HealingAudioTrack track) {
+    HapticFeedback.mediumImpact();
     setState(() {
       _currentTrack = track;
       _isPlaying = true;
@@ -52,7 +55,56 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
     _rotationController.repeat();
   }
 
+  void _playFeaturedTrackWithSpinUp(HealingAudioTrack track) async {
+    HapticFeedback.mediumImpact();
+
+    if (_currentTrack?.id == track.id && _isPlaying) return;
+
+    setState(() {
+      _currentTrack = track;
+      _isPlaying = true;
+      _isSpinningUp = true;
+    });
+
+    _rotationController.repeat();
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.amberAccent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Spinning vinyl record & streaming "${track.title}"...',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF1E1B4B),
+        duration: const Duration(milliseconds: 2500),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
+
+    await Future.delayed(const Duration(milliseconds: 2500));
+    if (mounted) {
+      setState(() {
+        _isSpinningUp = false;
+      });
+    }
+  }
+
   void _togglePlayPause() {
+    HapticFeedback.mediumImpact();
     setState(() {
       _isPlaying = !_isPlaying;
       if (_isPlaying) {
@@ -64,6 +116,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
   }
 
   void _nextTrack(List<HealingAudioTrack> tracks) {
+    HapticFeedback.mediumImpact();
     if (_currentTrack == null || tracks.isEmpty) return;
     final currentIndex = tracks.indexOf(_currentTrack!);
     final nextIndex = (currentIndex + 1) % tracks.length;
@@ -71,6 +124,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
   }
 
   void _previousTrack(List<HealingAudioTrack> tracks) {
+    HapticFeedback.mediumImpact();
     if (_currentTrack == null || tracks.isEmpty) return;
     final currentIndex = tracks.indexOf(_currentTrack!);
     final prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
@@ -78,29 +132,18 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
   }
 
   void _toggleFavorite(String trackId) {
+    HapticFeedback.lightImpact();
     setState(() {
       if (_favoriteTrackIds.contains(trackId)) {
         _favoriteTrackIds.remove(trackId);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Removed from favorites'),
-            duration: Duration(seconds: 1),
-          ),
-        );
       } else {
         _favoriteTrackIds.add(trackId);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Added to favorites! ❤️'),
-            backgroundColor: AppColors.primary,
-            duration: Duration(seconds: 1),
-          ),
-        );
       }
     });
   }
 
   void _downloadTrack(HealingAudioTrack track) {
+    HapticFeedback.mediumImpact();
     if (_downloadedTrackIds.contains(track.id)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -134,6 +177,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
 
   void _openFullPlayerModal(List<HealingAudioTrack> tracks) {
     if (_currentTrack == null) return;
+    HapticFeedback.lightImpact();
 
     showModalBottomSheet(
       context: context,
@@ -154,8 +198,14 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
         onFavoriteToggle: () => _toggleFavorite(_currentTrack!.id),
         onDownload: () => _downloadTrack(_currentTrack!),
         onProgressChanged: (val) => setState(() => _playbackProgress = val),
-        onShuffleToggle: () => setState(() => _isShuffle = !_isShuffle),
-        onRepeatToggle: () => setState(() => _isRepeat = !_isRepeat),
+        onShuffleToggle: () {
+          HapticFeedback.selectionClick();
+          setState(() => _isShuffle = !_isShuffle);
+        },
+        onRepeatToggle: () {
+          HapticFeedback.selectionClick();
+          setState(() => _isRepeat = !_isRepeat);
+        },
       ),
     );
   }
@@ -237,7 +287,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                     children: [
                       const SizedBox(height: 12),
 
-                      // TOP FEATURED TRACK BANNER
+                      // TOP FEATURED TRACK BANNER WITH VINYL SPIN-UP ANIMATION
                       if (allTracks.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -292,8 +342,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                                 ),
                               ],
                             ),
-                            const Icon(Icons.graphic_eq_rounded,
-                                color: AppColors.primary, size: 22),
+                            _AnimatedEqualizerBars(isPlaying: _isPlaying),
                           ],
                         ),
                       ),
@@ -440,7 +489,10 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
         ],
       ),
       child: TextField(
-        onChanged: (val) => setState(() => _searchQuery = val),
+        onChanged: (val) {
+          HapticFeedback.selectionClick();
+          setState(() => _searchQuery = val);
+        },
         style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
         decoration: InputDecoration(
           hintText: 'Search audio, frequency (e.g. 528 Hz), or artist...',
@@ -449,7 +501,10 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear_rounded, color: AppColors.textHint, size: 18),
-                  onPressed: () => setState(() => _searchQuery = ''),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    setState(() => _searchQuery = '');
+                  },
                 )
               : null,
           border: InputBorder.none,
@@ -478,6 +533,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
 
           return GestureDetector(
             onTap: () {
+              HapticFeedback.selectionClick();
               setState(() {
                 _selectedCategory = cat;
               });
@@ -580,45 +636,64 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
           Positioned(
             right: -20,
             bottom: -20,
-            child: Icon(Icons.music_note_rounded,
-                size: 140, color: Colors.white.withValues(alpha: 0.08)),
+            child: RotationTransition(
+              turns: _rotationController,
+              child: Icon(Icons.album_rounded,
+                  size: 140, color: Colors.white.withValues(alpha: 0.12)),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(18.0),
             child: Row(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: track.imageUrl.startsWith('http')
-                      ? CachedNetworkImage(
-                          imageUrl: track.imageUrl,
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) =>
-                              _buildAudioIconBox(track, size: 80),
-                        )
-                      : _buildAudioIconBox(track, size: 80),
+                RotationTransition(
+                  turns: _rotationController,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: track.imageUrl.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: track.imageUrl,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorWidget: (context, url, error) =>
+                                _buildAudioIconBox(track, size: 80),
+                          )
+                        : _buildAudioIconBox(track, size: 80),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.amberAccent,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          'FEATURED HARMONIC',
-                          style: TextStyle(
-                              color: Color(0xFF1E1B4B),
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w900),
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.amberAccent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'FEATURED HARMONIC',
+                              style: TextStyle(
+                                  color: Color(0xFF1E1B4B),
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w900),
+                            ),
+                          ),
+                          if (_isSpinningUp) ...[
+                            const SizedBox(width: 6),
+                            const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 1.8, color: Colors.amberAccent),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -639,7 +714,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                       ),
                       const SizedBox(height: 10),
                       SizedBox(
-                        height: 32,
+                        height: 34,
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
@@ -647,14 +722,23 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10)),
                             padding:
-                                const EdgeInsets.symmetric(horizontal: 12),
-                            elevation: 0,
+                                const EdgeInsets.symmetric(horizontal: 14),
+                            elevation: 2,
                           ),
-                          onPressed: () => _playTrack(track),
-                          icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                          label: const Text('LISTEN NOW',
-                              style: TextStyle(
-                                  fontSize: 11, fontWeight: FontWeight.w900)),
+                          onPressed: () => _playFeaturedTrackWithSpinUp(track),
+                          icon: _isSpinningUp
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Color(0xFF312E81)),
+                                )
+                              : const Icon(Icons.play_arrow_rounded, size: 18),
+                          label: Text(
+                            _isSpinningUp ? 'SPINNING VINYL...' : 'LISTEN NOW',
+                            style: const TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.w900),
+                          ),
                         ),
                       ),
                     ],
@@ -739,10 +823,9 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                           color: Colors.black.withValues(alpha: 0.55),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(
-                          Icons.equalizer_rounded,
-                          color: Colors.amberAccent,
-                          size: 28,
+                        child: const Center(
+                          child: _AnimatedEqualizerBars(
+                              isPlaying: true, color: Colors.amberAccent),
                         ),
                       ),
                   ],
@@ -847,19 +930,13 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                   ),
                 ),
 
-                // Quick Actions
+                // Quick Actions with Haptic Heart Button
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      icon: Icon(
-                        isFavorite
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        color: isFavorite ? Colors.redAccent : AppColors.textHint,
-                        size: 20,
-                      ),
-                      onPressed: () => _toggleFavorite(track.id),
+                    _AnimatedHeartButton(
+                      isFavorite: isFavorite,
+                      onTap: () => _toggleFavorite(track.id),
                     ),
                     IconButton(
                       icon: Icon(
@@ -932,9 +1009,18 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                           fontSize: 13,
                           fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      '${_currentTrack!.artist} • ${_currentTrack!.frequency}',
-                      style: const TextStyle(color: Color(0xFFC7D2FE), fontSize: 10.5),
+                    Row(
+                      children: [
+                        Text(
+                          '${_currentTrack!.artist} • ${_currentTrack!.frequency}',
+                          style: const TextStyle(color: Color(0xFFC7D2FE), fontSize: 10.5),
+                        ),
+                        if (_isPlaying) ...[
+                          const SizedBox(width: 8),
+                          const _AnimatedEqualizerBars(
+                              isPlaying: true, color: Colors.amberAccent),
+                        ],
+                      ],
                     ),
                   ],
                 ),
@@ -949,6 +1035,155 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                 onPressed: () => _nextTrack(tracks),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ANIMATED EQUALIZER SOUND WAVE BARS
+class _AnimatedEqualizerBars extends StatefulWidget {
+  final bool isPlaying;
+  final Color color;
+
+  const _AnimatedEqualizerBars({
+    required this.isPlaying,
+    this.color = AppColors.primary,
+  });
+
+  @override
+  State<_AnimatedEqualizerBars> createState() => _AnimatedEqualizerBarsState();
+}
+
+class _AnimatedEqualizerBarsState extends State<_AnimatedEqualizerBars>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 550),
+    );
+    if (widget.isPlaying) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedEqualizerBars oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isPlaying != oldWidget.isPlaying) {
+      if (widget.isPlaying) {
+        _controller.repeat(reverse: true);
+      } else {
+        _controller.stop();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final val = _controller.value;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _buildBar(8 + val * 10),
+            const SizedBox(width: 2.5),
+            _buildBar(16 - val * 8),
+            const SizedBox(width: 2.5),
+            _buildBar(6 + val * 14),
+            const SizedBox(width: 2.5),
+            _buildBar(14 - val * 10),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBar(double height) {
+    return Container(
+      width: 3.0,
+      height: widget.isPlaying ? height.clamp(4.0, 20.0) : 5.0,
+      decoration: BoxDecoration(
+        color: widget.color,
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+}
+
+// ANIMATED HEART POP BUTTON WITH HAPTIC FEEDBACK
+class _AnimatedHeartButton extends StatefulWidget {
+  final bool isFavorite;
+  final VoidCallback onTap;
+
+  const _AnimatedHeartButton({
+    required this.isFavorite,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedHeartButton> createState() => _AnimatedHeartButtonState();
+}
+
+class _AnimatedHeartButtonState extends State<_AnimatedHeartButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween<double>(begin: 1.0, end: 1.45), weight: 50),
+      TweenSequenceItem(tween: Tween<double>(begin: 1.45, end: 1.0), weight: 50),
+    ]).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutBack),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    HapticFeedback.mediumImpact();
+    _controller.forward(from: 0.0);
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Icon(
+            widget.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            color: widget.isFavorite ? Colors.redAccent : AppColors.textHint,
+            size: 22,
           ),
         ),
       ),
@@ -1026,7 +1261,10 @@ class _FullAudioPlayerModal extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.keyboard_arrow_down_rounded,
                     color: Colors.white, size: 30),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.pop(context);
+                },
               ),
               const Text(
                 'NOW PLAYING HARMONIC',
@@ -1036,63 +1274,80 @@ class _FullAudioPlayerModal extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1),
               ),
-              IconButton(
-                icon: Icon(
-                    isFavorite
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    color: isFavorite ? Colors.redAccent : Colors.white),
-                onPressed: onFavoriteToggle,
+              _AnimatedHeartButton(
+                isFavorite: isFavorite,
+                onTap: onFavoriteToggle,
               ),
             ],
           ),
           const Spacer(),
-          RotationTransition(
-            turns: rotationController,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.amberAccent, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.amber.withValues(alpha: 0.35),
-                      blurRadius: 20,
-                      spreadRadius: 2),
+
+          // SLIDE & FADE ANIMATED TRACK PLAYER ARTWORK & DETAILS
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(scale: animation, child: child),
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey(track.id),
+              child: Column(
+                children: [
+                  RotationTransition(
+                    turns: rotationController,
+                    child: Container(
+                      width: 180,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.amberAccent, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.amber.withValues(alpha: 0.35),
+                              blurRadius: 20,
+                              spreadRadius: 2),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: track.imageUrl.startsWith('http')
+                            ? CachedNetworkImage(
+                                imageUrl: track.imageUrl,
+                                fit: BoxFit.cover,
+                                errorWidget: (context, url, error) => Container(
+                                    color: track.categoryColor,
+                                    child: const Icon(Icons.music_note_rounded,
+                                        size: 72, color: Colors.white)),
+                              )
+                            : Container(
+                                color: track.categoryColor,
+                                child: const Icon(Icons.music_note_rounded,
+                                    size: 72, color: Colors.white)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    track.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${track.artist} • ${track.frequency}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFFC7D2FE), fontSize: 13),
+                  ),
                 ],
-              ),
-              child: ClipOval(
-                child: track.imageUrl.startsWith('http')
-                    ? CachedNetworkImage(
-                        imageUrl: track.imageUrl,
-                        fit: BoxFit.cover,
-                        errorWidget: (context, url, error) => Container(
-                            color: track.categoryColor,
-                            child: const Icon(Icons.music_note_rounded,
-                                size: 72, color: Colors.white)),
-                      )
-                    : Container(
-                        color: track.categoryColor,
-                        child: const Icon(Icons.music_note_rounded,
-                            size: 72, color: Colors.white)),
               ),
             ),
           ),
+
           const Spacer(),
-          Text(
-            track.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${track.artist} • ${track.frequency}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Color(0xFFC7D2FE), fontSize: 13),
-          ),
-          const SizedBox(height: 20),
+
+          // AUDIO PLAYER PROGRESS SLIDER
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: Colors.amberAccent,
@@ -1115,6 +1370,8 @@ class _FullAudioPlayerModal extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
+
+          // CONTROL BUTTONS ROW WITH HAPTIC FEEDBACK
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
