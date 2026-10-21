@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_alert_manager.dart';
@@ -197,6 +198,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 
               // Services List & Category Filter
               servicesAsync.when(
+                skipLoadingOnRefresh: true,
                 data: (servicesList) {
                   if (servicesList.isEmpty) {
                     return _buildEmptyState();
@@ -293,7 +295,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         separatorBuilder: (context, index) => const SizedBox(height: 16),
                         itemBuilder: (context, index) {
                           final srv = filteredServices[index];
-                          return _buildServiceCard(context, srv);
+                          return _buildServiceCard(context, srv, index);
                         },
                       ),
                     ],
@@ -365,44 +367,84 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
     );
   }
 
-  Widget _buildServiceCard(BuildContext context, ServiceItem srv) {
-    final int discountPercent = srv.offerPrice > srv.serviceCharge
-        ? (((srv.offerPrice - srv.serviceCharge) / srv.offerPrice) * 100).round()
-        : 0;
+  Widget _buildServiceCard(BuildContext context, ServiceItem srv, int index) {
+    // Beautiful Light-Colored Frame Gradients & Borders
+    final frameGradients = [
+      const LinearGradient(
+        colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      const LinearGradient(
+        colors: [Color(0xFFFFFFFF), Color(0xFFF0FDF4)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      const LinearGradient(
+        colors: [Color(0xFFFFFFFF), Color(0xFFFFFBEB)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      const LinearGradient(
+        colors: [Color(0xFFFFFFFF), Color(0xFFFAF5FF)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    ];
+
+    final frameBorders = [
+      const Color(0xFFC7D2FE), // Indigo light border
+      const Color(0xFFA7F3D0), // Mint green light border
+      const Color(0xFFFDE68A), // Amber gold light border
+      const Color(0xFFE9D5FF), // Purple light border
+    ];
+
+    final gradient = frameGradients[index % frameGradients.length];
+    final borderColor = frameBorders[index % frameBorders.length];
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-        boxShadow: const [
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: borderColor, width: 1.5),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0C4B489B),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            color: borderColor.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Offer Image Banner (if available)
+          // Offer Image Banner - FULL IMAGE VISIBLE WITHOUT CUT OFF
           if (srv.offerImageUrl.isNotEmpty)
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(19)),
-                  child: CachedNetworkImage(
-                    imageUrl: srv.offerImageUrl,
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: 150,
-                      color: const Color(0xFFF1F5F9),
-                      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                Container(
+                  height: 165,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    child: Center(
+                      child: CachedNetworkImage(
+                        imageUrl: srv.offerImageUrl,
+                        height: 165,
+                        width: double.infinity,
+                        fit: BoxFit.contain, // FULL IMAGE VISIBLE WITHOUT CUT OFF
+                        placeholder: (context, url) => Container(
+                          height: 165,
+                          color: const Color(0xFFF1F5F9),
+                          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        ),
+                        errorWidget: (context, url, error) => const SizedBox.shrink(),
+                      ),
                     ),
-                    errorWidget: (context, url, error) => const SizedBox.shrink(),
                   ),
                 ),
                 Positioned(
@@ -413,6 +455,9 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(8),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                      ],
                     ),
                     child: Text(
                       srv.category.toUpperCase(),
@@ -425,28 +470,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     ),
                   ),
                 ),
-                if (discountPercent > 0)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '$discountPercent% OFF',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
 
@@ -456,6 +479,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
@@ -470,15 +494,30 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            srv.serviceName,
-                            style: AppTextStyles.titleMedium.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
+                          // Service Title Row + Small Bee Beeyond Emblem Logo
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  srv.serviceName,
+                                  style: AppTextStyles.titleMedium.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Image.asset(
+                                AssetPaths.beeBeyondEmblem,
+                                width: 22,
+                                height: 22,
+                                fit: BoxFit.contain,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
                             srv.duration,
                             style: AppTextStyles.labelSmall.copyWith(
