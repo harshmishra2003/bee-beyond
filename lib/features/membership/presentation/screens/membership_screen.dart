@@ -130,6 +130,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
               // MEMBERSHIP CARDS LIST (DYNAMIC API RESPONSE)
               plansAsync.when(
+                skipLoadingOnRefresh: true,
                 data: (plans) {
                   if (plans.isEmpty) {
                     return _buildEmptyState();
