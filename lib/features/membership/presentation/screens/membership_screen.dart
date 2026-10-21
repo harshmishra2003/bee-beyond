@@ -4,6 +4,7 @@ import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
 import '../../../orders/presentation/screens/receipt_preview_screen.dart';
@@ -37,6 +38,11 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
   }
 
   void _subscribePlan(MembershipPlanEntity plan) {
+    final currentUser = ref.read(authStateProvider).user;
+    final customerName = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Bee Beeyond Member';
+    final customerPhone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : 'Self-Service Pass';
+    final customerEmail = currentUser?.email.isNotEmpty == true ? currentUser!.email : 'member@beebeeyond.com';
+
     final receiptId = 'REC-2025-${(1000 + plan.id.hashCode % 8999).abs()}';
     final orderId = 'MBR-2025-${(5000 + plan.id.hashCode % 4999).abs()}';
 
@@ -44,10 +50,10 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       receiptId: receiptId,
       orderId: orderId,
       title: plan.displayName,
-      type: 'SERVICE',
-      customerName: 'Aarav Sharma',
-      customerPhone: '+91 9876543210',
-      customerEmail: 'aarav@example.com',
+      type: 'MEMBERSHIP',
+      customerName: customerName,
+      customerPhone: customerPhone,
+      customerEmail: customerEmail,
       deliveryAddress: 'Online VIP Membership Access Pass (Bee Beeyond Portal)',
       items: [
         ReceiptItem(name: plan.displayName, quantity: 1, unitPrice: plan.price),
