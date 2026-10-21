@@ -24,7 +24,7 @@ final ordersListProvider = FutureProvider<List<OrderEntity>>((ref) async {
         OrderEntity(
           orderId: receipt.orderId,
           status: 'Delivered',
-          totalAmount: receipt.totalPayable,
+          totalAmount: receipt.grandTotal,
           orderDate: receipt.date,
           totalItems: receipt.items.isNotEmpty ? receipt.items.length : 1,
         ),
