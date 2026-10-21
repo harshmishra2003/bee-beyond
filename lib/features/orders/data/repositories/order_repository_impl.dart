@@ -14,16 +14,15 @@ class OrderRepositoryImpl implements OrderRepository {
 
   @override
   Future<OrderEntity> getOrderById(String id) async {
-    final res = await remoteDataSource.getOrderById(id);
-    if (res != null) {
-      return res;
-    }
-    return OrderEntity(
+    final item = await remoteDataSource.getOrderById(id);
+    final OrderEntity fallback = OrderEntity(
       orderId: id,
       status: 'Processing',
       totalAmount: 0.0,
       orderDate: DateTime.now(),
       totalItems: 1,
     );
+    final OrderEntity result = (item as OrderEntity?) ?? fallback;
+    return result;
   }
 }
