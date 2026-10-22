@@ -7,6 +7,7 @@ class CartItemModel extends CartItemEntity {
     required super.imageUrl,
     required super.price,
     required super.quantity,
+    super.maxAllowedQuantity = 5,
   });
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +24,9 @@ class CartItemModel extends CartItemEntity {
       quantity: (json['quantity'] as num?)?.toInt() ??
           int.tryParse(json['quantity']?.toString() ?? '') ??
           1,
+      maxAllowedQuantity: (json['maxAllowedQuantity'] as num?)?.toInt() ??
+          (json['max_qty'] as num?)?.toInt() ??
+          5,
     );
   }
 
@@ -33,5 +37,6 @@ class CartItemModel extends CartItemEntity {
         'image_url': imageUrl,
         'price': price,
         'quantity': quantity,
+        'maxAllowedQuantity': maxAllowedQuantity,
       };
 }
