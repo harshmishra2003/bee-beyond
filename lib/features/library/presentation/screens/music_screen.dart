@@ -1557,13 +1557,28 @@ class _FullAudioPlayerModal extends StatelessWidget {
                     color: Colors.white, size: 36),
                 onPressed: onPrevious,
               ),
-              FloatingActionButton.large(
-                backgroundColor: Colors.amberAccent,
-                foregroundColor: const Color(0xFF1E1B4B),
-                onPressed: onPlayPauseToggle,
-                child: Icon(
+              GestureDetector(
+                onTap: onPlayPauseToggle,
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Colors.amberAccent,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x40F59E0B),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
                     isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    size: 40),
+                    color: const Color(0xFF1E1B4B),
+                    size: 40,
+                  ),
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.skip_next_rounded,
