@@ -5,6 +5,7 @@ import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/otp_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
+import '../features/cart/domain/entities/cart_item_entity.dart';
 import '../features/cart/presentation/screens/cart_screen.dart';
 import '../features/checkout/presentation/screens/checkout_screen.dart';
 import '../features/courses/presentation/screens/course_detail_screen.dart';
@@ -251,12 +252,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.checkout,
         name: RouteNames.checkout,
-        pageBuilder: (context, state) => buildCustomTransitionPage(
-          context: context,
-          state: state,
-          child: const CheckoutScreen(),
-          type: AppTransitionType.slideUp,
-        ),
+        pageBuilder: (context, state) {
+          final directItem = state.extra is CartItemEntity
+              ? state.extra as CartItemEntity
+              : null;
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: CheckoutScreen(directItem: directItem),
+            type: AppTransitionType.slideUp,
+          );
+        },
       ),
       GoRoute(
         path: RoutePaths.orders,
