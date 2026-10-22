@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/product_card.dart';
 import '../../../../routing/route_paths.dart';
@@ -329,6 +330,9 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
             return _buildEmptyState(context);
           }
 
+          final cartAsync = ref.watch(cartManagerProvider);
+          final cartItems = cartAsync.value ?? [];
+
           final filteredProducts = products.where((p) {
             final matchesCategory = _selectedCategory == 'All' ||
                 p.category.toLowerCase().contains(_selectedCategory.toLowerCase()) ||
@@ -432,18 +436,30 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            childAspectRatio: 0.60,
+                            childAspectRatio: 0.63,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
                           ),
                           itemCount: filteredProducts.length,
                           itemBuilder: (context, index) {
                             final product = filteredProducts[index];
+                            final cartItemIndex = cartItems.indexWhere((i) =>
+                                i.id == product.id ||
+                                i.id.startsWith(product.id) ||
+                                i.title.startsWith(product.title));
+                            final bool isInCart = cartItemIndex >= 0;
+                            final int cartQuantity =
+                                isInCart ? cartItems[cartItemIndex].quantity : 0;
+
                             return ProductCard(
                               title: product.title,
+                              category: product.category,
                               imageUrl: product.imageUrl,
                               price: product.price,
                               originalPrice: product.originalPrice,
+                              unitType: product.unitType,
+                              isInCart: isInCart,
+                              cartQuantity: cartQuantity,
                               onTap: () => context.push(
                                   '${RoutePaths.productDetail}?id=${product.id}'),
                               onAddToCart: () {
@@ -456,24 +472,38 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                                         quantity: 1,
                                       ),
                                     );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('${product.title} added to cart!'),
-                                    backgroundColor: AppColors.primary,
-                                  ),
+                                AppAlertManager.showFloatingToast(
+                                  context,
+                                  title: 'Added to Cart!',
+                                  message: '${product.title} added to cart.',
+                                  icon: Icons.shopping_bag_rounded,
+                                  backgroundColor: const Color(0xFF0F172A),
+                                  accentColor: const Color(0xFF10B981),
+                                  actionLabel: 'VIEW CART',
+                                  onAction: () => context.go(RoutePaths.cart),
                                 );
                               },
                               onBuyNow: () {
-                                ref.read(cartManagerProvider.notifier).addToCart(
-                                      CartItemEntity(
-                                        id: product.id,
-                                        title: product.title,
-                                        imageUrl: product.imageUrl,
-                                        price: product.price,
-                                        quantity: 1,
-                                      ),
-                                    );
-                                context.push(RoutePaths.checkout);
+                                if (!isInCart) {
+                                  ref.read(cartManagerProvider.notifier).addToCart(
+                                        CartItemEntity(
+                                          id: product.id,
+                                          title: product.title,
+                                          imageUrl: product.imageUrl,
+                                          price: product.price,
+                                          quantity: 1,
+                                        ),
+                                      );
+                                }
+                                context.go(RoutePaths.cart);
+                              },
+                              onIncrementQuantity: () {
+                                ref.read(cartManagerProvider.notifier).updateQuantity(
+                                    product.id, cartQuantity + 1);
+                              },
+                              onDecrementQuantity: () {
+                                ref.read(cartManagerProvider.notifier).updateQuantity(
+                                    product.id, cartQuantity - 1);
                               },
                             );
                           },
