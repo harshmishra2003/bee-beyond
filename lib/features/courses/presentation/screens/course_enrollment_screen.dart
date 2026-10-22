@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
 import '../providers/course_provider.dart';
 
@@ -294,18 +295,84 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
   @override
   Widget build(BuildContext context) {
     final courseAsync = ref.watch(courseDetailProvider(widget.courseId));
+    final joinedCoursesAsync = ref.watch(joinedCoursesProvider);
+
+    final isEnrolled = joinedCoursesAsync.maybeWhen(
+      data: (list) => list.any((c) => c.courseId == widget.courseId),
+      orElse: () => false,
+    );
 
     return Scaffold(
       appBar: const CustomAppBar(title: 'Course Enrollment Form'),
       body: courseAsync.when(
-        data: (course) => SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        data: (course) {
+          if (isEnrolled) {
+            return Center(
+              child: Container(
+                margin: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFA7F3D0), width: 1.5),
+                  boxShadow: const [
+                    BoxShadow(
+                        color: Color(0x10059669),
+                        blurRadius: 12,
+                        offset: Offset(0, 4)),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFD1FAE5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.verified_user_rounded,
+                          color: Color(0xFF059669), size: 48),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'ACTIVE ENROLLMENT DETECTED',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF065F46),
+                          letterSpacing: 0.8),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'You are already actively enrolled in "${course.title}". Duplicate enrollment is locked while your study pass is active.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 13, color: Color(0xFF047857), height: 1.4),
+                    ),
+                    const SizedBox(height: 20),
+                    ThreeDButton(
+                      text: 'ACCESS STUDY MODULES NOW →',
+                      color: const Color(0xFF059669),
+                      shadowColor: const Color(0xFF064E3B),
+                      onPressed: () {
+                        context.push('${RoutePaths.courseDetail}?id=${course.id}');
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 // Top Course Information Card
                 Container(
                   padding: const EdgeInsets.all(16),
