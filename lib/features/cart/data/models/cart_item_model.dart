@@ -11,17 +11,25 @@ class CartItemModel extends CartItemEntity {
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     return CartItemModel(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      imageUrl: json['image_url'] ?? '',
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      quantity: json['quantity'] ?? 1,
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? json['name']?.toString() ?? '',
+      imageUrl: json['imageUrl']?.toString() ??
+          json['image_url']?.toString() ??
+          json['image']?.toString() ??
+          '',
+      price: (json['price'] as num?)?.toDouble() ??
+          double.tryParse(json['price']?.toString() ?? '') ??
+          0.0,
+      quantity: (json['quantity'] as num?)?.toInt() ??
+          int.tryParse(json['quantity']?.toString() ?? '') ??
+          1,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
+        'imageUrl': imageUrl,
         'image_url': imageUrl,
         'price': price,
         'quantity': quantity,
