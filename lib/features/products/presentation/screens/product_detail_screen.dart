@@ -336,18 +336,21 @@ class ProductDetailScreen extends ConsumerWidget {
                       fontSize: 13,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       onPressed: () {
-                        if (!isInCart) {
-                          ref.read(cartManagerProvider.notifier).addToCart(
-                                CartItemEntity(
-                                  id: product.id,
-                                  title: product.title,
-                                  imageUrl: product.imageUrl,
-                                  price: product.price,
-                                  quantity: 1,
-                                ),
-                              );
+                        if (isInCart) {
+                          context.go(RoutePaths.cart);
+                        } else {
+                          context.push(
+                            RoutePaths.checkout,
+                            extra: CartItemEntity(
+                              id: product.id,
+                              title: product.title,
+                              imageUrl: product.imageUrl,
+                              price: product.price,
+                              quantity: 1,
+                              maxAllowedQuantity: product.effectiveMaxQuantity,
+                            ),
+                          );
                         }
-                        context.push(RoutePaths.checkout);
                       },
                     ),
                   ),
