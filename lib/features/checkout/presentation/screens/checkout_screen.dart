@@ -12,6 +12,7 @@ import '../../../../routing/route_paths.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../cart/domain/entities/cart_item_entity.dart';
 import '../../../cart/presentation/managers/cart_manager.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
 import '../providers/payment_provider.dart';
@@ -311,6 +312,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
     ref.read(cartManagerProvider.notifier).clearCart();
+
+    ref.read(notificationsProvider.notifier).postNotification(
+      title: '📦 Order Confirmed & Paid!',
+      message: 'Official 18% GST Tax Invoice ($receiptId) generated for ${newReceipt.title}.',
+      category: 'orders',
+    );
 
     AppAlertManager.showFloatingToast(
       context,
