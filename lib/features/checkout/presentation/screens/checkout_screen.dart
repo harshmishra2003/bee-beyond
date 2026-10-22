@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +17,9 @@ import '../../../orders/presentation/providers/receipt_provider.dart';
 import '../providers/payment_provider.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
-  const CheckoutScreen({super.key});
+  final CartItemEntity? directItem;
+
+  const CheckoutScreen({super.key, this.directItem});
 
   @override
   ConsumerState<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -75,9 +76,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         }
       }
     });
-    _streetController.text = 'Flat 402, Green Meadows, MG Road';
-    _cityController.text = 'Mumbai';
-    _pincodeController.text = '400001';
   }
 
   @override
@@ -95,6 +93,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     super.dispose();
   }
 
+  List<CartItemEntity> get _checkoutItems {
+    if (widget.directItem != null) {
+      return [widget.directItem!];
+    }
+    return ref.read(cartManagerProvider).value ?? [];
+  }
+
   void _onProcessCheckout() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,8 +108,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       return;
     }
 
-    final cartItems = ref.read(cartManagerProvider).value ?? [];
-    final totalPayable = cartItems.totalPayable;
+    final items = _checkoutItems;
+    final totalPayable = items.totalPayable;
 
     if (_paymentCategory == 'upi') {
       final selectedApp = _upiApps.firstWhere((a) => a['id'] == _selectedUpiApp, orElse: () => _upiApps.first);
@@ -125,7 +130,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         appName: appName,
         upiId: upiId.isEmpty ? 'beebeeyond@upi' : upiId,
         totalAmount: totalPayable,
-        items: cartItems,
+        items: items,
       );
     } else if (_paymentCategory == 'card') {
       if (_cardNumberController.text.trim().length < 16 ||
@@ -139,19 +144,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       _executeSimulatedGatewayPayment(
         methodName: 'Credit / Debit Card',
         totalAmount: totalPayable,
-        items: cartItems,
+        items: items,
       );
     } else if (_paymentCategory == 'netbanking') {
       _executeSimulatedGatewayPayment(
         methodName: 'NetBanking ($_selectedBank)',
         totalAmount: totalPayable,
-        items: cartItems,
+        items: items,
       );
     } else if (_paymentCategory == 'cod') {
       _executeSimulatedGatewayPayment(
         methodName: 'Cash / Pay on Delivery',
         totalAmount: totalPayable,
-        items: cartItems,
+        items: items,
       );
     }
   }
@@ -311,7 +316,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
 
     ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
-    ref.read(cartManagerProvider.notifier).clearCart();
+
+    // Clear cart ONLY if checking out from saved cart (not direct buy now item)
+    if (widget.directItem == null) {
+      ref.read(cartManagerProvider.notifier).clearCart();
+    }
 
     ref.read(notificationsProvider.notifier).postNotification(
       title: '📦 Order Confirmed & Paid!',
@@ -343,7 +352,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cartItems = ref.watch(cartManagerProvider).value ?? [];
+    final savedCartItems = ref.watch(cartManagerProvider).value ?? [];
+    final cartItems = widget.directItem != null ? [widget.directItem!] : savedCartItems;
+
     final subtotal = cartItems.subtotal;
     final tax = cartItems.taxAmount;
     final totalPayable = cartItems.totalPayable;
@@ -456,9 +467,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   const SizedBox(height: 12),
                   _buildTextField(
                     controller: _streetController,
-                    label: 'Flat / House / Street Address *',
-                    hint: 'Flat 402, Green Meadows',
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Address required' : null,
+                    label: 'Flat / House / Building Address *',
+                    hint: 'e.g. Flat 302, Green Heights, MG Road',
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Building address required' : null,
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -466,8 +477,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       Expanded(
                         child: _buildTextField(
                           controller: _cityController,
-                          label: 'City *',
-                          hint: 'Mumbai',
+                          label: 'City / Town *',
+                          hint: 'e.g. Mumbai / Delhi',
                           validator: (v) => v == null || v.trim().isEmpty ? 'City required' : null,
                         ),
                       ),
@@ -476,7 +487,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         child: _buildTextField(
                           controller: _pincodeController,
                           label: 'PIN Code *',
-                          hint: '400001',
+                          hint: 'e.g. 400001',
                           keyboardType: TextInputType.number,
                           validator: (v) => v == null || v.trim().length < 6 ? '6-digit PIN required' : null,
                         ),
