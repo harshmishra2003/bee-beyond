@@ -8,6 +8,7 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../checkout/presentation/providers/payment_provider.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
 import '../../../orders/presentation/screens/receipt_preview_screen.dart';
@@ -208,30 +209,24 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                         title: 'UPI Express Pay (GPay, PhonePe, Paytm)',
                         subtitle: 'Instant 1-tap payment confirmation',
                         icon: Icons.qr_code_scanner_rounded,
-                        value: 'UPI',
-                        groupValue: selectedMethod,
-                        onChanged: (val) =>
-                            setModalState(() => selectedMethod = val!),
+                        isSelected: selectedMethod == 'UPI',
+                        onTap: () => setModalState(() => selectedMethod = 'UPI'),
                       ),
                       const SizedBox(height: 8),
                       _buildPaymentOptionTile(
                         title: 'Credit / Debit Card (Visa, MasterCard, RuPay)',
                         subtitle: '100% Encrypted 256-bit SSL Payment',
                         icon: Icons.credit_card_rounded,
-                        value: 'CARD',
-                        groupValue: selectedMethod,
-                        onChanged: (val) =>
-                            setModalState(() => selectedMethod = val!),
+                        isSelected: selectedMethod == 'CARD',
+                        onTap: () => setModalState(() => selectedMethod = 'CARD'),
                       ),
                       const SizedBox(height: 8),
                       _buildPaymentOptionTile(
                         title: 'Net Banking (SBI, HDFC, ICICI, Axis)',
                         subtitle: 'Direct Secure Bank Authorization',
                         icon: Icons.account_balance_rounded,
-                        value: 'NETBANKING',
-                        groupValue: selectedMethod,
-                        onChanged: (val) =>
-                            setModalState(() => selectedMethod = val!),
+                        isSelected: selectedMethod == 'NETBANKING',
+                        onTap: () => setModalState(() => selectedMethod = 'NETBANKING'),
                       ),
                     ],
                   ),
@@ -363,6 +358,12 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                     plan.accessDuration > 0 ? plan.accessDuration : 1,
               );
 
+          ref.read(notificationsProvider.notifier).postNotification(
+            title: '⭐ VIP Membership Pass Activated!',
+            message: 'Subscribed to ${plan.displayName}. Official tax invoice $receiptId generated.',
+            category: 'vip_pass',
+          );
+
           AppAlertManager.showFloatingToast(
             context,
             title: 'VIP Pass Activated & Paid!',
@@ -417,14 +418,11 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     required String title,
     required String subtitle,
     required IconData icon,
-    required String value,
-    required String groupValue,
-    required ValueChanged<String?> onChanged,
+    required bool isSelected,
+    required VoidCallback onTap,
   }) {
-    final isSelected = value == groupValue;
-
     return GestureDetector(
-      onTap: () => onChanged(value),
+      onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(12),
@@ -438,12 +436,18 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
         ),
         child: Row(
           children: [
-            Radio<String>(
-              value: value,
-              groupValue: groupValue,
-              onChanged: onChanged,
-              activeColor: const Color(0xFF312E81),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF312E81) : const Color(0xFF94A3B8),
+                  width: isSelected ? 6.0 : 1.5,
+                ),
+              ),
             ),
+            const SizedBox(width: 10),
             Icon(icon, color: const Color(0xFF312E81), size: 22),
             const SizedBox(width: 10),
             Expanded(
