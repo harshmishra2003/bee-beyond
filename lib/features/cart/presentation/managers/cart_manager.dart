@@ -119,5 +119,12 @@ extension CartStateExtension on List<CartItemEntity> {
 
   double get totalPayable => subtotal + taxAmount;
 
-  int get totalItems => fold(0, (sum, item) => sum + item.quantity);
+  // Number of unique product items in cart (e.g. 1 product type = '1')
+  int get totalUniqueItems => length;
+
+  // Total quantity sum across all items
+  int get totalQuantity => fold(0, (sum, item) => sum + item.quantity);
+
+  // Cart Badge Indicator displays unique product items count
+  int get totalItems => length;
 }
