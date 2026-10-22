@@ -76,6 +76,7 @@ class ProductEntity extends Equatable {
   final bool inStock;
   final int availableQuantity;
   final int minOrderQuantity;
+  final int maxOrderLimit;
   final String unitType;
   final List<ProductUnitOption> unitOptions;
 
@@ -93,6 +94,7 @@ class ProductEntity extends Equatable {
     this.inStock = true,
     this.availableQuantity = 1,
     this.minOrderQuantity = 1,
+    this.maxOrderLimit = 5,
     this.unitType = '500 g',
     this.unitOptions = const [
       ProductUnitOption(label: '250 g', price: 280),
@@ -101,6 +103,15 @@ class ProductEntity extends Equatable {
       ProductUnitOption(label: '2N Pack', price: 1050),
     ],
   });
+
+  /// Maximum allowed quantity a user can purchase in a single order
+  int get effectiveMaxQuantity {
+    if (availableQuantity <= 0) return 0;
+    if (maxOrderLimit > 0) {
+      return maxOrderLimit < availableQuantity ? maxOrderLimit : availableQuantity;
+    }
+    return availableQuantity < 5 ? availableQuantity : 5;
+  }
 
   List<String> get allImages {
     final List<String> list = [];
@@ -137,6 +148,7 @@ class ProductEntity extends Equatable {
         inStock,
         availableQuantity,
         minOrderQuantity,
+        maxOrderLimit,
         unitType,
         unitOptions,
       ];
