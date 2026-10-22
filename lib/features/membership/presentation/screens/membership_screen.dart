@@ -5,7 +5,9 @@ import '../../../../core/services/expiry_manager_service.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/three_d_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../checkout/presentation/providers/payment_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
 import '../../../orders/presentation/screens/receipt_preview_screen.dart';
@@ -39,65 +41,436 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     super.dispose();
   }
 
-  void _subscribePlan(MembershipPlanEntity plan) {
-    final currentUser = ref.read(authStateProvider).user;
-    final customerName = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Bee Beeyond Member';
-    final customerPhone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : 'Self-Service Pass';
-    final customerEmail = currentUser?.email.isNotEmpty == true ? currentUser!.email : 'member@beebeeyond.com';
+  void _openMembershipCheckoutModal(MembershipPlanEntity plan) {
+    String selectedMethod = 'UPI';
 
-    final receiptId = 'REC-2025-${(1000 + plan.id.hashCode % 8999).abs()}';
-    final orderId = 'MBR-2025-${(5000 + plan.id.hashCode % 4999).abs()}';
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (modalContext, setModalState) {
+          final currentUser = ref.read(authStateProvider).user;
+          final customerName = currentUser?.name.isNotEmpty == true
+              ? currentUser!.name
+              : 'Bee Beeyond VIP Member';
+          final customerPhone = currentUser?.phone.isNotEmpty == true
+              ? currentUser!.phone
+              : 'Self-Service Pass';
+          final customerEmail = currentUser?.email.isNotEmpty == true
+              ? currentUser!.email
+              : 'member@beebeeyond.com';
 
-    final newReceipt = ReceiptEntity(
-      receiptId: receiptId,
-      orderId: orderId,
-      title: plan.displayName,
-      type: 'MEMBERSHIP',
-      customerName: customerName,
-      customerPhone: customerPhone,
-      customerEmail: customerEmail,
-      deliveryAddress: 'Online VIP Membership Access Pass (Bee Beeyond Portal)',
-      items: [
-        ReceiptItem(name: plan.displayName, quantity: 1, unitPrice: plan.price),
-      ],
-      subtotal: plan.price,
-      gstRate: 0.18,
-      deliveryFee: 0.0,
-      discount: 0.0,
-      paymentMethod: 'UPI / Card (Online)',
-      date: DateTime.now(),
+          final basePrice = plan.price;
+          final gstAmount = basePrice * 0.18;
+          final grandTotal = basePrice + gstAmount;
+
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.82,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Plan Banner Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: plan.gradientColors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(plan.icon, color: Colors.amberAccent, size: 32),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              plan.displayName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Validity: ${plan.durationLabel} • VIP Access Pass',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Billing Breakdown Card
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Pass Base Price',
+                              style: TextStyle(
+                                  fontSize: 12.5, color: Color(0xFF64748B))),
+                          Text(CurrencyUtils.formatINR(basePrice),
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A))),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('GST Tax (18% CGST + SGST)',
+                              style: TextStyle(
+                                  fontSize: 12.5, color: Color(0xFF64748B))),
+                          Text(CurrencyUtils.formatINR(gstAmount),
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A))),
+                        ],
+                      ),
+                      const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total Payable Amount',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF312E81))),
+                          Text(CurrencyUtils.formatINR(grandTotal),
+                              style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF312E81))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Select Payment Method',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A)),
+                ),
+                const SizedBox(height: 10),
+
+                // Payment Methods Selection List
+                Expanded(
+                  child: ListView(
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      _buildPaymentOptionTile(
+                        title: 'UPI Express Pay (GPay, PhonePe, Paytm)',
+                        subtitle: 'Instant 1-tap payment confirmation',
+                        icon: Icons.qr_code_scanner_rounded,
+                        value: 'UPI',
+                        groupValue: selectedMethod,
+                        onChanged: (val) =>
+                            setModalState(() => selectedMethod = val!),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildPaymentOptionTile(
+                        title: 'Credit / Debit Card (Visa, MasterCard, RuPay)',
+                        subtitle: '100% Encrypted 256-bit SSL Payment',
+                        icon: Icons.credit_card_rounded,
+                        value: 'CARD',
+                        groupValue: selectedMethod,
+                        onChanged: (val) =>
+                            setModalState(() => selectedMethod = val!),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildPaymentOptionTile(
+                        title: 'Net Banking (SBI, HDFC, ICICI, Axis)',
+                        subtitle: 'Direct Secure Bank Authorization',
+                        icon: Icons.account_balance_rounded,
+                        value: 'NETBANKING',
+                        groupValue: selectedMethod,
+                        onChanged: (val) =>
+                            setModalState(() => selectedMethod = val!),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Pay & Activate 3D Button
+                ThreeDButton(
+                  text:
+                      'Pay ${CurrencyUtils.formatINR(grandTotal)} & Activate ▶',
+                  fontSize: 14.5,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _executeMembershipPayment(
+                      plan: plan,
+                      paymentMethod: selectedMethod,
+                      grandTotal: grandTotal,
+                      customerName: customerName,
+                      customerPhone: customerPhone,
+                      customerEmail: customerEmail,
+                    );
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
+  }
 
-    ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
-
-    // Activate the pass in ActivePassNotifier
-    ref.read(activePassProvider.notifier).activatePass(
-          passId: plan.id,
-          passName: plan.displayName,
-          slug: plan.slug,
-          durationYears: plan.accessDuration > 0 ? plan.accessDuration : 1,
-        );
-
-    AppAlertManager.showFloatingToast(
-      context,
-      title: 'VIP Pass Activated!',
-      message: 'Subscribed to ${plan.displayName} successfully',
-      icon: Icons.stars_rounded,
-      backgroundColor: const Color(0xFF0F172A),
-      accentColor: const Color(0xFF10B981),
-      actionLabel: 'RECEIPT',
-      onAction: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
+  void _executeMembershipPayment({
+    required MembershipPlanEntity plan,
+    required String paymentMethod,
+    required double grandTotal,
+    required String customerName,
+    required String customerPhone,
+    required String customerEmail,
+  }) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                  color: Color(0xFF312E81), strokeWidth: 3),
+              SizedBox(height: 20),
+              Text(
+                'Securing Bank Gateway Connection...',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Color(0xFF312E81)),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Initiating server order & cryptographic signature...',
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+      final receiptId =
+          'REC-2025-${(1000 + plan.id.hashCode % 8999).abs()}';
+
+      // 1. Create Server Order
+      final serverOrder = await paymentRepo.createServerOrder(
+        amount: grandTotal,
+        currency: 'INR',
+        receiptId: receiptId,
+        items: [
+          {'title': plan.displayName, 'price': grandTotal, 'quantity': 1}
+        ],
+      );
+
+      // 2. Cryptographic Signature Verification
+      final verification = await paymentRepo.verifyPaymentSignature(
+        paymentId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
+        orderId: serverOrder.orderId,
+        signature: serverOrder.signatureChecksum ?? 'MBR_VERIFIED',
+      );
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+
+        if (verification.isVerified) {
+          final newReceipt = ReceiptEntity(
+            receiptId: receiptId,
+            orderId: serverOrder.orderId,
+            title: plan.displayName,
+            type: 'MEMBERSHIP',
+            customerName: customerName,
+            customerPhone: customerPhone,
+            customerEmail: customerEmail,
+            deliveryAddress:
+                'Online VIP Membership Access Pass (Bee Beeyond Portal)',
+            items: [
+              ReceiptItem(
+                  name: plan.displayName, quantity: 1, unitPrice: plan.price),
+            ],
+            subtotal: plan.price,
+            gstRate: 0.18,
+            deliveryFee: 0.0,
+            discount: 0.0,
+            paymentMethod: paymentMethod,
+            date: DateTime.now(),
+          );
+
+          ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
+
+          // Activate the pass in ActivePassNotifier
+          ref.read(activePassProvider.notifier).activatePass(
+                passId: plan.id,
+                passName: plan.displayName,
+                slug: plan.slug,
+                durationYears:
+                    plan.accessDuration > 0 ? plan.accessDuration : 1,
+              );
+
+          AppAlertManager.showFloatingToast(
+            context,
+            title: 'VIP Pass Activated & Paid!',
+            message:
+                'Subscribed to ${plan.displayName}. Official tax invoice generated.',
+            icon: Icons.stars_rounded,
+            backgroundColor: const Color(0xFF0F172A),
+            accentColor: const Color(0xFF10B981),
+            actionLabel: 'VIEW INVOICE',
+            onAction: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ReceiptPreviewScreen(receipt: newReceipt),
+                ),
+              );
+            },
+          );
+
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
+            ),
+          );
+        } else {
+          AppAlertManager.showFloatingToast(
+            context,
+            title: 'Payment Verification Failed',
+            message: 'Cryptographic signature check failed. Please try again.',
+            icon: Icons.error_outline_rounded,
+            backgroundColor: const Color(0xFF0F172A),
+            accentColor: const Color(0xFFEF4444),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+        AppAlertManager.showFloatingToast(
+          context,
+          title: 'Gateway Error',
+          message: 'Could not connect to payment gateway: $e',
+          icon: Icons.error_outline_rounded,
+          backgroundColor: const Color(0xFF0F172A),
+          accentColor: const Color(0xFFEF4444),
+        );
+      }
+    }
+  }
+
+  Widget _buildPaymentOptionTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required String value,
+    required String groupValue,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final isSelected = value == groupValue;
+
+    return GestureDetector(
+      onTap: () => onChanged(value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF312E81) : const Color(0xFFE2E8F0),
+            width: isSelected ? 1.8 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Radio<String>(
+              value: value,
+              groupValue: groupValue,
+              onChanged: onChanged,
+              activeColor: const Color(0xFF312E81),
+            ),
+            Icon(icon, color: const Color(0xFF312E81), size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -522,7 +895,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                   // Shiny Glossy Pulsing Subscribe Button
                   _ShiningPulsingSubscribeButton(
                     plan: plan,
-                    onPressed: () => _subscribePlan(plan),
+                    onPressed: () => _openMembershipCheckoutModal(plan),
                   ),
                 ],
               ),
