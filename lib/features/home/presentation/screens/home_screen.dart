@@ -8,8 +8,10 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/expiry_alert_banner.dart';
 import '../../../../core/widgets/shining_view_all_button.dart';
 import '../../../../routing/route_paths.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../cart/presentation/managers/cart_manager.dart';
 import '../../../courses/presentation/providers/course_provider.dart';
+import '../../../membership/presentation/providers/expiry_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../providers/home_provider.dart';
 import '../widgets/category_carousel.dart';
@@ -51,6 +53,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         setState(() {
           _currentHintIndex = (_currentHintIndex + 1) % _searchHints.length;
         });
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final currentUser = ref.read(authStateProvider).user;
+        final fullName = currentUser?.name.trim().isNotEmpty == true
+            ? currentUser!.name.trim()
+            : 'Dear Member';
+
+        // 1. Post Time-Based Greeting Notification with Full Name
+        ref.read(notificationsProvider.notifier).postTimeBasedGreeting(fullName);
+
+        // 2. Check VIP Membership Pass Expiry & Trigger Dynamic Alert
+        final activePass = ref.read(activePassProvider);
+        ref.read(notificationsProvider.notifier).checkPassExpiryAlert(activePass, fullName);
       }
     });
   }
@@ -135,7 +153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, right: 6.0),
             child: InkWell(
-              onTap: () => context.push(RoutePaths.cart),
+              onTap: () => context.go(RoutePaths.cart),
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 width: 40,
@@ -344,7 +362,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     ShiningViewAllButton(
-                      onPressed: () => context.push(RoutePaths.courses),
+                      onPressed: () => context.go(RoutePaths.courses),
                     ),
                   ],
                 ),
@@ -353,7 +371,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               CategoryCarousel(
                 categories: data.categories,
                 onCategorySelected: (cat) {
-                  context.push('${RoutePaths.courses}?category=${Uri.encodeComponent(cat.name)}');
+                  context.go('${RoutePaths.courses}?category=${Uri.encodeComponent(cat.name)}');
                 },
               ),
               const SizedBox(height: 18),
@@ -372,7 +390,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     ShiningViewAllButton(
-                      onPressed: () => context.push(RoutePaths.courses),
+                      onPressed: () => context.go(RoutePaths.courses),
                     ),
                   ],
                 ),
@@ -381,14 +399,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               HomeBannerSlider(
                 banners: data.banners,
                 onBannerTap: (banner) {
-                  context.push(RoutePaths.courses);
+                  context.go(RoutePaths.courses);
                 },
               ),
               const SizedBox(height: 22),
 
               // JOINED COURSE Section with Purple Header & Shining View All Button
               JoinedCoursesSection(
-                onViewAllTap: () => context.push(RoutePaths.courses),
+                onViewAllTap: () => context.go(RoutePaths.courses),
                 onLearnTap: (courseId) => context.push('${RoutePaths.courseDetail}?id=$courseId'),
                 onJoinGroupTap: (courseId) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -400,7 +418,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // OUR COURSES Section with Purple Header & Shining View All Button
               OurCoursesSection(
-                onViewAllTap: () => context.push(RoutePaths.courses),
+                onViewAllTap: () => context.go(RoutePaths.courses),
                 onCourseTap: (courseId) => context.push('${RoutePaths.courseDetail}?id=$courseId'),
               ),
               const SizedBox(height: 90),
