@@ -18,6 +18,7 @@ class CourseCard extends StatelessWidget {
   final VoidCallback? onJoinGroup;
   final DateTime? createdAt;
   final bool isNew;
+  final bool isEnrolled;
 
   const CourseCard({
     super.key,
@@ -32,6 +33,7 @@ class CourseCard extends StatelessWidget {
     this.onJoinGroup,
     this.createdAt,
     this.isNew = false,
+    this.isEnrolled = false,
   });
 
   bool get _shouldShowNewBadge {
@@ -108,14 +110,17 @@ class CourseCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isEnrolled ? const Color(0xFFF0FDF4) : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-        boxShadow: const [
+        border: Border.all(
+          color: isEnrolled ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0),
+          width: isEnrolled ? 1.6 : 1.2,
+        ),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0C4B489B),
+            color: isEnrolled ? const Color(0x15059669) : const Color(0x0C4B489B),
             blurRadius: 8,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -129,7 +134,7 @@ class CourseCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // LEFT SIDE: FULLY VISIBLE IMAGE THUMBNAIL WITH NEW BADGE OVERLAY
+                // LEFT SIDE: FULLY VISIBLE IMAGE THUMBNAIL WITH NEW/ENROLLED BADGE OVERLAY
                 Container(
                   width: 115,
                   height: 110,
@@ -158,7 +163,7 @@ class CourseCard extends StatelessWidget {
                         ),
                       ),
                       // Top Left "NEW" Lottie Animated Badge (Visible for 2 days from creation)
-                      if (_shouldShowNewBadge)
+                      if (_shouldShowNewBadge && !isEnrolled)
                         Positioned(
                           top: 2,
                           left: 2,
@@ -184,18 +189,18 @@ class CourseCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Category Tag & Rating
+                      // Category Tag & Rating / Enrolled Badge
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.primary,
+                              color: isEnrolled ? const Color(0xFF059669) : AppColors.primary,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              category.toUpperCase(),
+                              isEnrolled ? 'ENROLLED ✓' : category.toUpperCase(),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 8.5,
@@ -228,8 +233,8 @@ class CourseCard extends StatelessWidget {
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: isEnrolled ? const Color(0xFF065F46) : AppColors.textPrimary,
                           fontWeight: FontWeight.w800,
                           fontSize: 13.5,
                           height: 1.22,
@@ -275,14 +280,14 @@ class CourseCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                CurrencyUtils.formatINR(price),
-                                style: const TextStyle(
-                                  color: AppColors.primary,
+                                isEnrolled ? 'ENROLLED' : CurrencyUtils.formatINR(price),
+                                style: TextStyle(
+                                  color: isEnrolled ? const Color(0xFF059669) : AppColors.primary,
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 15,
+                                  fontSize: isEnrolled ? 13 : 15,
                                 ),
                               ),
-                              if (computedOriginalPrice != null)
+                              if (!isEnrolled && computedOriginalPrice != null)
                                 Text(
                                   CurrencyUtils.formatINR(computedOriginalPrice),
                                   style: const TextStyle(
@@ -298,7 +303,7 @@ class CourseCard extends StatelessWidget {
                           if (onJoinGroup != null)
                             ShiningJoinGroupButton(
                               onPressed: onJoinGroup!,
-                              text: 'Join Group',
+                              text: isEnrolled ? 'Group Chat' : 'Join Group',
                             ),
                         ],
                       ),
