@@ -498,19 +498,17 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                                 );
                               },
                               onBuyNow: () {
-                                if (!isInCart) {
-                                  ref.read(cartManagerProvider.notifier).addToCart(
-                                        CartItemEntity(
-                                          id: product.id,
-                                          title: product.title,
-                                          imageUrl: product.imageUrl,
-                                          price: product.price,
-                                          quantity: 1,
-                                          maxAllowedQuantity: product.effectiveMaxQuantity,
-                                        ),
-                                      );
-                                }
-                                context.go(RoutePaths.cart);
+                                context.push(
+                                  RoutePaths.checkout,
+                                  extra: CartItemEntity(
+                                    id: product.id,
+                                    title: product.title,
+                                    imageUrl: product.imageUrl,
+                                    price: product.price,
+                                    quantity: 1,
+                                    maxAllowedQuantity: product.effectiveMaxQuantity,
+                                  ),
+                                );
                               },
                               onIncrementQuantity: () {
                                 ref.read(cartManagerProvider.notifier).updateQuantity(
