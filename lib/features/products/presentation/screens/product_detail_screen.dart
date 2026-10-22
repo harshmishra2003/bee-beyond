@@ -96,20 +96,22 @@ class ProductDetailScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: product.inStock
+                              color: product.inStock && product.effectiveMaxQuantity > 0
                                   ? const Color(0xFFECFDF5)
                                   : const Color(0xFFFEF2F2),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: product.inStock
+                                color: product.inStock && product.effectiveMaxQuantity > 0
                                     ? const Color(0xFFA7F3D0)
                                     : const Color(0xFFFCA5A5),
                               ),
                             ),
                             child: Text(
-                              product.inStock ? 'IN STOCK' : 'OUT OF STOCK',
+                              product.inStock && product.effectiveMaxQuantity > 0
+                                  ? 'IN STOCK (${product.effectiveMaxQuantity} MAX / ORDER)'
+                                  : 'OUT OF STOCK',
                               style: TextStyle(
-                                color: product.inStock
+                                color: product.inStock && product.effectiveMaxQuantity > 0
                                     ? const Color(0xFF059669)
                                     : const Color(0xFFEF4444),
                                 fontSize: 10,
@@ -273,6 +275,19 @@ class ProductDetailScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () {
+                        if (isInCart && inCartQty >= product.effectiveMaxQuantity) {
+                          AppAlertManager.showFloatingToast(
+                            context,
+                            title: 'Maximum Limit Reached',
+                            message:
+                                'Only ${product.effectiveMaxQuantity} unit(s) allowed per order for ${product.title}.',
+                            icon: Icons.info_outline_rounded,
+                            backgroundColor: const Color(0xFF0F172A),
+                            accentColor: const Color(0xFFF59E0B),
+                          );
+                          return;
+                        }
+
                         ref.read(cartManagerProvider.notifier).addToCart(
                               CartItemEntity(
                                 id: product.id,
@@ -280,6 +295,7 @@ class ProductDetailScreen extends ConsumerWidget {
                                 imageUrl: product.imageUrl,
                                 price: product.price,
                                 quantity: 1,
+                                maxAllowedQuantity: product.effectiveMaxQuantity,
                               ),
                             );
                         AppAlertManager.showFloatingToast(
