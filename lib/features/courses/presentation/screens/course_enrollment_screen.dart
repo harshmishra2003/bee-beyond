@@ -9,6 +9,7 @@ import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../providers/course_provider.dart';
 
 class CountryPhoneRule {
@@ -258,6 +259,12 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
         title: course.title,
         imageUrl: course.imageUrl,
         initialProgress: 0.1,
+      );
+
+      ref.read(notificationsProvider.notifier).postNotification(
+        title: '🎓 Course Enrollment Confirmed!',
+        message: 'Welcome to ${course.title}! Access your official study guide & handbook now.',
+        category: 'courses',
       );
 
       // Create Enrollment Data
@@ -649,7 +656,8 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
               ],
             ),
           ),
-        ),
+        );
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
