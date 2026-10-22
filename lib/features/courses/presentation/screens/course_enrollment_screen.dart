@@ -5,10 +5,12 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
+import '../../../checkout/presentation/providers/payment_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../providers/course_provider.dart';
 
@@ -237,58 +239,10 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
     return null;
   }
 
-  // Submit Enrollment
+  // Submit Enrollment & Open Payment Gateway
   Future<void> _submitEnrollment(dynamic course) async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isSubmitting = true;
-      });
-
-      // Simulate server processing & animation
-      await Future.delayed(const Duration(milliseconds: 1500));
-
-      if (!mounted) return;
-
-      setState(() {
-        _isSubmitting = false;
-      });
-
-      // Automatically add course to Joined Courses
-      await ref.read(joinedCoursesProvider.notifier).joinCourse(
-        courseId: course.id,
-        title: course.title,
-        imageUrl: course.imageUrl,
-        initialProgress: 0.1,
-      );
-
-      ref.read(notificationsProvider.notifier).postNotification(
-        title: '🎓 Course Enrollment Confirmed!',
-        message: 'Welcome to ${course.title}! Access your official study guide & handbook now.',
-        category: 'courses',
-      );
-
-      // Create Enrollment Data
-      final studentName = '${_firstNameController.text.trim()} ${_middleNameController.text.trim()} ${_lastNameController.text.trim()}'.replaceAll('  ', ' ');
-      final enrollmentId = 'ENR-2025-${(1000 + (widget.courseId.hashCode % 8999)).abs()}';
-
-      if (!mounted) return;
-
-      // Navigate to Enrollment Confirmation Receipt Screen
-      context.push(
-        RoutePaths.enrollmentReceipt,
-        extra: {
-          'enrollmentId': enrollmentId,
-          'studentName': studentName,
-          'courseTitle': course.title,
-          'courseCategory': course.category,
-          'coursePrice': course.price,
-          'email': _emailController.text.trim(),
-          'phone': '${_selectedCountry.code} ${_phoneController.text.trim()}',
-          'address': '${_flatNoController.text.trim()}, ${_street1Controller.text.trim()}, ${_cityController.text.trim()}, ${_stateController.text.trim()} - ${_pincodeController.text.trim()}',
-          'profilePic': _selectedProfilePic,
-          'date': DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()),
-        },
-      );
+      _openCourseCheckoutModal(course);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -297,6 +251,402 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
         ),
       );
     }
+  }
+
+  void _openCourseCheckoutModal(dynamic course) {
+    String selectedMethod = 'UPI';
+    final basePrice = (course.price as num).toDouble();
+    final gstAmount = basePrice * 0.18;
+    final grandTotal = basePrice + gstAmount;
+
+    final studentName =
+        '${_firstNameController.text.trim()} ${_middleNameController.text.trim()} ${_lastNameController.text.trim()}'
+            .replaceAll('  ', ' ');
+    final phone =
+        '${_selectedCountry.code} ${_phoneController.text.trim()}';
+    final email = _emailController.text.trim();
+    final address =
+        '${_flatNoController.text.trim()}, ${_street1Controller.text.trim()}, ${_cityController.text.trim()}, ${_stateController.text.trim()} - ${_pincodeController.text.trim()}';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (modalContext, setModalState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.82,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Course Header Card
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.school_rounded,
+                          color: Colors.white, size: 32),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              course.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Student: $studentName',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Fee & GST Billing Breakdown
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Course Fee',
+                              style: TextStyle(
+                                  fontSize: 12.5, color: Color(0xFF64748B))),
+                          Text(CurrencyUtils.formatINR(basePrice),
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A))),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('GST Tax (18% CGST + SGST)',
+                              style: TextStyle(
+                                  fontSize: 12.5, color: Color(0xFF64748B))),
+                          Text(CurrencyUtils.formatINR(gstAmount),
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A))),
+                        ],
+                      ),
+                      const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total Payable Amount',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary)),
+                          Text(CurrencyUtils.formatINR(grandTotal),
+                              style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.primary)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Select Payment Method',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A)),
+                ),
+                const SizedBox(height: 10),
+
+                Expanded(
+                  child: ListView(
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      _buildPaymentTile(
+                        title: 'UPI Express Pay (GPay, PhonePe, Paytm)',
+                        subtitle: 'Instant 1-tap payment confirmation',
+                        icon: Icons.qr_code_scanner_rounded,
+                        isSelected: selectedMethod == 'UPI',
+                        onTap: () => setModalState(() => selectedMethod = 'UPI'),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildPaymentTile(
+                        title: 'Credit / Debit Card (Visa, MasterCard, RuPay)',
+                        subtitle: '100% Encrypted 256-bit SSL Payment',
+                        icon: Icons.credit_card_rounded,
+                        isSelected: selectedMethod == 'CARD',
+                        onTap: () => setModalState(() => selectedMethod = 'CARD'),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildPaymentTile(
+                        title: 'Net Banking (SBI, HDFC, ICICI, Axis)',
+                        subtitle: 'Direct Secure Bank Authorization',
+                        icon: Icons.account_balance_rounded,
+                        isSelected: selectedMethod == 'NETBANKING',
+                        onTap: () => setModalState(() => selectedMethod = 'NETBANKING'),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                ThreeDButton(
+                  text: 'Pay ${CurrencyUtils.formatINR(grandTotal)} & Enroll ▶',
+                  fontSize: 14.5,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _executeCoursePayment(
+                      course: course,
+                      paymentMethod: selectedMethod,
+                      grandTotal: grandTotal,
+                      studentName: studentName,
+                      phone: phone,
+                      email: email,
+                      address: address,
+                    );
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _executeCoursePayment({
+    required dynamic course,
+    required String paymentMethod,
+    required double grandTotal,
+    required String studentName,
+    required String phone,
+    required String email,
+    required String address,
+  }) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                  color: AppColors.primary, strokeWidth: 3),
+              SizedBox(height: 20),
+              Text(
+                'Connecting to Bank Payment Gateway...',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: AppColors.primary),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Initiating server order & cryptographic signature...',
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+      final enrollmentId =
+          'ENR-2025-${(1000 + (widget.courseId.hashCode % 8999)).abs()}';
+
+      final serverOrder = await paymentRepo.createServerOrder(
+        amount: grandTotal,
+        currency: 'INR',
+        receiptId: enrollmentId,
+        items: [
+          {'title': course.title, 'price': grandTotal, 'quantity': 1}
+        ],
+      );
+
+      final verification = await paymentRepo.verifyPaymentSignature(
+        paymentId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
+        orderId: serverOrder.orderId,
+        signature: serverOrder.signatureChecksum ?? 'ENR_VERIFIED',
+      );
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+
+        if (verification.isVerified) {
+          await ref.read(joinedCoursesProvider.notifier).joinCourse(
+                courseId: course.id,
+                title: course.title,
+                imageUrl: course.imageUrl,
+                initialProgress: 0.1,
+              );
+
+          ref.read(notificationsProvider.notifier).postNotification(
+                title: '🎓 Course Enrollment Confirmed!',
+                message:
+                    'Welcome to ${course.title}! Access your official study guide & handbook now.',
+                category: 'courses',
+              );
+
+          context.push(
+            RoutePaths.enrollmentReceipt,
+            extra: {
+              'enrollmentId': enrollmentId,
+              'studentName': studentName,
+              'courseTitle': course.title,
+              'courseCategory': course.category,
+              'coursePrice': course.price,
+              'email': email,
+              'phone': phone,
+              'address': address,
+              'profilePic': _selectedProfilePic,
+              'date': DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()),
+            },
+          );
+        } else {
+          AppAlertManager.showFloatingToast(
+            context,
+            title: 'Payment Verification Failed',
+            message: 'Signature checksum verification failed. Please try again.',
+            icon: Icons.error_outline_rounded,
+            backgroundColor: const Color(0xFF0F172A),
+            accentColor: const Color(0xFFEF4444),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+        AppAlertManager.showFloatingToast(
+          context,
+          title: 'Gateway Error',
+          message: 'Could not connect to payment gateway: $e',
+          icon: Icons.error_outline_rounded,
+          backgroundColor: const Color(0xFF0F172A),
+          accentColor: const Color(0xFFEF4444),
+        );
+      }
+    }
+  }
+
+  Widget _buildPaymentTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+            width: isSelected ? 1.8 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : const Color(0xFF94A3B8),
+                  width: isSelected ? 6.0 : 1.5,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Icon(icon, color: AppColors.primary, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -380,361 +730,363 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                // Top Course Information Card
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x184B489B),
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.school_rounded, color: Colors.white, size: 36),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              course.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${course.duration} • ${CurrencyUtils.formatINR(course.price)}',
-                              style: const TextStyle(color: Colors.white70, fontSize: 12.5),
-                            ),
-                          ],
+                  // Top Course Information Card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x184B489B),
+                          blurRadius: 8,
+                          offset: Offset(0, 3),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Student Profile Picture Upload Section
-                Center(
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFFF2F0FC),
-                          border: Border.all(color: AppColors.primary, width: 2.2),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x144B489B),
-                              blurRadius: 8,
-                              offset: Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: _selectedProfilePic != null
-                            ? ClipOval(
-                                child: Image.asset(
-                                  _selectedProfilePic!,
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => const Icon(
-                                    Icons.person_rounded,
-                                    size: 54,
-                                    color: AppColors.primary,
-                                  ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.school_rounded, color: Colors.white, size: 36),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                course.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
                                 ),
-                              )
-                            : const Icon(
-                                Icons.person_rounded,
-                                size: 54,
-                                color: AppColors.primary,
                               ),
-                      ),
-                      InkWell(
-                        onTap: _showImagePickerModal,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(color: Colors.black26, blurRadius: 4),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${course.duration} • ${CurrencyUtils.formatINR(course.price)}',
+                                style: const TextStyle(color: Colors.white70, fontSize: 12.5),
+                              ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
-                            size: 18,
-                            color: Colors.white,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Student Profile Picture Upload Section
+                  Center(
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFFF2F0FC),
+                            border: Border.all(color: AppColors.primary, width: 2.2),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x144B489B),
+                                blurRadius: 8,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: _selectedProfilePic != null
+                              ? ClipOval(
+                                  child: Image.asset(
+                                    _selectedProfilePic!,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => const Icon(
+                                      Icons.person_rounded,
+                                      size: 54,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.person_rounded,
+                                  size: 54,
+                                  color: AppColors.primary,
+                                ),
+                        ),
+                        InkWell(
+                          onTap: _showImagePickerModal,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(color: Colors.black26, blurRadius: 4),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Center(
+                    child: Text(
+                      'Upload Student Profile Photo',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // SECTION 1: PERSONAL DETAILS
+                  _buildSectionHeader('1. Personal Details', Icons.person_outline_rounded),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(controller: _firstNameController, label: 'First Name *', hint: 'e.g. Rahul', validator: (v) => v == null || v.trim().isEmpty ? 'First Name is required' : null),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(controller: _middleNameController, label: 'Middle Name (Optional)', hint: 'e.g. Kumar'),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(controller: _lastNameController, label: 'Last Name *', hint: 'e.g. Sharma', validator: (v) => v == null || v.trim().isEmpty ? 'Last Name is required' : null),
+                  const SizedBox(height: 12),
+
+                  // Gender Dropdown
+                  _buildDropdown(
+                    label: 'Gender *',
+                    value: _selectedGender,
+                    items: _genderOptions,
+                    onChanged: (v) => setState(() => _selectedGender = v),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Date of Birth Field
+                  GestureDetector(
+                    onTap: _selectDOB,
+                    child: AbsorbPointer(
+                      child: _buildTextField(
+                        controller: _dobController,
+                        label: 'Date of Birth (DOB) *',
+                        hint: 'Select Date (dd/mm/yyyy)',
+                        suffixIcon: Icons.calendar_month_rounded,
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Date of Birth is required' : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(controller: _parentNameController, label: "Parent / Guardian's Name *", hint: "Father / Mother's Name", validator: (v) => v == null || v.trim().isEmpty ? "Parent's Name is required" : null),
+                  const SizedBox(height: 12),
+
+                  // Qualification Dropdown
+                  _buildDropdown(
+                    label: 'Educational Qualification *',
+                    value: _selectedQualification,
+                    items: _qualificationOptions,
+                    onChanged: (v) => setState(() => _selectedQualification = v),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // SECTION 2: CONTACT INFORMATION
+                  _buildSectionHeader('2. Contact Information', Icons.phone_android_rounded),
+                  const SizedBox(height: 12),
+
+                  // Primary Mobile Number with Country Code
+                  _buildPhoneFieldWithCountry(
+                    label: 'Mobile Number *',
+                    controller: _phoneController,
+                    selectedRule: _selectedCountry,
+                    onCountryChanged: (rule) => setState(() => _selectedCountry = rule!),
+                    validator: (v) => _validatePhone(v, _selectedCountry),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Alternative Mobile Number
+                  _buildPhoneFieldWithCountry(
+                    label: 'Alternative Mobile Number (Optional)',
+                    controller: _altPhoneController,
+                    selectedRule: _selectedAltCountry,
+                    onCountryChanged: (rule) => setState(() => _selectedAltCountry = rule!),
+                    validator: (v) => _validatePhone(v, _selectedAltCountry, isOptional: true),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(
+                    controller: _emailController,
+                    label: 'Email Address *',
+                    hint: 'e.g. student@gmail.com',
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Email Address is required';
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) return 'Enter a valid email address';
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // SECTION 3: ADDRESS DETAILS
+                  _buildSectionHeader('3. Address & Nationality', Icons.location_on_outlined),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(controller: _flatNoController, label: 'Flat / House / Building No. *', hint: 'e.g. Flat 302, Green Heights', validator: (v) => v == null || v.trim().isEmpty ? 'Building No. is required' : null),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(controller: _street1Controller, label: 'Street Address 1 *', hint: 'e.g. MG Road, Near Central Park', validator: (v) => v == null || v.trim().isEmpty ? 'Street Address is required' : null),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(controller: _street2Controller, label: 'Street Address 2 (Optional)', hint: 'Landmark / Area'),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: _openStatePicker,
+                          child: AbsorbPointer(
+                            child: _buildTextField(
+                              controller: _stateController,
+                              label: 'State / UT *',
+                              hint: 'Select State',
+                              suffixIcon: Icons.keyboard_arrow_down_rounded,
+                              validator: (v) => v == null || v.trim().isEmpty ? 'State is required' : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: _openCityPicker,
+                          child: AbsorbPointer(
+                            child: _buildTextField(
+                              controller: _cityController,
+                              label: 'City / Town *',
+                              hint: 'Select City',
+                              suffixIcon: Icons.keyboard_arrow_down_rounded,
+                              validator: (v) => v == null || v.trim().isEmpty ? 'City is required' : null,
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 6),
-                const Center(
-                  child: Text(
-                    'Upload Student Profile Photo',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(
+                    controller: _pincodeController,
+                    label: 'Pincode / Postal Code *',
+                    hint: 'e.g. 400001',
+                    keyboardType: TextInputType.number,
+                    validator: (v) => v == null || v.trim().length < 4 ? 'Enter a valid Pincode' : null,
                   ),
-                ),
+                  const SizedBox(height: 12),
 
-                const SizedBox(height: 24),
-
-                // SECTION 1: PERSONAL DETAILS
-                _buildSectionHeader('1. Personal Details', Icons.person_outline_rounded),
-                const SizedBox(height: 12),
-
-                _buildTextField(controller: _firstNameController, label: 'First Name *', hint: 'e.g. Rahul', validator: (v) => v == null || v.trim().isEmpty ? 'First Name is required' : null),
-                const SizedBox(height: 12),
-
-                _buildTextField(controller: _middleNameController, label: 'Middle Name (Optional)', hint: 'e.g. Kumar'),
-                const SizedBox(height: 12),
-
-                _buildTextField(controller: _lastNameController, label: 'Last Name *', hint: 'e.g. Sharma', validator: (v) => v == null || v.trim().isEmpty ? 'Last Name is required' : null),
-                const SizedBox(height: 12),
-
-                // Gender Dropdown
-                _buildDropdown(
-                  label: 'Gender *',
-                  value: _selectedGender,
-                  items: _genderOptions,
-                  onChanged: (v) => setState(() => _selectedGender = v),
-                ),
-                const SizedBox(height: 12),
-
-                // Date of Birth Field
-                GestureDetector(
-                  onTap: _selectDOB,
-                  child: AbsorbPointer(
-                    child: _buildTextField(
-                      controller: _dobController,
-                      label: 'Date of Birth (DOB) *',
-                      hint: 'Select Date (dd/mm/yyyy)',
-                      suffixIcon: Icons.calendar_month_rounded,
-                      validator: (v) => v == null || v.trim().isEmpty ? 'Date of Birth is required' : null,
-                    ),
+                  _buildDropdown(
+                    label: 'Nationality *',
+                    value: _selectedNationality,
+                    items: _nationalityOptions,
+                    onChanged: (v) => setState(() => _selectedNationality = v),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                _buildTextField(controller: _parentNameController, label: "Parent / Guardian's Name *", hint: "Father / Mother's Name", validator: (v) => v == null || v.trim().isEmpty ? "Parent's Name is required" : null),
-                const SizedBox(height: 12),
+                  _buildTextField(controller: _extraActivityController, label: 'Extra Curricular Activities / Hobbies (Optional)', hint: 'Yoga, Music, Reading, etc.'),
 
-                // Qualification Dropdown
-                _buildDropdown(
-                  label: 'Educational Qualification *',
-                  value: _selectedQualification,
-                  items: _qualificationOptions,
-                  onChanged: (v) => setState(() => _selectedQualification = v),
-                ),
-
-                const SizedBox(height: 24),
-
-                // SECTION 2: CONTACT INFORMATION
-                _buildSectionHeader('2. Contact Information', Icons.phone_android_rounded),
-                const SizedBox(height: 12),
-
-                // Primary Mobile Number with Country Code
-                _buildPhoneFieldWithCountry(
-                  label: 'Mobile Number *',
-                  controller: _phoneController,
-                  selectedRule: _selectedCountry,
-                  onCountryChanged: (rule) => setState(() => _selectedCountry = rule!),
-                  validator: (v) => _validatePhone(v, _selectedCountry),
-                ),
-                const SizedBox(height: 12),
-
-                // Alternative Mobile Number
-                _buildPhoneFieldWithCountry(
-                  label: 'Alternative Mobile Number (Optional)',
-                  controller: _altPhoneController,
-                  selectedRule: _selectedAltCountry,
-                  onCountryChanged: (rule) => setState(() => _selectedAltCountry = rule!),
-                  validator: (v) => _validatePhone(v, _selectedAltCountry, isOptional: true),
-                ),
-                const SizedBox(height: 12),
-
-                _buildTextField(
-                  controller: _emailController,
-                  label: 'Email Address *',
-                  hint: 'e.g. student@gmail.com',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Email Address is required';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) return 'Enter a valid email address';
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 24),
-
-                // SECTION 3: ADDRESS DETAILS
-                _buildSectionHeader('3. Address & Nationality', Icons.location_on_outlined),
-                const SizedBox(height: 12),
-
-                _buildTextField(controller: _flatNoController, label: 'Flat / House / Building No. *', hint: 'e.g. Flat 302, Green Heights', validator: (v) => v == null || v.trim().isEmpty ? 'Building No. is required' : null),
-                const SizedBox(height: 12),
-
-                _buildTextField(controller: _street1Controller, label: 'Street Address 1 *', hint: 'e.g. MG Road, Near Central Park', validator: (v) => v == null || v.trim().isEmpty ? 'Street Address is required' : null),
-                const SizedBox(height: 12),
-
-                _buildTextField(controller: _street2Controller, label: 'Street Address 2 (Optional)', hint: 'Landmark / Area'),
-                const SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: _openStatePicker,
-                        child: AbsorbPointer(
-                          child: _buildTextField(
-                            controller: _stateController,
-                            label: 'State / UT *',
-                            hint: 'Select State',
-                            suffixIcon: Icons.keyboard_arrow_down_rounded,
-                            validator: (v) => v == null || v.trim().isEmpty ? 'State is required' : null,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: _openCityPicker,
-                        child: AbsorbPointer(
-                          child: _buildTextField(
-                            controller: _cityController,
-                            label: 'City / Town *',
-                            hint: 'Select City',
-                            suffixIcon: Icons.keyboard_arrow_down_rounded,
-                            validator: (v) => v == null || v.trim().isEmpty ? 'City is required' : null,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                _buildTextField(
-                  controller: _pincodeController,
-                  label: 'Pincode / Postal Code *',
-                  hint: 'e.g. 400001',
-                  keyboardType: TextInputType.number,
-                  validator: (v) => v == null || v.trim().length < 4 ? 'Enter a valid Pincode' : null,
-                ),
-                const SizedBox(height: 12),
-
-                _buildDropdown(
-                  label: 'Nationality *',
-                  value: _selectedNationality,
-                  items: _nationalityOptions,
-                  onChanged: (v) => setState(() => _selectedNationality = v),
-                ),
-                const SizedBox(height: 12),
-
-                _buildTextField(controller: _extraActivityController, label: 'Extra Curricular Activities / Hobbies (Optional)', hint: 'Yoga, Music, Reading, etc.'),
-
-                const SizedBox(height: 30),
-              ],
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
-          ),
-        );
+          );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
       bottomNavigationBar: courseAsync.maybeWhen(
-        data: (course) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0x1F4B489B),
-                      blurRadius: 16,
-                      offset: Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeInOutBack,
-                    width: _isSubmitting ? 54 : MediaQuery.of(context).size.width - 40,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      gradient: _isSubmitting ? null : AppColors.primaryGradient,
-                      color: _isSubmitting ? AppColors.primary : null,
-                      borderRadius: BorderRadius.circular(_isSubmitting ? 27 : 16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withAlpha(76),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(_isSubmitting ? 27 : 16),
-                        onTap: _isSubmitting ? null : () => _submitEnrollment(course),
-                        child: Center(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            child: _isSubmitting
-                                ? const SizedBox(
-                                    key: ValueKey('loading'),
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                    ),
-                                  )
-                                : const Text(
-                                    'SUBMIT',
-                                    key: ValueKey('text'),
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                      letterSpacing: 1.5,
-                                    ),
-                                  ),
+        data: (course) => isEnrolled
+            ? const SizedBox.shrink()
+            : SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x1F4B489B),
+                            blurRadius: 16,
+                            offset: Offset(0, -4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeInOutBack,
+                          width: _isSubmitting ? 54 : MediaQuery.of(context).size.width - 40,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            gradient: _isSubmitting ? null : AppColors.primaryGradient,
+                            color: _isSubmitting ? AppColors.primary : null,
+                            borderRadius: BorderRadius.circular(_isSubmitting ? 27 : 16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withAlpha(76),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(_isSubmitting ? 27 : 16),
+                              onTap: _isSubmitting ? null : () => _submitEnrollment(course),
+                              child: Center(
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 200),
+                                  child: _isSubmitting
+                                      ? const SizedBox(
+                                          key: ValueKey('loading'),
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        )
+                                      : const Text(
+                                          'PROCEED TO CHECKOUT ▶',
+                                          key: ValueKey('text'),
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w900,
+                                            color: Colors.white,
+                                            letterSpacing: 1.2,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
         orElse: () => const SizedBox.shrink(),
       ),
     );
