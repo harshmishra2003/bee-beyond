@@ -229,7 +229,7 @@ class HomeDrawer extends ConsumerWidget {
                   title: 'Shopping Cart',
                   onTap: () {
                     Navigator.pop(context);
-                    context.push(RoutePaths.cart);
+                    context.go(RoutePaths.cart);
                   },
                 ),
                 _DrawerTile(
