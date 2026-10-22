@@ -463,6 +463,19 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                               onTap: () => context.push(
                                   '${RoutePaths.productDetail}?id=${product.id}'),
                               onAddToCart: () {
+                                if (isInCart && cartQuantity >= product.effectiveMaxQuantity) {
+                                  AppAlertManager.showFloatingToast(
+                                    context,
+                                    title: 'Maximum Limit Reached',
+                                    message:
+                                        'Only ${product.effectiveMaxQuantity} unit(s) allowed per order for ${product.title}.',
+                                    icon: Icons.info_outline_rounded,
+                                    backgroundColor: const Color(0xFF0F172A),
+                                    accentColor: const Color(0xFFF59E0B),
+                                  );
+                                  return;
+                                }
+
                                 ref.read(cartManagerProvider.notifier).addToCart(
                                       CartItemEntity(
                                         id: product.id,
@@ -470,6 +483,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                                         imageUrl: product.imageUrl,
                                         price: product.price,
                                         quantity: 1,
+                                        maxAllowedQuantity: product.effectiveMaxQuantity,
                                       ),
                                     );
                                 AppAlertManager.showFloatingToast(
@@ -492,6 +506,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                                           imageUrl: product.imageUrl,
                                           price: product.price,
                                           quantity: 1,
+                                          maxAllowedQuantity: product.effectiveMaxQuantity,
                                         ),
                                       );
                                 }
