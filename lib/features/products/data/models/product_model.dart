@@ -16,6 +16,7 @@ class ProductModel extends ProductEntity {
     super.inStock = true,
     super.availableQuantity = 1,
     super.minOrderQuantity = 1,
+    super.maxOrderLimit = 5,
     super.unitType = '500 g',
     super.unitOptions = const [],
   });
@@ -131,6 +132,19 @@ class ProductModel extends ProductEntity {
       minQty = int.tryParse(rawMinQty.toString()) ?? 1;
     }
 
+    final rawMaxLimit = json['max_order_limit'] ??
+        json['maximum_order_quantity'] ??
+        json['max_limit'] ??
+        json['max_qty'] ??
+        5;
+
+    int maxLimit = 5;
+    if (rawMaxLimit is num) {
+      maxLimit = rawMaxLimit.toInt();
+    } else if (rawMaxLimit != null) {
+      maxLimit = int.tryParse(rawMaxLimit.toString()) ?? 5;
+    }
+
     final unitStr = json['unit']?.toString() ??
         json['unit_type']?.toString() ??
         json['weight']?.toString() ??
@@ -185,6 +199,7 @@ class ProductModel extends ProductEntity {
       inStock: inStockFlag,
       availableQuantity: qty > 0 ? qty : 1,
       minOrderQuantity: minQty > 0 ? minQty : 1,
+      maxOrderLimit: maxLimit > 0 ? maxLimit : 5,
       unitType: unitStr,
       unitOptions: parsedUnitOptions,
     );
@@ -204,6 +219,8 @@ class ProductModel extends ProductEntity {
       'mrp': originalPrice ?? price,
       'in_stock': inStock,
       'available_quantity': availableQuantity,
+      'minimum_order_quantity': minOrderQuantity,
+      'max_order_limit': maxOrderLimit,
       'unit_options': unitOptions.map((u) => u.toJson()).toList(),
     };
   }
