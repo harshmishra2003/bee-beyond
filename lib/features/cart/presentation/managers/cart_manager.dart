@@ -36,27 +36,23 @@ class CartManager extends AsyncNotifier<List<CartItemEntity>> {
 
   /// Adds an item to the cart using optimistic UI updates for instant feedback.
   Future<void> addToCart(CartItemEntity item) async {
-    // Optimistic UI update
-    if (state.hasValue) {
-      final currentItems = state.value!.toList();
-      final index = currentItems.indexWhere((i) => i.id == item.id);
+    final currentList = state.value ?? [];
+    final updatedList = List<CartItemEntity>.from(currentList);
+    final index = updatedList.indexWhere((i) => i.id == item.id);
 
-      if (index >= 0) {
-        currentItems[index] = currentItems[index].copyWith(
-          quantity: currentItems[index].quantity + item.quantity,
-        );
-      } else {
-        currentItems.add(item);
-      }
-      state = AsyncValue.data(currentItems);
+    if (index >= 0) {
+      updatedList[index] = updatedList[index].copyWith(
+        quantity: updatedList[index].quantity + item.quantity,
+      );
     } else {
-      state = const AsyncValue.loading();
+      updatedList.add(item);
     }
+
+    // Immediately set optimistic state
+    state = AsyncValue.data(updatedList);
 
     try {
       await _repository.addToCart(item);
-      final updatedItems = await _fetchCartItems();
-      state = AsyncValue.data(updatedItems);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -68,23 +64,18 @@ class CartManager extends AsyncNotifier<List<CartItemEntity>> {
       return removeItem(id);
     }
 
-    // Optimistic UI update
-    if (state.hasValue) {
-      final currentItems = state.value!;
-      final updatedItems = currentItems.map((item) {
-        if (item.id == id) {
-          return item.copyWith(quantity: quantity);
-        }
-        return item;
-      }).toList();
+    final currentItems = state.value ?? [];
+    final updatedItems = currentItems.map((item) {
+      if (item.id == id) {
+        return item.copyWith(quantity: quantity);
+      }
+      return item;
+    }).toList();
 
-      state = AsyncValue.data(updatedItems);
-    }
+    state = AsyncValue.data(updatedItems);
 
     try {
       await _repository.updateQuantity(id, quantity);
-      final refreshedItems = await _fetchCartItems();
-      state = AsyncValue.data(refreshedItems);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -92,17 +83,13 @@ class CartManager extends AsyncNotifier<List<CartItemEntity>> {
 
   /// Removes an item entirely from the cart.
   Future<void> removeItem(String id) async {
-    // Optimistic UI update
-    if (state.hasValue) {
-      final currentItems = state.value!;
-      final updatedItems = currentItems.where((item) => item.id != id).toList();
-      state = AsyncValue.data(updatedItems);
-    }
+    final currentItems = state.value ?? [];
+    final updatedItems = currentItems.where((item) => item.id != id).toList();
+
+    state = AsyncValue.data(updatedItems);
 
     try {
       await _repository.removeFromCart(id);
-      final refreshedItems = await _fetchCartItems();
-      state = AsyncValue.data(refreshedItems);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -110,13 +97,10 @@ class CartManager extends AsyncNotifier<List<CartItemEntity>> {
 
   /// Clears all items in the cart.
   Future<void> clearCart() async {
-    // Optimistic UI update
     state = const AsyncValue.data([]);
 
     try {
       await _repository.clearCart();
-      final refreshedItems = await _fetchCartItems();
-      state = AsyncValue.data(refreshedItems);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
