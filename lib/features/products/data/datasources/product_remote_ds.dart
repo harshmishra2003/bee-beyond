@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:dio/dio.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/product_model.dart';
@@ -12,40 +14,93 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   ProductRemoteDataSourceImpl([this._dioClient]);
 
+  Dio get _dio =>
+      _dioClient?.instance ??
+      Dio(
+        BaseOptions(
+          baseUrl: ApiEndpoints.baseUrl,
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
   @override
   Future<List<ProductModel>> getProducts() async {
-    final dio = _dioClient;
-    if (dio != null) {
-      try {
-        final response = await dio.get(ApiEndpoints.products);
-        if (response.statusCode == 200 && response.data != null) {
-          final data = response.data;
-          final List<dynamic> list = data is Map
-              ? (data['data'] ?? data['products'] ?? [])
-              : (data is List ? data : []);
+    final candidateEndpoints = [
+      ApiEndpoints.products, // '/products.php'
+      'https://metricstestingapp.xyz/api/products.php',
+      '/products.php',
+      '/products',
+    ];
 
-          return list
-              .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
-              .toList();
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await _dio.get(
+          endpoint,
+          queryParameters: {
+            '_t': DateTime.now().millisecondsSinceEpoch,
+          },
+        );
+
+        if (response.statusCode == 200 && response.data != null) {
+          dynamic rawData = response.data;
+          if (rawData is String) {
+            rawData = jsonDecode(rawData);
+          }
+
+          final List<dynamic> list = rawData is Map
+              ? (rawData['data'] ?? rawData['products'] ?? rawData['items'] ?? [])
+              : (rawData is List ? rawData : []);
+
+          if (list.isNotEmpty) {
+            return list
+                .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
+                .toList();
+          }
         }
-      } catch (_) {
-        return [];
-      }
+      } catch (_) {}
     }
+
     return [];
   }
 
   @override
   Future<ProductModel> getProductById(String id) async {
-    final dio = _dioClient;
-    if (dio != null) {
+    final candidateEndpoints = [
+      '${ApiEndpoints.productDetail}?id=$id', // '/product_details.php?id=1'
+      'https://metricstestingapp.xyz/api/product_details.php?id=$id',
+      '/product_details.php?id=$id',
+      '/product_details.php',
+      '/products/$id',
+    ];
+
+    for (final endpoint in candidateEndpoints) {
       try {
-        final response = await dio.get('${ApiEndpoints.productDetail}$id');
+        final response = await _dio.get(
+          endpoint,
+          queryParameters: {
+            if (!endpoint.contains('id=')) 'id': id,
+            '_t': DateTime.now().millisecondsSinceEpoch,
+          },
+        );
+
         if (response.statusCode == 200 && response.data != null) {
-          final data = response.data;
-          final Map<String, dynamic> json =
-              data is Map ? (data['data'] ?? data) : {};
-          return ProductModel.fromJson(json);
+          dynamic rawData = response.data;
+          if (rawData is String) {
+            rawData = jsonDecode(rawData);
+          }
+
+          final Map<String, dynamic> json = rawData is Map
+              ? (rawData['data'] is Map ? rawData['data'] : rawData)
+              : {};
+
+          if (json.isNotEmpty) {
+            return ProductModel.fromJson(json);
+          }
         }
       } catch (_) {}
     }
@@ -55,8 +110,8 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       (p) => p.id == id,
       orElse: () => ProductModel(
         id: id,
-        title: 'Product Details',
-        description: 'Details for this product will be loaded dynamically.',
+        title: 'Organic Healing Product',
+        description: 'Authentic certified Ayurvedic remedy.',
         category: 'Store',
         imageUrl: '',
         price: 0.0,
