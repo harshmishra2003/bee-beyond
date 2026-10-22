@@ -9,6 +9,7 @@ import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
 import '../../../orders/presentation/screens/receipt_preview_screen.dart';
@@ -55,6 +56,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
     );
 
     ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
+
+    ref.read(notificationsProvider.notifier).postNotification(
+      title: '🩺 Practitioner Session Reserved!',
+      message: '1-on-1 slot reserved for "${srv.serviceName}". View tax invoice & appointment details.',
+      category: 'services',
+    );
 
     AppAlertManager.showFloatingToast(
       context,
