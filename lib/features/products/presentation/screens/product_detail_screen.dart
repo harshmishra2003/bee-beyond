@@ -12,52 +12,26 @@ import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../cart/domain/entities/cart_item_entity.dart';
 import '../../../cart/presentation/managers/cart_manager.dart';
-import '../../domain/entities/product_entity.dart';
 import '../providers/product_provider.dart';
 
-class ProductDetailScreen extends ConsumerStatefulWidget {
+class ProductDetailScreen extends ConsumerWidget {
   final String productId;
 
   const ProductDetailScreen({super.key, required this.productId});
 
   @override
-  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
-}
-
-class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
-  int _selectedQuantity = 1;
-  int _selectedUnitIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final productAsync = ref.watch(productDetailProvider(widget.productId));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productAsync = ref.watch(productDetailProvider(productId));
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'Product Details'),
       body: productAsync.when(
         data: (product) {
-          final unitOptions = product.unitOptions.isNotEmpty
-              ? product.unitOptions
-              : [
-                  ProductUnitOption(label: product.unitType, price: product.price, mrp: product.originalPrice),
-                  ProductUnitOption(label: 'Pack of 2', price: (product.price * 1.8).roundToDouble()),
-                  ProductUnitOption(label: 'Pack of 3', price: (product.price * 2.5).roundToDouble()),
-                ];
-
-          if (_selectedUnitIndex >= unitOptions.length) {
-            _selectedUnitIndex = 0;
-          }
-
-          final activeUnitOption = unitOptions[_selectedUnitIndex];
-          final activeUnitPrice = activeUnitOption.price;
-          final activeMrp = activeUnitOption.mrp ?? product.originalPrice;
-
-          final discount = product.calculateDiscountPercent(activeUnitPrice);
-          final savingsPerUnit = (activeMrp != null && activeMrp > activeUnitPrice)
-              ? (activeMrp - activeUnitPrice)
+          final discount = product.discountPercent;
+          final savingsAmount = (product.originalPrice != null && product.originalPrice! > product.price)
+              ? (product.originalPrice! - product.price)
               : 0.0;
-          final totalSavingsAmount = savingsPerUnit * _selectedQuantity;
 
           final allImages = product.allImages;
 
@@ -159,23 +133,24 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Price & Discount Row (Calculated dynamically per active unit option!)
+                      // Price & Discount Row
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.baseline,
                         textBaseline: TextBaseline.alphabetic,
                         children: [
                           Text(
-                            CurrencyUtils.formatINR(activeUnitPrice),
+                            CurrencyUtils.formatINR(product.price),
                             style: AppTextStyles.headlineMedium.copyWith(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w900,
                               fontSize: 24,
                             ),
                           ),
-                          if (activeMrp != null && activeMrp > activeUnitPrice) ...[
+                          if (product.originalPrice != null &&
+                              product.originalPrice! > product.price) ...[
                             const SizedBox(width: 10),
                             Text(
-                              CurrencyUtils.formatINR(activeMrp),
+                              CurrencyUtils.formatINR(product.originalPrice!),
                               style: AppTextStyles.titleMedium.copyWith(
                                 decoration: TextDecoration.lineThrough,
                                 color: AppColors.textHint,
@@ -195,7 +170,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ],
                       ),
 
-                      if (totalSavingsAmount > 0) ...[
+                      if (savingsAmount > 0) ...[
                         const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -204,7 +179,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            '🎉 You save ${CurrencyUtils.formatINR(totalSavingsAmount)} ($discount% OFF) on this selection!',
+                            '🎉 You save ${CurrencyUtils.formatINR(savingsAmount)} ($discount% OFF) on this item!',
                             style: const TextStyle(
                               color: Color(0xFF047857),
                               fontSize: 11.5,
@@ -213,117 +188,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                         ),
                       ],
-
-                      const SizedBox(height: 20),
-
-                      // COMPULSORY SELECT WEIGHT / UNIT TYPE CHIPS
-                      Row(
-                        children: [
-                          const Text(
-                            'Select Weight / Unit Size',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3C7),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              'REQUIRED *',
-                              style: TextStyle(
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFFB45309),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-
-                      SizedBox(
-                        height: 48,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: unitOptions.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final option = unitOptions[index];
-                            final isSelected = _selectedUnitIndex == index;
-
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _selectedUnitIndex = index;
-                                });
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.primary
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? AppColors.primary
-                                        : const Color(0xFFCBD5E1),
-                                    width: isSelected ? 1.8 : 1.2,
-                                  ),
-                                  boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: AppColors.primary.withValues(alpha: 0.25),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 3),
-                                          )
-                                        ]
-                                      : null,
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      option.label,
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Colors.white
-                                            : AppColors.textPrimary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 1),
-                                    Text(
-                                      CurrencyUtils.formatINR(option.price),
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Colors.amberAccent
-                                            : AppColors.primary,
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 10.5,
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
 
                       const SizedBox(height: 20),
 
@@ -374,19 +238,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       ),
       bottomNavigationBar: productAsync.maybeWhen(
         data: (product) {
-          final unitOptions = product.unitOptions.isNotEmpty
-              ? product.unitOptions
-              : [
-                  ProductUnitOption(label: product.unitType, price: product.price, mrp: product.originalPrice),
-                ];
-
-          if (_selectedUnitIndex >= unitOptions.length) {
-            _selectedUnitIndex = 0;
-          }
-
-          final activeUnitOption = unitOptions[_selectedUnitIndex];
-          final activeUnitPrice = activeUnitOption.price;
-
           final cartAsync = ref.watch(cartManagerProvider);
           final cartItems = cartAsync.value ?? [];
           final cartItemIndex = cartItems.indexWhere((i) => i.id == product.id);
@@ -425,23 +276,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ref.read(cartManagerProvider.notifier).addToCart(
                               CartItemEntity(
                                 id: product.id,
-                                title:
-                                    '${product.title} (${activeUnitOption.label})',
+                                title: product.title,
                                 imageUrl: product.imageUrl,
-                                price: activeUnitPrice,
-                                quantity: _selectedQuantity,
+                                price: product.price,
+                                quantity: 1,
                               ),
                             );
                         AppAlertManager.showFloatingToast(
                           context,
                           title: 'Item Added to Cart!',
-                          message:
-                              '${product.title} (${activeUnitOption.label} x${_selectedQuantity}) added to cart.',
+                          message: '${product.title} added to cart.',
                           icon: Icons.shopping_bag_rounded,
                           backgroundColor: const Color(0xFF0F172A),
                           accentColor: const Color(0xFF10B981),
                           actionLabel: 'VIEW CART',
-                          onAction: () => context.push(RoutePaths.cart),
+                          onAction: () => context.go(RoutePaths.cart),
                         );
                       },
                       icon: Icon(
@@ -475,11 +324,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ref.read(cartManagerProvider.notifier).addToCart(
                                 CartItemEntity(
                                   id: product.id,
-                                  title:
-                                      '${product.title} (${activeUnitOption.label})',
+                                  title: product.title,
                                   imageUrl: product.imageUrl,
-                                  price: activeUnitPrice,
-                                  quantity: _selectedQuantity,
+                                  price: product.price,
+                                  quantity: 1,
                                 ),
                               );
                         }
