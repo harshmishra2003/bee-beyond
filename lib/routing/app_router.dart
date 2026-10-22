@@ -44,7 +44,7 @@ import 'router_notifier.dart';
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final routerNotifier = ref.watch(routerNotifierProvider);
+  final routerNotifier = ref.read(routerNotifierProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
