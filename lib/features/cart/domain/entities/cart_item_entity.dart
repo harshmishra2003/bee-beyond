@@ -6,6 +6,7 @@ class CartItemEntity extends Equatable {
   final String imageUrl;
   final double price;
   final int quantity;
+  final int maxAllowedQuantity;
 
   const CartItemEntity({
     required this.id,
@@ -13,18 +14,21 @@ class CartItemEntity extends Equatable {
     required this.imageUrl,
     required this.price,
     required this.quantity,
+    this.maxAllowedQuantity = 5,
   });
 
-  CartItemEntity copyWith({int? quantity}) {
+  CartItemEntity copyWith({int? quantity, int? maxAllowedQuantity}) {
     return CartItemEntity(
       id: id,
       title: title,
       imageUrl: imageUrl,
       price: price,
       quantity: quantity ?? this.quantity,
+      maxAllowedQuantity: maxAllowedQuantity ?? this.maxAllowedQuantity,
     );
   }
 
   @override
-  List<Object?> get props => [id, title, imageUrl, price, quantity];
+  List<Object?> get props =>
+      [id, title, imageUrl, price, quantity, maxAllowedQuantity];
 }
