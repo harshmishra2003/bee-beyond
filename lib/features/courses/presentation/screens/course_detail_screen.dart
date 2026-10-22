@@ -8,6 +8,7 @@ import 'package:printing/printing.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/app_pdf_book_viewer.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -703,34 +704,48 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Registration Fee',
-                      style: TextStyle(
+                    Text(
+                      isEnrolled ? 'Enrolled Status' : 'Registration Fee',
+                      style: const TextStyle(
                         fontSize: 11.5,
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      CurrencyUtils.formatINR(course.price),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: AppColors.primary,
+                      isEnrolled ? 'ACTIVE ✓' : CurrencyUtils.formatINR(course.price),
+                      style: TextStyle(
+                        fontSize: isEnrolled ? 16 : 20,
+                        color: isEnrolled ? const Color(0xFF059669) : AppColors.primary,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 Expanded(
                   child: ThreeDButton(
-                    text: isEnrolled ? 'Go To Course →' : 'Enroll Now →',
-                    fontSize: 14.5,
+                    text: isEnrolled ? 'ENROLLED • ACCESS MODULES →' : 'Enroll Now →',
+                    color: isEnrolled ? const Color(0xFF059669) : null,
+                    shadowColor: isEnrolled ? const Color(0xFF064E3B) : null,
+                    fontSize: 12.5,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 10),
+                        horizontal: 16, vertical: 10),
                     onPressed: () {
-                      context.push(
-                          '${RoutePaths.courseEnrollment}?id=${course.id}');
+                      if (isEnrolled) {
+                        _tabController.animateTo(1);
+                        AppAlertManager.showFloatingToast(
+                          context,
+                          title: 'Actively Enrolled',
+                          message: 'Accessing study modules & curriculum below',
+                          icon: Icons.verified_rounded,
+                          backgroundColor: const Color(0xFF0F172A),
+                          accentColor: const Color(0xFF10B981),
+                        );
+                      } else {
+                        context.push(
+                            '${RoutePaths.courseEnrollment}?id=${course.id}');
+                      }
                     },
                   ),
                 ),
