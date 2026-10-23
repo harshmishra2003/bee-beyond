@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/membership_access_guard.dart';
 import '../../../../routing/route_paths.dart';
 
 class LibraryScreen extends StatelessWidget {
@@ -10,8 +11,11 @@ class LibraryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const CustomAppBar(title: 'Digital Healing Library'),
+    return MembershipAccessGuard(
+      featureName: 'Digital Healing Library',
+      featureDescription: 'eBooks, guided videos, Binaural audio & research materials',
+      child: Scaffold(
+        appBar: const CustomAppBar(title: 'Digital Healing Library'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
