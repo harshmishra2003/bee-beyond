@@ -11,9 +11,16 @@ class AssetPaths {
   static const String emptyCourse = 'assets/images/empty_course.png';
   static const String userAvatar = 'assets/images/user_avatar.png';
 
-  // Social Icons
+  // Social & Portal Icons
   static const String googleIcon = 'assets/icons/google.png';
   static const String appleIcon = 'assets/icons/apple.png';
+  static const String whatsappIcon = 'assets/icons/whatsapp.png';
+  static const String instagramIcon = 'assets/icons/instagram.png';
+  static const String linkedinIcon = 'assets/icons/linkedin.png';
+  static const String customerServiceIcon = 'assets/icons/customer-service.png';
+  static const String audioIcon = 'assets/icons/audio.png';
+  static const String booksIcon = 'assets/icons/books.png';
+  static const String membershipIcon = 'assets/icons/membership.png';
 
   // Lottie
   static const String lottieLoading = 'assets/lottie/loading.json';
