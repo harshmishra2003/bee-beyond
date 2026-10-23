@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_pdf_book_viewer.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/membership_access_guard.dart';
 import '../../../../routing/page_transitions.dart';
 import '../../domain/entities/book_item.dart';
 import '../providers/library_provider.dart';
@@ -56,8 +57,11 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   Widget build(BuildContext context) {
     final booksAsync = ref.watch(booksAndMaterialsProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return MembershipAccessGuard(
+      featureName: 'Books & Study Handbooks',
+      featureDescription: 'PDF handbooks, research notes & digital eBooks',
+      child: Scaffold(
+        backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'Books & Study Materials'),
       body: booksAsync.when(
         data: (allBooks) {
