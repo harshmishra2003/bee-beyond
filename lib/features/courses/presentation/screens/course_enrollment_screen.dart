@@ -524,6 +524,26 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
       }
 
       _razorpayService?.onSuccess = (response) async {
+        final paymentId = response.paymentId?.trim();
+        final signature = response.signature?.trim();
+
+        if (paymentId == null || paymentId.isEmpty || signature == null || signature.isEmpty) {
+          if (mounted) {
+            setState(() => _isSubmitting = false);
+            AppAlertManager.showFloatingToast(
+              context,
+              title: 'Payment Incomplete',
+              message: 'No valid payment signature returned from payment gateway.',
+              icon: Icons.warning_amber_rounded,
+              backgroundColor: const Color(0xFF0F172A),
+              accentColor: const Color(0xFFF59E0B),
+            );
+          }
+          return;
+        }
+
+        if (!mounted) return;
+
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -548,13 +568,14 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
 
         try {
           final verification = await paymentRepo.verifyPaymentSignature(
-            paymentId: response.paymentId ?? '',
+            paymentId: paymentId,
             orderId: response.orderId ?? serverOrder.gatewayOrderId,
-            signature: response.signature ?? '',
+            signature: signature,
           );
 
           if (mounted) {
             Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
+            setState(() => _isSubmitting = false);
 
             if (verification.isVerified) {
               await ref.read(joinedCoursesProvider.notifier).joinCourse(
@@ -599,6 +620,7 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
         } catch (e) {
           if (mounted) {
             Navigator.of(context, rootNavigator: true).pop();
+            setState(() => _isSubmitting = false);
             AppAlertManager.showFloatingToast(
               context,
               title: 'Verification Error',
@@ -612,6 +634,9 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
       };
 
       _razorpayService?.onError = (response) {
+        if (!mounted) return;
+        setState(() => _isSubmitting = false);
+
         final failureResp = response is PaymentFailureResponse ? response : null;
         final int? code = failureResp?.code;
         final String? msg = failureResp?.message;
@@ -623,7 +648,7 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
         AppAlertManager.showFloatingToast(
           context,
           title: isCancelled ? 'Payment Cancelled' : 'Payment Failed',
-          message: isCancelled ? 'You cancelled the payment process.' : (msg ?? 'Transaction failed.'),
+          message: isCancelled ? 'Payment was cancelled or dismissed. No amount was charged.' : (msg ?? 'Transaction failed.'),
           icon: isCancelled ? Icons.info_outline_rounded : Icons.error_outline_rounded,
           backgroundColor: const Color(0xFF0F172A),
           accentColor: isCancelled ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
