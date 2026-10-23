@@ -206,6 +206,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 
