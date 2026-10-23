@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/asset_paths.dart';
@@ -150,9 +149,9 @@ class _AboutScreenState extends State<AboutScreen> {
 
             const SizedBox(height: 20),
 
-            // IMPACT KPI METRIC COUNTERS
+            // ANIMATED IMPACT KPI METRIC COUNTERS
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -168,9 +167,22 @@ class _AboutScreenState extends State<AboutScreen> {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _MetricCounterItem(number: '50,000+', label: 'Seekers Healed'),
-                  _MetricCounterItem(number: '120+', label: 'Certified Courses'),
-                  _MetricCounterItem(number: '4.9 ⭐', label: 'User Rating'),
+                  _AnimatedMetricCounter(
+                    targetValue: 50000,
+                    suffix: '+',
+                    label: 'Seekers Healed',
+                  ),
+                  _AnimatedMetricCounter(
+                    targetValue: 120,
+                    suffix: '+',
+                    label: 'Certified Courses',
+                  ),
+                  _AnimatedMetricCounter(
+                    targetValue: 4.9,
+                    suffix: ' ⭐',
+                    label: 'User Rating',
+                    isDecimal: true,
+                  ),
                 ],
               ),
             ),
@@ -338,13 +350,13 @@ class _AboutScreenState extends State<AboutScreen> {
 
             const SizedBox(height: 24),
 
-            // CLICKABLE SOCIAL MEDIA CONNECTIONS
+            // CLICKABLE STANDALONE CIRCULAR SOCIAL MEDIA ICONS
             _buildSectionHeader('Connect With Bee Beyonnd', Icons.share_rounded),
             const SizedBox(height: 10),
 
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 color: const Color(0xFFEEF2FF),
                 borderRadius: BorderRadius.circular(22),
@@ -363,60 +375,61 @@ class _AboutScreenState extends State<AboutScreen> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Tap below to connect with us on social media',
+                    'Tap any icon to visit our official social channels',
                     style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
 
-                  // SOCIAL BUTTONS GRID
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    alignment: WrapAlignment.center,
+                  // STANDALONE CIRCULAR SOCIAL ICON BADGES
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       // WHATSAPP
-                      _buildSocialButton(
-                        label: 'WhatsApp',
-                        icon: Icons.chat_rounded,
-                        color: const Color(0xFF25D366),
+                      _SocialIconBadge(
+                        label: 'Chat on WhatsApp',
+                        imageAsset: AssetPaths.whatsappIcon,
+                        fallbackIcon: Icons.chat_rounded,
+                        gradientColors: const [Color(0xFF25D366), Color(0xFF128C7E)],
                         onTap: () => _launchUrl('https://wa.me/919967326151?text=Hello%20Bee%20Beyonnd'),
                       ),
 
                       // INSTAGRAM
-                      _buildSocialButton(
-                        label: 'Instagram',
-                        icon: Icons.camera_alt_rounded,
-                        color: const Color(0xFFE4405F),
+                      _SocialIconBadge(
+                        label: 'Follow on Instagram',
+                        imageAsset: AssetPaths.instagramIcon,
+                        fallbackIcon: Icons.camera_alt_rounded,
+                        gradientColors: const [Color(0xFFE4405F), Color(0xFFC13584), Color(0xFF833AB4)],
                         onTap: () => _launchUrl('https://instagram.com/beebeeyond'),
                       ),
 
-                      // FACEBOOK
-                      _buildSocialButton(
-                        label: 'Facebook',
-                        icon: Icons.facebook_rounded,
-                        color: const Color(0xFF1877F2),
-                        onTap: () => _launchUrl('https://facebook.com/beebeeyond'),
-                      ),
-
                       // LINKEDIN
-                      _buildSocialButton(
-                        label: 'LinkedIn',
-                        icon: Icons.business_center_rounded,
-                        color: const Color(0xFF0A66C2),
+                      _SocialIconBadge(
+                        label: 'Connect on LinkedIn',
+                        imageAsset: AssetPaths.linkedinIcon,
+                        fallbackIcon: Icons.business_center_rounded,
+                        gradientColors: const [Color(0xFF0077B5), Color(0xFF00A0DC)],
                         onTap: () => _launchUrl('https://linkedin.com/company/beebeeyond'),
                       ),
 
+                      // FACEBOOK
+                      _SocialIconBadge(
+                        label: 'Follow on Facebook',
+                        fallbackIcon: Icons.facebook_rounded,
+                        gradientColors: const [Color(0xFF1877F2), Color(0xFF3B5998)],
+                        onTap: () => _launchUrl('https://facebook.com/beebeeyond'),
+                      ),
+
                       // WEBSITE
-                      _buildSocialButton(
-                        label: 'Official Website',
-                        icon: Icons.language_rounded,
-                        color: AppColors.primary,
+                      _SocialIconBadge(
+                        label: 'Visit Official Website',
+                        fallbackIcon: Icons.language_rounded,
+                        gradientColors: const [Color(0xFF0F0C20), Color(0xFF312E81)],
                         onTap: () => _launchUrl('https://metricstestingapp.xyz'),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
 
                   const Text(
                     '📍 Malad West, Mumbai, Maharashtra, India',
@@ -675,63 +688,131 @@ class _AboutScreenState extends State<AboutScreen> {
       ),
     );
   }
+}
 
-  Widget _buildSocialButton({
-    required String label,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return ElevatedButton.icon(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        elevation: 0,
-      ),
-      onPressed: onTap,
-      icon: Icon(icon, color: Colors.white, size: 16),
-      label: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
-      ),
+// ANIMATED NUMERIC METRIC COUNTER
+class _AnimatedMetricCounter extends StatelessWidget {
+  final double targetValue;
+  final String suffix;
+  final String label;
+  final bool isDecimal;
+
+  const _AnimatedMetricCounter({
+    required this.targetValue,
+    required this.suffix,
+    required this.label,
+    this.isDecimal = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: targetValue),
+      duration: const Duration(milliseconds: 2200),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        String formattedNumber;
+        if (isDecimal) {
+          formattedNumber = value.toStringAsFixed(1);
+        } else {
+          final intVal = value.toInt();
+          formattedNumber = intVal >= 1000
+              ? '${(intVal ~/ 1000)},${(intVal % 1000).toString().padLeft(3, '0')}'
+              : '$intVal';
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$formattedNumber$suffix',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-class _MetricCounterItem extends StatelessWidget {
-  final String number;
+// STANDALONE CIRCULAR GLOWING SOCIAL ICON BADGE
+class _SocialIconBadge extends StatelessWidget {
   final String label;
+  final String? imageAsset;
+  final IconData? fallbackIcon;
+  final List<Color> gradientColors;
+  final VoidCallback onTap;
 
-  const _MetricCounterItem({required this.number, required this.label});
+  const _SocialIconBadge({
+    required this.label,
+    this.imageAsset,
+    this.fallbackIcon,
+    required this.gradientColors,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          number,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: AppColors.primary,
+    return Tooltip(
+      message: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(28),
+          child: Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: gradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: gradientColors.first.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(
+              child: imageAsset != null
+                  ? Image.asset(
+                      imageAsset!,
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        fallbackIcon ?? Icons.link_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    )
+                  : Icon(
+                      fallbackIcon ?? Icons.link_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+            ),
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
