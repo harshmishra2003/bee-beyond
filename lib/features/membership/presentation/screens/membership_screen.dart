@@ -276,89 +276,189 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
   }) async {
     final receiptId = 'REC-2025-${(1000 + plan.id.hashCode % 8999).abs()}';
 
-    PaymentProcessingSheet.show(
-      context,
-      appName: paymentMethod,
-      upiId: 'beebeeyond@okaxis',
-      amount: grandTotal,
-      orderId: receiptId,
-      onVerifyPayment: () async {
-        try {
-          final paymentRepo = ref.read(paymentRepositoryProvider);
-          final serverOrder = await paymentRepo.createServerOrder(
-            amount: grandTotal,
-            currency: 'INR',
-            receiptId: receiptId,
-            items: [
-              {'title': plan.displayName, 'price': grandTotal, 'quantity': 1}
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+              SizedBox(height: 20),
+              Text(
+                'Creating Membership Order...',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
+              ),
             ],
-          );
+          ),
+        ),
+      ),
+    );
 
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+
+      final serverOrder = await paymentRepo.createServerOrder(
+        amount: grandTotal,
+        currency: 'INR',
+        receiptId: receiptId,
+        items: [
+          {
+            'product_id': int.tryParse('${plan.id}') ?? 1,
+            'quantity': 1,
+          }
+        ],
+      );
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+      }
+
+      _razorpayService?.onSuccess = (response) async {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            content: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+                  SizedBox(height: 20),
+                  Text(
+                    'Verifying Membership Payment...',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        try {
           final verification = await paymentRepo.verifyPaymentSignature(
-            paymentId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
-            orderId: serverOrder.orderId,
-            signature: serverOrder.signatureChecksum ?? 'MBR_VERIFIED',
+            paymentId: response.paymentId ?? '',
+            orderId: response.orderId ?? serverOrder.gatewayOrderId,
+            signature: response.signature ?? '',
           );
 
-          return verification.isVerified;
-        } catch (_) {
-          return true;
-        }
-      },
-      onSuccessComplete: () {
-        final newReceipt = ReceiptEntity(
-          receiptId: receiptId,
-          orderId: receiptId,
-          title: plan.displayName,
-          type: 'MEMBERSHIP',
-          customerName: customerName,
-          customerPhone: customerPhone,
-          customerEmail: customerEmail,
-          deliveryAddress: 'Online VIP Membership Access Pass (Bee Beeyond Portal)',
-          items: [
-            ReceiptItem(name: plan.displayName, quantity: 1, unitPrice: plan.price),
-          ],
-          subtotal: plan.price,
-          gstRate: 0.18,
-          deliveryFee: 0.0,
-          discount: 0.0,
-          paymentMethod: paymentMethod,
-          date: DateTime.now(),
-        );
+          if (mounted) {
+            Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
 
-        ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
+            if (verification.isVerified) {
+              final newReceipt = ReceiptEntity(
+                receiptId: receiptId,
+                orderId: serverOrder.orderId,
+                title: plan.displayName,
+                type: 'MEMBERSHIP',
+                customerName: customerName,
+                customerPhone: customerPhone,
+                customerEmail: customerEmail,
+                deliveryAddress: 'Online VIP Membership Access Pass (Bee Beyonnd Portal)',
+                items: [
+                  ReceiptItem(name: plan.displayName, quantity: 1, unitPrice: plan.price),
+                ],
+                subtotal: plan.price,
+                gstRate: 0.18,
+                deliveryFee: 0.0,
+                discount: 0.0,
+                paymentMethod: 'Razorpay Gateway',
+                date: DateTime.now(),
+              );
 
-        ref.read(activePassProvider.notifier).activatePass(
-              passId: plan.id,
-              passName: plan.displayName,
-              slug: plan.slug,
-              durationYears: plan.accessDuration > 0 ? plan.accessDuration : 1,
+              ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
+
+              ref.read(activePassProvider.notifier).activatePass(
+                    passId: plan.id,
+                    passName: plan.displayName,
+                    slug: plan.slug,
+                    durationYears: plan.accessDuration > 0 ? plan.accessDuration : 1,
+                  );
+
+              ref.read(notificationsProvider.notifier).postNotification(
+                    title: '⭐ VIP Membership Pass Activated!',
+                    message: 'Subscribed to ${plan.displayName}. Official tax invoice $receiptId generated.',
+                    category: 'vip_pass',
+                  );
+
+              context.push(
+                RoutePaths.receiptPreview,
+                extra: newReceipt,
+              );
+            } else {
+              AppAlertManager.showFloatingToast(
+                context,
+                title: 'Payment Verification Failed',
+                message: verification.message ?? 'Server signature check failed.',
+                icon: Icons.error_outline_rounded,
+                backgroundColor: const Color(0xFF0F172A),
+                accentColor: const Color(0xFFEF4444),
+              );
+            }
+          }
+        } catch (e) {
+          if (mounted) {
+            Navigator.of(context, rootNavigator: true).pop();
+            AppAlertManager.showFloatingToast(
+              context,
+              title: 'Verification Error',
+              message: 'Could not verify payment: $e',
+              icon: Icons.error_outline_rounded,
+              backgroundColor: const Color(0xFF0F172A),
+              accentColor: const Color(0xFFEF4444),
             );
+          }
+        }
+      };
 
-        ref.read(notificationsProvider.notifier).postNotification(
-          title: '⭐ VIP Membership Pass Activated!',
-          message: 'Subscribed to ${plan.displayName}. Official tax invoice $receiptId generated.',
-          category: 'vip_pass',
-        );
+      _razorpayService?.onError = (response) {
+        final failureResp = response is PaymentFailureResponse ? response : null;
+        final int? code = failureResp?.code;
+        final String? msg = failureResp?.message;
+
+        final isCancelled = code == Razorpay.PAYMENT_CANCELLED ||
+            (msg?.toLowerCase().contains('cancel') ?? false) ||
+            (msg?.toLowerCase().contains('dismiss') ?? false);
 
         AppAlertManager.showFloatingToast(
           context,
-          title: 'VIP Pass Activated & Paid!',
-          message: 'Subscribed to ${plan.displayName}. Official tax invoice generated.',
-          icon: Icons.stars_rounded,
+          title: isCancelled ? 'Payment Cancelled' : 'Payment Failed',
+          message: isCancelled ? 'You cancelled the payment process.' : (msg ?? 'Transaction failed.'),
+          icon: isCancelled ? Icons.info_outline_rounded : Icons.error_outline_rounded,
           backgroundColor: const Color(0xFF0F172A),
-          accentColor: const Color(0xFF10B981),
-          actionLabel: 'VIEW INVOICE',
-          onAction: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
-              ),
-            );
-          },
+          accentColor: isCancelled ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
         );
-      },
-    );
+      };
+
+      _razorpayService?.openCheckout(
+        keyId: serverOrder.keyId,
+        amountPaise: serverOrder.amountPaise,
+        gatewayOrderId: serverOrder.gatewayOrderId,
+        name: 'Bee Beyonnd',
+        description: 'VIP Membership Pass: ${plan.displayName}',
+        contact: customerPhone,
+        email: customerEmail,
+        customerName: customerName,
+      );
+
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+        AppAlertManager.showFloatingToast(
+          context,
+          title: 'Order Creation Error',
+          message: '$e',
+          icon: Icons.error_outline_rounded,
+          backgroundColor: const Color(0xFF0F172A),
+          accentColor: const Color(0xFFEF4444),
+        );
+      }
+    }
   }
 
   Widget _buildPaymentOptionTile({
