@@ -6,12 +6,17 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign_out_dialog.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../membership/presentation/providers/expiry_provider.dart';
 
 class HomeDrawer extends ConsumerWidget {
   const HomeDrawer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(liveTickerProvider);
+    final activePass = ref.watch(activePassProvider);
+    final isUnlocked = activePass != null && !activePass.isExpired;
+
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
 
@@ -102,11 +107,14 @@ class HomeDrawer extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          const Row(
+                          Row(
                             children: [
                               // VIP Tag
                               _HeaderBadge(
-                                text: '✨ VIP GOLD MEMBER',
+                                text: isUnlocked
+                                    ? '✨ VIP ACTIVE (${activePass.formattedLiveCountdown})'
+                                    : '🔒 VIP EXPIRED - RENEW NOW',
+                                bgColor: isUnlocked ? const Color(0xFF059669) : const Color(0xFFDC2626),
                                 bgColor: Color(0xFFF59E0B),
                                 textColor: Colors.white,
                               ),
@@ -253,10 +261,19 @@ class HomeDrawer extends ConsumerWidget {
                 _DrawerTile(
                   icon: Icons.card_membership_rounded,
                   iconColor: const Color(0xFFD97706),
-                  title: 'VIP Membership',
+                  title: 'VIP Membership Plans',
                   onTap: () {
                     Navigator.pop(context);
                     context.push(RoutePaths.membership);
+                  },
+                ),
+                _DrawerTile(
+                  icon: Icons.workspace_premium_rounded,
+                  iconColor: const Color(0xFFF59E0B),
+                  title: 'My Memberships History',
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push(RoutePaths.myMemberships);
                   },
                 ),
 
