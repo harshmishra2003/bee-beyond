@@ -579,6 +579,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
           ),
         ),
       ),
+    ),
     );
   }
 
