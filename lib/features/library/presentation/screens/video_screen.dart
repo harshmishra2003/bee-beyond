@@ -240,6 +240,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 
