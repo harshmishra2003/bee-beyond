@@ -7,6 +7,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/membership_access_guard.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
@@ -153,8 +154,11 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
   Widget build(BuildContext context) {
     final servicesAsync = ref.watch(servicesProvider);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+    return MembershipAccessGuard(
+      featureName: 'Doctor Consultations & Services',
+      featureDescription: '1-on-1 practitioner bookings, Prakriti analysis & Vastu consultations',
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
       appBar: const CustomAppBar(title: 'Wellness & Consultation Services'),
       body: RefreshIndicator(
         color: AppColors.primary,
