@@ -115,7 +115,6 @@ class HomeDrawer extends ConsumerWidget {
                                     ? '✨ VIP ACTIVE (${activePass.formattedLiveCountdown})'
                                     : '🔒 VIP EXPIRED - RENEW NOW',
                                 bgColor: isUnlocked ? const Color(0xFF059669) : const Color(0xFFDC2626),
-                                bgColor: Color(0xFFF59E0B),
                                 textColor: Colors.white,
                               ),
                             ],
