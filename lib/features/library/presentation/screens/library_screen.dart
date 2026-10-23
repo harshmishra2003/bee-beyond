@@ -95,6 +95,7 @@ class LibraryScreen extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -183,7 +184,6 @@ class LibraryScreen extends StatelessWidget {
           ],
         ),
       ),
-    ),
     );
   }
 }
