@@ -69,21 +69,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     'Kotak Mahindra Bank',
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        final currentUser = ref.read(authStateProvider).user;
-        if (currentUser != null) {
-          if (currentUser.name.isNotEmpty) _nameController.text = currentUser.name;
-          if (currentUser.email.isNotEmpty) _emailController.text = currentUser.email;
-          if (currentUser.phone.isNotEmpty) _phoneController.text = currentUser.phone;
-        }
-      }
-    });
-  }
-
   RazorpayService? _razorpayService;
 
   @override
