@@ -170,8 +170,43 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading dialog
       }
 
+      // 1.1 Handle COD (Cash on Delivery) directly without launching Razorpay SDK
+      if (_paymentCategory == 'cod') {
+        if (mounted) {
+          setState(() => _isProcessingPayment = false);
+          _completeOrderAndGenerateReceipt(
+            'Cash on Delivery',
+            totalPayable,
+            items,
+            serverOrderId: serverOrder.orderId,
+            serverReceiptId: 'REC-2025-${serverOrder.localOrderId.toString().padLeft(4, '0')}',
+          );
+        }
+        return;
+      }
+
       // 2. Set up Razorpay callbacks
       _razorpayService?.onSuccess = (response) async {
+        final paymentId = response.paymentId?.trim();
+        final signature = response.signature?.trim();
+
+        if (paymentId == null || paymentId.isEmpty || signature == null || signature.isEmpty) {
+          if (mounted) {
+            setState(() => _isProcessingPayment = false);
+            AppAlertManager.showFloatingToast(
+              context,
+              title: 'Payment Incomplete',
+              message: 'No valid payment signature returned from payment gateway.',
+              icon: Icons.warning_amber_rounded,
+              backgroundColor: const Color(0xFF0F172A),
+              accentColor: const Color(0xFFF59E0B),
+            );
+          }
+          return;
+        }
+
+        if (!mounted) return;
+
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -196,9 +231,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
         try {
           final verification = await paymentRepo.verifyPaymentSignature(
-            paymentId: response.paymentId ?? '',
+            paymentId: paymentId,
             orderId: response.orderId ?? serverOrder.gatewayOrderId,
-            signature: response.signature ?? '',
+            signature: signature,
           );
 
           if (mounted) {
@@ -241,6 +276,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       };
 
       _razorpayService?.onError = (response) {
+        if (!mounted) return;
         setState(() => _isProcessingPayment = false);
 
         final failureResp = response is PaymentFailureResponse ? response : null;
@@ -256,24 +292,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           context,
           title: isCancelled ? 'Payment Cancelled' : 'Payment Failed',
           message: isCancelled
-              ? 'You cancelled the payment. Your order is saved as pending in My Orders.'
+              ? 'Payment process was cancelled or dismissed. No amount was charged.'
               : (msg ?? 'Transaction was declined or failed.'),
           icon: isCancelled ? Icons.info_outline_rounded : Icons.error_outline_rounded,
           backgroundColor: const Color(0xFF0F172A),
           accentColor: isCancelled ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
-          actionLabel: 'VIEW ORDERS',
-          onAction: () {
-            context.push(RoutePaths.orders);
-          },
         );
-
-        if (isCancelled) {
-          Future.delayed(const Duration(milliseconds: 600), () {
-            if (mounted) {
-              context.go(RoutePaths.orders);
-            }
-          });
-        }
       };
 
       // 3. Open Real Razorpay Checkout SDK
