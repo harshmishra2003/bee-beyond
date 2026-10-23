@@ -21,6 +21,7 @@ import '../features/library/presentation/screens/music_screen.dart';
 import '../features/library/presentation/screens/video_screen.dart';
 import '../features/main_layout/presentation/screens/main_screen.dart';
 import '../features/membership/presentation/screens/membership_screen.dart';
+import '../features/membership/presentation/screens/my_memberships_screen.dart';
 import '../features/notifications/presentation/screens/notifications_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/orders/presentation/screens/order_detail_screen.dart';
@@ -326,6 +327,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           state: state,
           child: const MembershipScreen(),
           type: AppTransitionType.slideUp,
+        ),
+      ),
+      GoRoute(
+        path: RoutePaths.myMemberships,
+        name: RouteNames.myMemberships,
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const MyMembershipsScreen(),
+          type: AppTransitionType.slideRight,
         ),
       ),
       GoRoute(
