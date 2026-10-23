@@ -247,10 +247,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       },
     );
   }
-        );
-      }
-    }
-  }
 
   void _completeOrderAndGenerateReceipt(
     String paymentMethod,
