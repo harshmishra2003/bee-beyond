@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/membership_access_guard.dart';
 import '../../domain/entities/healing_audio_track.dart';
 import '../providers/library_provider.dart';
 
@@ -392,8 +393,11 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
   Widget build(BuildContext context) {
     final audioAsync = ref.watch(audioTracksProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return MembershipAccessGuard(
+      featureName: 'Music & Audio Portal',
+      featureDescription: 'binaural sleep tracks, healing mantras & frequency audio',
+      child: Scaffold(
+        backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'Healing Music & Audios'),
       body: audioAsync.when(
         skipLoadingOnRefresh: true,
