@@ -355,7 +355,6 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       },
     );
   }
-  }
 
   Widget _buildPaymentOptionTile({
     required String title,
