@@ -11,7 +11,8 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../checkout/presentation/providers/payment_provider.dart';
-import '../../../checkout/presentation/widgets/payment_processing_sheet.dart';
+import '../../../../core/services/razorpay_service.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../providers/course_provider.dart';
 
@@ -109,9 +110,12 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
     'Other',
   ];
 
+  RazorpayService? _razorpayService;
+
   @override
   void initState() {
     super.initState();
+    _razorpayService = RazorpayService();
     _selectedCountry = countryRules.first;
     _selectedAltCountry = countryRules.first;
     _selectedGender = _genderOptions.first;
@@ -121,6 +125,7 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
 
   @override
   void dispose() {
+    _razorpayService?.dispose();
     _firstNameController.dispose();
     _middleNameController.dispose();
     _lastNameController.dispose();
@@ -477,66 +482,178 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
   }) async {
     final enrollmentId = 'ENR-2025-${(1000 + (widget.courseId.hashCode % 8999)).abs()}';
 
-    PaymentProcessingSheet.show(
-      context,
-      appName: paymentMethod,
-      upiId: 'beebeeyond@okaxis',
-      amount: grandTotal,
-      orderId: enrollmentId,
-      onVerifyPayment: () async {
-        try {
-          final paymentRepo = ref.read(paymentRepositoryProvider);
-          final serverOrder = await paymentRepo.createServerOrder(
-            amount: grandTotal,
-            currency: 'INR',
-            receiptId: enrollmentId,
-            items: [
-              {'title': course.title, 'price': grandTotal, 'quantity': 1}
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+              SizedBox(height: 20),
+              Text(
+                'Creating Course Order...',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
+              ),
             ],
-          );
-
-          final verification = await paymentRepo.verifyPaymentSignature(
-            paymentId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
-            orderId: serverOrder.orderId,
-            signature: serverOrder.signatureChecksum ?? 'ENR_VERIFIED',
-          );
-
-          return verification.isVerified;
-        } catch (_) {
-          return true;
-        }
-      },
-      onSuccessComplete: () async {
-        await ref.read(joinedCoursesProvider.notifier).joinCourse(
-              courseId: course.id,
-              title: course.title,
-              imageUrl: course.imageUrl,
-              initialProgress: 0.1,
-            );
-
-        ref.read(notificationsProvider.notifier).postNotification(
-              title: '🎓 Course Enrollment Confirmed!',
-              message: 'Welcome to ${course.title}! Access your official study guide & handbook now.',
-              category: 'courses',
-            );
-
-        context.push(
-          RoutePaths.enrollmentReceipt,
-          extra: {
-            'enrollmentId': enrollmentId,
-            'studentName': studentName,
-            'courseTitle': course.title,
-            'courseCategory': course.category,
-            'coursePrice': course.price,
-            'email': email,
-            'phone': phone,
-            'address': address,
-            'profilePic': _selectedProfilePic,
-            'date': DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()),
-          },
-        );
-      },
+          ),
+        ),
+      ),
     );
+
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+
+      final serverOrder = await paymentRepo.createServerOrder(
+        amount: grandTotal,
+        currency: 'INR',
+        receiptId: enrollmentId,
+        items: [
+          {
+            'product_id': int.tryParse('${course.id}') ?? 1,
+            'quantity': 1,
+          }
+        ],
+      );
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+      }
+
+      _razorpayService?.onSuccess = (response) async {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            content: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+                  SizedBox(height: 20),
+                  Text(
+                    'Verifying Payment with Server...',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        try {
+          final verification = await paymentRepo.verifyPaymentSignature(
+            paymentId: response.paymentId ?? '',
+            orderId: response.orderId ?? serverOrder.gatewayOrderId,
+            signature: response.signature ?? '',
+          );
+
+          if (mounted) {
+            Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
+
+            if (verification.isVerified) {
+              await ref.read(joinedCoursesProvider.notifier).joinCourse(
+                    courseId: course.id,
+                    title: course.title,
+                    imageUrl: course.imageUrl,
+                    initialProgress: 0.1,
+                  );
+
+              ref.read(notificationsProvider.notifier).postNotification(
+                    title: '🎓 Course Enrollment Confirmed!',
+                    message: 'Welcome to ${course.title}! Access your official study guide & handbook now.',
+                    category: 'courses',
+                  );
+
+              context.push(
+                RoutePaths.enrollmentReceipt,
+                extra: {
+                  'enrollmentId': enrollmentId,
+                  'studentName': studentName,
+                  'courseTitle': course.title,
+                  'courseCategory': course.category,
+                  'coursePrice': course.price,
+                  'email': email,
+                  'phone': phone,
+                  'address': address,
+                  'profilePic': _selectedProfilePic,
+                  'date': DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()),
+                },
+              );
+            } else {
+              AppAlertManager.showFloatingToast(
+                context,
+                title: 'Payment Verification Failed',
+                message: verification.message ?? 'Server signature check failed.',
+                icon: Icons.error_outline_rounded,
+                backgroundColor: const Color(0xFF0F172A),
+                accentColor: const Color(0xFFEF4444),
+              );
+            }
+          }
+        } catch (e) {
+          if (mounted) {
+            Navigator.of(context, rootNavigator: true).pop();
+            AppAlertManager.showFloatingToast(
+              context,
+              title: 'Verification Error',
+              message: 'Could not verify payment: $e',
+              icon: Icons.error_outline_rounded,
+              backgroundColor: const Color(0xFF0F172A),
+              accentColor: const Color(0xFFEF4444),
+            );
+          }
+        }
+      };
+
+      _razorpayService?.onError = (response) {
+        final failureResp = response is PaymentFailureResponse ? response : null;
+        final int? code = failureResp?.code;
+        final String? msg = failureResp?.message;
+
+        final isCancelled = code == Razorpay.PAYMENT_CANCELLED ||
+            (msg?.toLowerCase().contains('cancel') ?? false) ||
+            (msg?.toLowerCase().contains('dismiss') ?? false);
+
+        AppAlertManager.showFloatingToast(
+          context,
+          title: isCancelled ? 'Payment Cancelled' : 'Payment Failed',
+          message: isCancelled ? 'You cancelled the payment process.' : (msg ?? 'Transaction failed.'),
+          icon: isCancelled ? Icons.info_outline_rounded : Icons.error_outline_rounded,
+          backgroundColor: const Color(0xFF0F172A),
+          accentColor: isCancelled ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
+        );
+      };
+
+      _razorpayService?.openCheckout(
+        keyId: serverOrder.keyId,
+        amountPaise: serverOrder.amountPaise,
+        gatewayOrderId: serverOrder.gatewayOrderId,
+        name: 'Bee Beyonnd',
+        description: 'Course Enrollment: ${course.title}',
+        contact: phone,
+        email: email,
+        customerName: studentName,
+      );
+
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+        AppAlertManager.showFloatingToast(
+          context,
+          title: 'Order Creation Error',
+          message: '$e',
+          icon: Icons.error_outline_rounded,
+          backgroundColor: const Color(0xFF0F172A),
+          accentColor: const Color(0xFFEF4444),
+        );
+      }
+    }
   }
 
   Widget _buildPaymentTile({
