@@ -538,7 +538,6 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
       },
     );
   }
-  }
 
   Widget _buildPaymentTile({
     required String title,
