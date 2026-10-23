@@ -8,7 +8,8 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../checkout/presentation/providers/payment_provider.dart';
-import '../../../checkout/presentation/widgets/payment_processing_sheet.dart';
+import '../../../../core/services/razorpay_service.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
@@ -28,9 +29,12 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _shimmerController;
 
+  RazorpayService? _razorpayService;
+
   @override
   void initState() {
     super.initState();
+    _razorpayService = RazorpayService();
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 4500),
@@ -39,6 +43,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
   @override
   void dispose() {
+    _razorpayService?.dispose();
     _shimmerController.dispose();
     super.dispose();
   }
