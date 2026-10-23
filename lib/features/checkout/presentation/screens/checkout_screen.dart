@@ -15,6 +15,7 @@ import '../../../notifications/presentation/providers/notifications_provider.dar
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
 import 'package:flutter/services.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../../core/services/razorpay_service.dart';
 import '../../../../core/utils/payment_validators.dart';
 import '../providers/payment_provider.dart';
@@ -241,14 +242,38 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
       _razorpayService?.onError = (response) {
         setState(() => _isProcessingPayment = false);
+
+        final failureResp = response is PaymentFailureResponse ? response : null;
+        final int? code = failureResp?.code;
+        final String? msg = failureResp?.message;
+
+        final isCancelled = code == Razorpay.PAYMENT_CANCELLED ||
+            (msg?.toLowerCase().contains('cancel') ?? false) ||
+            (msg?.toLowerCase().contains('dismiss') ?? false) ||
+            (msg?.toLowerCase().contains('back') ?? false);
+
         AppAlertManager.showFloatingToast(
           context,
-          title: 'Payment Failed',
-          message: response.message ?? 'Transaction was cancelled or declined.',
-          icon: Icons.error_outline_rounded,
+          title: isCancelled ? 'Payment Cancelled' : 'Payment Failed',
+          message: isCancelled
+              ? 'You cancelled the payment. Your order is saved as pending in My Orders.'
+              : (msg ?? 'Transaction was declined or failed.'),
+          icon: isCancelled ? Icons.info_outline_rounded : Icons.error_outline_rounded,
           backgroundColor: const Color(0xFF0F172A),
-          accentColor: const Color(0xFFEF4444),
+          accentColor: isCancelled ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
+          actionLabel: 'VIEW ORDERS',
+          onAction: () {
+            context.push(RoutePaths.orders);
+          },
         );
+
+        if (isCancelled) {
+          Future.delayed(const Duration(milliseconds: 600), () {
+            if (mounted) {
+              context.go(RoutePaths.orders);
+            }
+          });
+        }
       };
 
       // 3. Open Real Razorpay Checkout SDK
