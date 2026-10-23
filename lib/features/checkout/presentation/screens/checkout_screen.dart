@@ -14,6 +14,8 @@ import '../../../cart/presentation/managers/cart_manager.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
+import 'package:flutter/services.dart';
+import '../../../../core/utils/payment_validators.dart';
 import '../providers/payment_provider.dart';
 import '../widgets/payment_processing_sheet.dart';
 
@@ -41,6 +43,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   String _selectedUpiApp = 'gpay';
   final _vpaController = TextEditingController();
 
+  final _cardHolderNameController = TextEditingController();
   final _cardNumberController = TextEditingController();
   final _cardExpiryController = TextEditingController();
   final _cardCvvController = TextEditingController();
@@ -89,6 +92,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     _cityController.dispose();
     _pincodeController.dispose();
     _vpaController.dispose();
+    _cardHolderNameController.dispose();
     _cardNumberController.dispose();
     _cardExpiryController.dispose();
     _cardCvvController.dispose();
@@ -404,7 +408,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     controller: _nameController,
                     label: 'Full Name *',
                     hint: 'e.g. Aarav Sharma',
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Name required' : null,
+                    validator: PaymentValidators.validateCardHolderName,
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -413,9 +417,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         child: _buildTextField(
                           controller: _phoneController,
                           label: 'Phone Number *',
-                          hint: '+91 9876543210',
+                          hint: '9876543210',
                           keyboardType: TextInputType.phone,
-                          validator: (v) => v == null || v.trim().length < 10 ? 'Valid Phone required' : null,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                          validator: PaymentValidators.validateIndianPhone,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -425,7 +430,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           label: 'Email Address *',
                           hint: 'aarav@example.com',
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v == null || !v.contains('@') ? 'Valid Email required' : null,
+                          validator: (v) => v == null || !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim()) ? 'Valid Email required' : null,
                         ),
                       ),
                     ],
@@ -455,7 +460,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           label: 'PIN Code *',
                           hint: 'e.g. 400001',
                           keyboardType: TextInputType.number,
-                          validator: (v) => v == null || v.trim().length < 6 ? '6-digit PIN required' : null,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
+                          validator: PaymentValidators.validateIndianPincode,
                         ),
                       ),
                     ],
@@ -532,14 +538,47 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         controller: _vpaController,
                         label: 'Virtual Payment Address (VPA / UPI ID)',
                         hint: 'username@okaxis or mobile@paytm',
+                        validator: PaymentValidators.validateUpiId,
                       ),
                     ],
                   ] else if (_paymentCategory == 'card') ...[
                     _buildTextField(
+                      controller: _cardHolderNameController,
+                      label: 'Cardholder Name *',
+                      hint: 'e.g. AARAV SHARMA',
+                      textCapitalization: TextCapitalization.characters,
+                      validator: PaymentValidators.validateCardHolderName,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTextField(
                       controller: _cardNumberController,
-                      label: 'Card Number',
-                      hint: '4532 •••• •••• 8910',
+                      label: 'Card Number (Luhn Verified) *',
+                      hint: '4532 8910 1234 5678',
                       keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        CardNumberInputFormatter(),
+                        LengthLimitingTextInputFormatter(19),
+                      ],
+                      validator: PaymentValidators.validateCardNumber,
+                      suffixIcon: UnconstrainedBox(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            PaymentValidators.detectCardNetwork(_cardNumberController.text),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Row(
@@ -547,17 +586,33 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         Expanded(
                           child: _buildTextField(
                             controller: _cardExpiryController,
-                            label: 'Expiry (MM/YY)',
+                            label: 'Expiry (MM/YY) *',
                             hint: '12/28',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              CardExpiryInputFormatter(),
+                              LengthLimitingTextInputFormatter(5),
+                            ],
+                            validator: PaymentValidators.validateExpiryDate,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _buildTextField(
                             controller: _cardCvvController,
-                            label: 'CVV / CVC',
-                            hint: '•••',
+                            label: 'CVV / CVC *',
+                            hint: '123',
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(4),
+                            ],
+                            validator: (v) => PaymentValidators.validateCVV(
+                              v,
+                              isAmex: _cardNumberController.text.startsWith('34') ||
+                                  _cardNumberController.text.startsWith('37'),
+                            ),
                           ),
                         ),
                       ],
@@ -797,23 +852,38 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     String? hint,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    int? maxLength,
+    TextCapitalization textCapitalization = TextCapitalization.none,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
+      inputFormatters: inputFormatters,
+      maxLength: maxLength,
+      textCapitalization: textCapitalization,
       style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
         hintText: hint,
         hintStyle: const TextStyle(fontSize: 11.5, color: AppColors.textHint),
+        prefixIcon: prefixIcon,
+        suffixIcon: suffixIcon,
+        counterText: '',
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.borderSubtle)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
       ),
+    );
+  }
     );
   }
 }
