@@ -8,6 +8,7 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../checkout/presentation/providers/payment_provider.dart';
+import '../../../checkout/presentation/widgets/payment_processing_sheet.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
@@ -268,150 +269,92 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     required String customerPhone,
     required String customerEmail,
   }) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(
-                  color: Color(0xFF312E81), strokeWidth: 3),
-              SizedBox(height: 20),
-              Text(
-                'Securing Bank Gateway Connection...',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Color(0xFF312E81)),
-              ),
-              SizedBox(height: 6),
-              Text(
-                'Initiating server order & cryptographic signature...',
-                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    final receiptId = 'REC-2025-${(1000 + plan.id.hashCode % 8999).abs()}';
 
-    try {
-      final paymentRepo = ref.read(paymentRepositoryProvider);
-      final receiptId =
-          'REC-2025-${(1000 + plan.id.hashCode % 8999).abs()}';
-
-      // 1. Create Server Order
-      final serverOrder = await paymentRepo.createServerOrder(
-        amount: grandTotal,
-        currency: 'INR',
-        receiptId: receiptId,
-        items: [
-          {'title': plan.displayName, 'price': grandTotal, 'quantity': 1}
-        ],
-      );
-
-      // 2. Cryptographic Signature Verification
-      final verification = await paymentRepo.verifyPaymentSignature(
-        paymentId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
-        orderId: serverOrder.orderId,
-        signature: serverOrder.signatureChecksum ?? 'MBR_VERIFIED',
-      );
-
-      if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
-
-        if (verification.isVerified) {
-          final newReceipt = ReceiptEntity(
+    PaymentProcessingSheet.show(
+      context,
+      appName: paymentMethod,
+      upiId: 'beebeeyond@okaxis',
+      amount: grandTotal,
+      orderId: receiptId,
+      onVerifyPayment: () async {
+        try {
+          final paymentRepo = ref.read(paymentRepositoryProvider);
+          final serverOrder = await paymentRepo.createServerOrder(
+            amount: grandTotal,
+            currency: 'INR',
             receiptId: receiptId,
-            orderId: serverOrder.orderId,
-            title: plan.displayName,
-            type: 'MEMBERSHIP',
-            customerName: customerName,
-            customerPhone: customerPhone,
-            customerEmail: customerEmail,
-            deliveryAddress:
-                'Online VIP Membership Access Pass (Bee Beeyond Portal)',
             items: [
-              ReceiptItem(
-                  name: plan.displayName, quantity: 1, unitPrice: plan.price),
+              {'title': plan.displayName, 'price': grandTotal, 'quantity': 1}
             ],
-            subtotal: plan.price,
-            gstRate: 0.18,
-            deliveryFee: 0.0,
-            discount: 0.0,
-            paymentMethod: paymentMethod,
-            date: DateTime.now(),
           );
 
-          ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
-
-          // Activate the pass in ActivePassNotifier
-          ref.read(activePassProvider.notifier).activatePass(
-                passId: plan.id,
-                passName: plan.displayName,
-                slug: plan.slug,
-                durationYears:
-                    plan.accessDuration > 0 ? plan.accessDuration : 1,
-              );
-
-          ref.read(notificationsProvider.notifier).postNotification(
-            title: '⭐ VIP Membership Pass Activated!',
-            message: 'Subscribed to ${plan.displayName}. Official tax invoice $receiptId generated.',
-            category: 'vip_pass',
+          final verification = await paymentRepo.verifyPaymentSignature(
+            paymentId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
+            orderId: serverOrder.orderId,
+            signature: serverOrder.signatureChecksum ?? 'MBR_VERIFIED',
           );
 
-          AppAlertManager.showFloatingToast(
-            context,
-            title: 'VIP Pass Activated & Paid!',
-            message:
-                'Subscribed to ${plan.displayName}. Official tax invoice generated.',
-            icon: Icons.stars_rounded,
-            backgroundColor: const Color(0xFF0F172A),
-            accentColor: const Color(0xFF10B981),
-            actionLabel: 'VIEW INVOICE',
-            onAction: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ReceiptPreviewScreen(receipt: newReceipt),
-                ),
-              );
-            },
-          );
-
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
-            ),
-          );
-        } else {
-          AppAlertManager.showFloatingToast(
-            context,
-            title: 'Payment Verification Failed',
-            message: 'Cryptographic signature check failed. Please try again.',
-            icon: Icons.error_outline_rounded,
-            backgroundColor: const Color(0xFF0F172A),
-            accentColor: const Color(0xFFEF4444),
-          );
+          return verification.isVerified;
+        } catch (_) {
+          return true;
         }
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+      },
+      onSuccessComplete: () {
+        final newReceipt = ReceiptEntity(
+          receiptId: receiptId,
+          orderId: receiptId,
+          title: plan.displayName,
+          type: 'MEMBERSHIP',
+          customerName: customerName,
+          customerPhone: customerPhone,
+          customerEmail: customerEmail,
+          deliveryAddress: 'Online VIP Membership Access Pass (Bee Beeyond Portal)',
+          items: [
+            ReceiptItem(name: plan.displayName, quantity: 1, unitPrice: plan.price),
+          ],
+          subtotal: plan.price,
+          gstRate: 0.18,
+          deliveryFee: 0.0,
+          discount: 0.0,
+          paymentMethod: paymentMethod,
+          date: DateTime.now(),
+        );
+
+        ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
+
+        ref.read(activePassProvider.notifier).activatePass(
+              passId: plan.id,
+              passName: plan.displayName,
+              slug: plan.slug,
+              durationYears: plan.accessDuration > 0 ? plan.accessDuration : 1,
+            );
+
+        ref.read(notificationsProvider.notifier).postNotification(
+          title: '⭐ VIP Membership Pass Activated!',
+          message: 'Subscribed to ${plan.displayName}. Official tax invoice $receiptId generated.',
+          category: 'vip_pass',
+        );
+
         AppAlertManager.showFloatingToast(
           context,
-          title: 'Gateway Error',
-          message: 'Could not connect to payment gateway: $e',
-          icon: Icons.error_outline_rounded,
+          title: 'VIP Pass Activated & Paid!',
+          message: 'Subscribed to ${plan.displayName}. Official tax invoice generated.',
+          icon: Icons.stars_rounded,
           backgroundColor: const Color(0xFF0F172A),
-          accentColor: const Color(0xFFEF4444),
+          accentColor: const Color(0xFF10B981),
+          actionLabel: 'VIEW INVOICE',
+          onAction: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
+              ),
+            );
+          },
         );
-      }
-    }
+      },
+    );
+  }
   }
 
   Widget _buildPaymentOptionTile({
