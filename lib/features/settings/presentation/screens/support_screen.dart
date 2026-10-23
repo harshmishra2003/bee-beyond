@@ -254,7 +254,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
 
             // CARD 1: CONNECT NO.
             _buildContactCard(
-              icon: Icons.phone_active_rounded,
+              icon: Icons.phone_in_talk_rounded,
               iconBgColor: const Color(0xFF10B981),
               label: 'Connect No.',
               value: AppConstants.supportPhone,
