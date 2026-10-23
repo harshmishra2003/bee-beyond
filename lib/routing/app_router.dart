@@ -26,6 +26,8 @@ import '../features/notifications/presentation/screens/notifications_screen.dart
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/orders/presentation/screens/order_detail_screen.dart';
 import '../features/orders/presentation/screens/orders_list_screen.dart';
+import '../features/orders/domain/entities/receipt_entity.dart';
+import '../features/orders/presentation/screens/receipt_preview_screen.dart';
 import '../features/orders/presentation/screens/receipts_list_screen.dart';
 import '../features/products/presentation/screens/product_detail_screen.dart';
 import '../features/products/presentation/screens/products_list_screen.dart';
@@ -284,6 +286,34 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: const ReceiptsListScreen(),
           type: AppTransitionType.slideRight,
         ),
+      ),
+      GoRoute(
+        path: RoutePaths.receiptPreview,
+        name: RouteNames.receiptPreview,
+        pageBuilder: (context, state) {
+          final receipt = state.extra is ReceiptEntity
+              ? state.extra as ReceiptEntity
+              : ReceiptEntity(
+                  receiptId: 'REC-2025-9981',
+                  orderId: 'ORD-998241',
+                  title: 'Bee Beyonnd Order',
+                  type: 'PRODUCT',
+                  customerName: 'Valued Customer',
+                  customerPhone: '+91 9892711391',
+                  customerEmail: 'support@beebeyonnd.in',
+                  deliveryAddress: 'Mumbai, Maharashtra',
+                  items: [const ReceiptItem(name: 'Bee Beyonnd Product', quantity: 1, unitPrice: 550.0)],
+                  subtotal: 550.0,
+                  paymentMethod: 'Razorpay Gateway',
+                  date: DateTime.now(),
+                );
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: ReceiptPreviewScreen(receipt: receipt),
+            type: AppTransitionType.slideUp,
+          );
+        },
       ),
       GoRoute(
         path: RoutePaths.orderDetail,
