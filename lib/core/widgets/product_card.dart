@@ -225,23 +225,28 @@ class _ProductCardState extends State<ProductCard> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: frameColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          widget.category.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.w900,
-                            color: frameColor,
-                            letterSpacing: 0.3,
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: frameColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            widget.category.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w900,
+                              color: frameColor,
+                              letterSpacing: 0.3,
+                            ),
                           ),
                         ),
                       ),
+                      const SizedBox(width: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
@@ -251,6 +256,8 @@ class _ProductCardState extends State<ProductCard> {
                         ),
                         child: Text(
                           widget.unitType,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 9.5,
                             fontWeight: FontWeight.bold,
@@ -294,12 +301,16 @@ class _ProductCardState extends State<ProductCard> {
 
                   Row(
                     children: [
-                      Text(
-                        CurrencyUtils.formatINR(widget.price),
-                        style: AppTextStyles.titleMedium.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14.5,
+                      Flexible(
+                        child: Text(
+                          CurrencyUtils.formatINR(widget.price),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.titleMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14.5,
+                          ),
                         ),
                       ),
                       if (widget.originalPrice != null &&
