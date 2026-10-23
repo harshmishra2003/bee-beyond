@@ -15,6 +15,7 @@ import '../../../notifications/presentation/providers/notifications_provider.dar
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/services/razorpay_service.dart';
 import '../../../../core/utils/payment_validators.dart';
 import '../providers/payment_provider.dart';
 import '../widgets/payment_processing_sheet.dart';
@@ -83,8 +84,27 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     });
   }
 
+  RazorpayService? _razorpayService;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpayService = RazorpayService();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final currentUser = ref.read(authStateProvider).user;
+        if (currentUser != null) {
+          if (currentUser.name.isNotEmpty) _nameController.text = currentUser.name;
+          if (currentUser.email.isNotEmpty) _emailController.text = currentUser.email;
+          if (currentUser.phone.isNotEmpty) _phoneController.text = currentUser.phone;
+        }
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _razorpayService?.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -109,7 +129,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   void _onProcessCheckout() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all required shipping fields correctly.')),
+        const SnackBar(content: Text('Please complete all required shipping & payment fields correctly.')),
       );
       return;
     }
@@ -117,139 +137,161 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final items = _checkoutItems;
     final totalPayable = items.totalPayable;
 
-    if (_paymentCategory == 'upi') {
-      final selectedApp = _upiApps.firstWhere((a) => a['id'] == _selectedUpiApp, orElse: () => _upiApps.first);
-      final appName = selectedApp['name']!;
-      String upiId = selectedApp['vpa']!;
-      final packageName = selectedApp['package'];
+    setState(() => _isProcessingPayment = true);
 
-      if (_selectedUpiApp == 'custom') {
-        upiId = _vpaController.text.trim();
-        if (upiId.isEmpty || !upiId.contains('@')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please enter a valid UPI VPA ID (e.g. user@upi)')),
-          );
-          return;
-        }
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+              SizedBox(height: 20),
+              Text(
+                'Creating Secure Server Order...',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Communicating with Bee Beyonnd backend & Razorpay...',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+
+      // 1. Send product_id and quantity to create_order.php
+      final serverOrder = await paymentRepo.createServerOrder(
+        amount: totalPayable,
+        currency: 'INR',
+        receiptId: 'rcpt_${DateTime.now().millisecondsSinceEpoch}',
+        items: items.map((i) => {
+          'product_id': i.id is int ? i.id : (int.tryParse('${i.id}') ?? 1),
+          'quantity': i.quantity,
+        }).toList(),
+      );
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading dialog
       }
 
-      _processUpiPayment(
-        appName: appName,
-        upiId: upiId.isEmpty ? 'beebeeyond@upi' : upiId,
-        packageName: packageName,
-        totalAmount: totalPayable,
-        items: items,
-      );
-    } else if (_paymentCategory == 'card') {
-      if (_cardNumberController.text.trim().length < 16 ||
-          _cardExpiryController.text.trim().isEmpty ||
-          _cardCvvController.text.trim().length < 3) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter valid Card Number, Expiry & CVV.')),
+      // 2. Set up Razorpay callbacks
+      _razorpayService?.onSuccess = (response) async {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            content: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+                  SizedBox(height: 20),
+                  Text(
+                    'Verifying Payment with Server...',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
+                  ),
+                ],
+              ),
+            ),
+          ),
         );
-        return;
+
+        try {
+          final verification = await paymentRepo.verifyPaymentSignature(
+            paymentId: response.paymentId ?? '',
+            orderId: response.orderId ?? serverOrder.gatewayOrderId,
+            signature: response.signature ?? '',
+          );
+
+          if (mounted) {
+            Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
+            setState(() => _isProcessingPayment = false);
+
+            if (verification.isVerified) {
+              _completeOrderAndGenerateReceipt(
+                'Razorpay Gateway',
+                totalPayable,
+                items,
+                serverOrderId: serverOrder.orderId,
+                serverReceiptId: 'REC-2025-${serverOrder.localOrderId.toString().padLeft(4, '0')}',
+              );
+            } else {
+              AppAlertManager.showFloatingToast(
+                context,
+                title: 'Payment Verification Failed',
+                message: verification.message ?? 'Server signature check failed.',
+                icon: Icons.error_outline_rounded,
+                backgroundColor: const Color(0xFF0F172A),
+                accentColor: const Color(0xFFEF4444),
+              );
+            }
+          }
+        } catch (e) {
+          if (mounted) {
+            Navigator.of(context, rootNavigator: true).pop();
+            setState(() => _isProcessingPayment = false);
+            AppAlertManager.showFloatingToast(
+              context,
+              title: 'Verification Error',
+              message: 'Could not verify payment: $e',
+              icon: Icons.error_outline_rounded,
+              backgroundColor: const Color(0xFF0F172A),
+              accentColor: const Color(0xFFEF4444),
+            );
+          }
+        }
+      };
+
+      _razorpayService?.onError = (response) {
+        setState(() => _isProcessingPayment = false);
+        AppAlertManager.showFloatingToast(
+          context,
+          title: 'Payment Failed',
+          message: response.message ?? 'Transaction was cancelled or declined.',
+          icon: Icons.error_outline_rounded,
+          backgroundColor: const Color(0xFF0F172A),
+          accentColor: const Color(0xFFEF4444),
+        );
+      };
+
+      // 3. Open Real Razorpay Checkout SDK
+      _razorpayService?.openCheckout(
+        keyId: serverOrder.keyId,
+        amountPaise: serverOrder.amountPaise,
+        gatewayOrderId: serverOrder.gatewayOrderId,
+        name: 'Bee Beyonnd',
+        description: 'Product Order #${serverOrder.orderId}',
+        contact: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
+        customerName: _nameController.text.trim(),
+      );
+
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+        setState(() => _isProcessingPayment = false);
+        AppAlertManager.showFloatingToast(
+          context,
+          title: 'Order Creation Error',
+          message: '$e',
+          icon: Icons.error_outline_rounded,
+          backgroundColor: const Color(0xFF0F172A),
+          accentColor: const Color(0xFFEF4444),
+        );
       }
-      _executeSimulatedGatewayPayment(
-        methodName: 'Credit / Debit Card',
-        totalAmount: totalPayable,
-        items: items,
-      );
-    } else if (_paymentCategory == 'netbanking') {
-      _executeSimulatedGatewayPayment(
-        methodName: 'NetBanking ($_selectedBank)',
-        totalAmount: totalPayable,
-        items: items,
-      );
-    } else if (_paymentCategory == 'cod') {
-      _executeSimulatedGatewayPayment(
-        methodName: 'Cash / Pay on Delivery',
-        totalAmount: totalPayable,
-        items: items,
-      );
     }
-  }
-
-  void _processUpiPayment({
-    required String appName,
-    required String upiId,
-    String? packageName,
-    required double totalAmount,
-    required List<CartItemEntity> items,
-  }) async {
-    final orderId = 'ORD-${100000 + DateTime.now().millisecond * 888}';
-
-    PaymentProcessingSheet.show(
-      context,
-      appName: appName,
-      upiId: upiId,
-      packageName: packageName,
-      amount: totalAmount,
-      orderId: orderId,
-      onVerifyPayment: () async {
-        try {
-          final paymentRepo = ref.read(paymentRepositoryProvider);
-          final serverOrder = await paymentRepo.createServerOrder(
-            amount: totalAmount,
-            currency: 'INR',
-            receiptId: orderId,
-            items: items.map((i) => {'title': i.title, 'price': i.price, 'quantity': i.quantity}).toList(),
-          );
-
-          final verification = await paymentRepo.verifyPaymentSignature(
-            paymentId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
-            orderId: serverOrder.orderId,
-            signature: serverOrder.signatureChecksum ?? 'SIG_VERIFIED',
-          );
-
-          return verification.isVerified;
-        } catch (_) {
-          return true;
-        }
-      },
-      onSuccessComplete: () {
-        _completeOrderAndGenerateReceipt('UPI ($appName)', totalAmount, items, serverOrderId: orderId);
-      },
-    );
-  }
-
-  void _executeSimulatedGatewayPayment({
-    required String methodName,
-    required double totalAmount,
-    required List<CartItemEntity> items,
-  }) async {
-    final orderId = 'ORD-${100000 + DateTime.now().millisecond * 888}';
-
-    PaymentProcessingSheet.show(
-      context,
-      appName: methodName,
-      upiId: 'beebeeyond@okaxis',
-      amount: totalAmount,
-      orderId: orderId,
-      onVerifyPayment: () async {
-        try {
-          final paymentRepo = ref.read(paymentRepositoryProvider);
-          final serverOrder = await paymentRepo.createServerOrder(
-            amount: totalAmount,
-            currency: 'INR',
-            receiptId: orderId,
-            items: items.map((i) => {'title': i.title, 'price': i.price, 'quantity': i.quantity}).toList(),
-          );
-
-          final verification = await paymentRepo.verifyPaymentSignature(
-            paymentId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
-            orderId: serverOrder.orderId,
-            signature: serverOrder.signatureChecksum ?? 'SIG_VERIFIED',
-          );
-
-          return verification.isVerified;
-        } catch (_) {
-          return true;
-        }
-      },
-      onSuccessComplete: () {
-        _completeOrderAndGenerateReceipt(methodName, totalAmount, items, serverOrderId: orderId);
-      },
-    );
   }
 
   void _completeOrderAndGenerateReceipt(
