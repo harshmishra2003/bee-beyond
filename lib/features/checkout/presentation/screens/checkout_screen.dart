@@ -884,8 +884,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       ),
     );
   }
-    );
-  }
 }
 
 // UPI SIMULATION MODAL BOTTOM SHEET
