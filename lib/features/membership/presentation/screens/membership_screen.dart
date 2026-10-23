@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/services/expiry_manager_service.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/three_d_button.dart';
+import '../../../../routing/route_paths.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../checkout/presentation/providers/payment_provider.dart';
 import '../../../../core/services/razorpay_service.dart';
@@ -281,13 +285,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
-              SizedBox(height: 20),
+              const CircularProgressIndicator(color: Color(0xFF312E81), strokeWidth: 3),
+              const SizedBox(height: 20),
               Text(
                 'Creating Membership Order...',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
@@ -323,13 +327,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            content: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
+            content: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
-                  SizedBox(height: 20),
+                  const CircularProgressIndicator(color: Color(0xFF312E81), strokeWidth: 3),
+                  const SizedBox(height: 20),
                   Text(
                     'Verifying Membership Payment...',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
