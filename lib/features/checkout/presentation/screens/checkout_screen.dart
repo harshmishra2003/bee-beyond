@@ -19,7 +19,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../../core/services/razorpay_service.dart';
 import '../../../../core/utils/payment_validators.dart';
 import '../providers/payment_provider.dart';
-import '../widgets/payment_processing_sheet.dart';
+import '../../../../core/widgets/status_dialog.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   final CartItemEntity? directItem;
@@ -123,6 +123,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final items = _checkoutItems;
     final totalPayable = items.totalPayable;
 
+    debugPrint('🛒 [CHECKOUT PROCESS STARTED] Items Count: ${items.length}, Total Payable: ₹$totalPayable');
+
     setState(() => _isProcessingPayment = true);
 
     showDialog(
@@ -155,6 +157,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     try {
       final paymentRepo = ref.read(paymentRepositoryProvider);
 
+      debugPrint('📝 [CREATE ORDER REQUEST] Calling /checkout/create_order.php...');
+
       // 1. Send product_id and quantity to create_order.php
       final serverOrder = await paymentRepo.createServerOrder(
         amount: totalPayable,
@@ -166,12 +170,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         }).toList(),
       );
 
+      debugPrint('✅ [CREATE ORDER SUCCESS] Server Order ID: ${serverOrder.orderId}, Gateway Order ID: ${serverOrder.gatewayOrderId}, Key ID: ${serverOrder.keyId}');
+
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading dialog
       }
 
       // 1.1 Handle COD (Cash on Delivery) directly without launching Razorpay SDK
       if (_paymentCategory == 'cod') {
+        debugPrint('🚚 [COD SELECTED] Processing Cash on Delivery order...');
         if (mounted) {
           setState(() => _isProcessingPayment = false);
           _completeOrderAndGenerateReceipt(
@@ -190,16 +197,21 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         final paymentId = response.paymentId?.trim();
         final signature = response.signature?.trim();
 
+        debugPrint('🎉 [RAZORPAY SUCCESS CALLBACK RECEIVED]');
+        debugPrint('   👉 Payment ID: $paymentId');
+        debugPrint('   👉 Order ID: ${response.orderId}');
+        debugPrint('   👉 Signature: $signature');
+
         if (paymentId == null || paymentId.isEmpty || signature == null || signature.isEmpty) {
           if (mounted) {
             setState(() => _isProcessingPayment = false);
-            AppAlertManager.showFloatingToast(
+            StatusDialog.show(
               context,
               title: 'Payment Incomplete',
-              message: 'No valid payment signature returned from payment gateway.',
-              icon: Icons.warning_amber_rounded,
-              backgroundColor: const Color(0xFF0F172A),
-              accentColor: const Color(0xFFF59E0B),
+              description: 'No valid payment signature returned from payment gateway.',
+              isSuccess: false,
+              onAction: () {},
+              actionText: 'OK',
             );
           }
           return;
@@ -207,40 +219,33 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
         if (!mounted) return;
 
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            content: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
-                  SizedBox(height: 20),
-                  Text(
-                    'Verifying Payment with Server...',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        // Show Verifying Status Dialog
+        StatusDialog.show(
+          context,
+          title: 'Verifying Payment...',
+          description: 'Checking payment signature & database status with server...',
+          isLoading: true,
         );
 
         try {
+          debugPrint('🔍 [SERVER VERIFICATION INITIATED] Calling verifyPaymentSignature...');
           final verification = await paymentRepo.verifyPaymentSignature(
             paymentId: paymentId,
             orderId: response.orderId ?? serverOrder.gatewayOrderId,
             signature: signature,
           );
 
+          debugPrint('🏁 [SERVER VERIFICATION RESULT] isVerified: ${verification.isVerified}, Status: ${verification.status}, Message: ${verification.message}');
+
           if (mounted) {
-            Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
+            // Dismiss verification loading dialog
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop();
+            }
             setState(() => _isProcessingPayment = false);
 
             if (verification.isVerified) {
+              debugPrint('🎉 [PAYMENT FULLY VERIFIED] Proceeding to generate receipt & complete order.');
               _completeOrderAndGenerateReceipt(
                 'Razorpay Gateway',
                 totalPayable,
@@ -249,27 +254,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 serverReceiptId: 'REC-2025-${serverOrder.localOrderId.toString().padLeft(4, '0')}',
               );
             } else {
-              AppAlertManager.showFloatingToast(
+              debugPrint('❌ [PAYMENT VERIFICATION FAILED] ${verification.message}');
+              StatusDialog.show(
                 context,
                 title: 'Payment Verification Failed',
-                message: verification.message ?? 'Server signature check failed.',
-                icon: Icons.error_outline_rounded,
-                backgroundColor: const Color(0xFF0F172A),
-                accentColor: const Color(0xFFEF4444),
+                description: verification.message ?? 'Payment status in database is not successful.',
+                isSuccess: false,
+                onAction: () {},
+                actionText: 'CLOSE',
               );
             }
           }
         } catch (e) {
+          debugPrint('🚨 [VERIFICATION EXCEPTION] Error: $e');
           if (mounted) {
-            Navigator.of(context, rootNavigator: true).pop();
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop();
+            }
             setState(() => _isProcessingPayment = false);
-            AppAlertManager.showFloatingToast(
+            StatusDialog.show(
               context,
               title: 'Verification Error',
-              message: 'Could not verify payment: $e',
-              icon: Icons.error_outline_rounded,
-              backgroundColor: const Color(0xFF0F172A),
-              accentColor: const Color(0xFFEF4444),
+              description: 'Could not verify payment with server: $e',
+              isSuccess: false,
+              onAction: () {},
+              actionText: 'RETRY',
             );
           }
         }
@@ -279,26 +288,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         if (!mounted) return;
         setState(() => _isProcessingPayment = false);
 
-        final failureResp = response is PaymentFailureResponse ? response : null;
-        final int? code = failureResp?.code;
-        final String? msg = failureResp?.message;
+        final int? code = response.code;
+        final String? msg = response.message;
+
+        debugPrint('❌ [RAZORPAY ERROR/CANCEL CALLBACK RECEIVED]');
+        debugPrint('   👉 Code: $code');
+        debugPrint('   👉 Message: $msg');
 
         final isCancelled = code == Razorpay.PAYMENT_CANCELLED ||
             (msg?.toLowerCase().contains('cancel') ?? false) ||
             (msg?.toLowerCase().contains('dismiss') ?? false) ||
             (msg?.toLowerCase().contains('back') ?? false);
 
-        AppAlertManager.showFloatingToast(
+        StatusDialog.show(
           context,
           title: isCancelled ? 'Payment Cancelled' : 'Payment Failed',
-          message: isCancelled
-              ? 'Payment process was cancelled or dismissed. No amount was charged.'
-              : (msg ?? 'Transaction was declined or failed.'),
-          icon: isCancelled ? Icons.info_outline_rounded : Icons.error_outline_rounded,
-          backgroundColor: const Color(0xFF0F172A),
-          accentColor: isCancelled ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
+          description: isCancelled
+              ? 'Payment process was cancelled or dismissed. No amount was debited from your account.'
+              : (msg ?? 'Transaction was declined or failed. Please try again.'),
+          isSuccess: false,
+          onAction: () {},
+          actionText: 'OK',
         );
       };
+
+      debugPrint('💳 [LAUNCHING RAZORPAY CHECKOUT SDK] Amount: ${serverOrder.amountRupees} INR...');
 
       // 3. Open Real Razorpay Checkout SDK
       _razorpayService?.openCheckout(
@@ -957,81 +971,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
         errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
         focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
-      ),
-    );
-  }
-}
-
-// UPI SIMULATION MODAL BOTTOM SHEET
-class _UpiSimulationModal extends StatelessWidget {
-  final String appName;
-  final String upiId;
-  final double amount;
-  final String upiUriString;
-  final VoidCallback onSuccess;
-
-  const _UpiSimulationModal({
-    required this.appName,
-    required this.upiId,
-    required this.amount,
-    required this.upiUriString,
-    required this.onSuccess,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              AssetPaths.beeBeyondImage1,
-              width: 54,
-              height: 54,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => const Icon(Icons.spa_rounded, color: AppColors.primary, size: 48),
-            ),
-            const SizedBox(height: 16),
-            const Text('BEE BEEYOND', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.amber, letterSpacing: 1.2)),
-            const SizedBox(height: 4),
-            Text('Paying via $appName', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(10)),
-              child: Text('VPA ID: $upiId', style: const TextStyle(color: Color(0xFF059669), fontSize: 11.5, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 20),
-            Text(CurrencyUtils.formatINR(amount), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.primary)),
-            const SizedBox(height: 28),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF059669),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
-                ),
-                onPressed: onSuccess,
-                icon: const Icon(Icons.check_circle_rounded, color: Colors.white),
-                label: const Text('SIMULATE SUCCESSFUL PAYMENT ✓', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13.5)),
-              ),
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel Transaction', style: TextStyle(color: AppColors.textSecondary)),
-            ),
-          ],
-        ),
       ),
     );
   }
