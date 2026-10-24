@@ -89,6 +89,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
+        alignment: Alignment.center,
         errorBuilder: (context, error, stackTrace) => Container(
           color: AppColors.primary,
           child: const Center(
@@ -102,6 +103,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
+        alignment: Alignment.center,
         placeholder: (context, url) => Container(
           color: AppColors.surfaceVariant,
           child: const Center(
