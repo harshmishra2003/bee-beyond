@@ -243,12 +243,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
                 const SizedBox(height: 12),
 
-                // Pay & Activate 3D Button
+                // Pay & Activate Full-Width 3D Button
                 ThreeDButton(
-                  text:
-                      'Pay ${CurrencyUtils.formatINR(grandTotal)} & Activate ▶',
+                  width: double.infinity,
+                  text: 'PAY ${CurrencyUtils.formatINR(grandTotal)} & ACTIVATE PASS ▶',
                   fontSize: 14.5,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  icon: const Icon(Icons.lock_rounded, color: Colors.amberAccent, size: 20),
                   onPressed: () {
                     Navigator.pop(ctx);
                     _executeMembershipPayment(
