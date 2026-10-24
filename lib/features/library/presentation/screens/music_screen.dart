@@ -235,34 +235,32 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
 
   Future<void> _togglePlayPause() async {
     HapticFeedback.mediumImpact();
-    if (_isPlaying) {
-      await _audioPlayer.pause();
-      if (mounted) {
-        setState(() {
-          _isPlaying = false;
-        });
+    final isCurrentlyPlaying = _isPlaying;
+
+    if (mounted) {
+      setState(() {
+        _isPlaying = !isCurrentlyPlaying;
+      });
+      if (_isPlaying) {
+        _rotationController.repeat();
+      } else {
         _rotationController.stop();
       }
-    } else {
-      if (_currentTrack != null && _currentTrack!.audioUrl.isNotEmpty) {
-        await _audioPlayer.resume();
-        if (mounted) {
-          setState(() {
-            _isPlaying = true;
-          });
-          _rotationController.repeat();
-        }
+    }
+
+    try {
+      if (isCurrentlyPlaying) {
+        await _audioPlayer.pause();
       } else {
-        setState(() {
-          _isPlaying = !_isPlaying;
-        });
-        if (_isPlaying) {
-          _rotationController.repeat();
-        } else {
-          _rotationController.stop();
+        if (_currentTrack != null && _currentTrack!.audioUrl.isNotEmpty) {
+          if (_audioPlayer.state == PlayerState.paused) {
+            await _audioPlayer.resume();
+          } else {
+            await _playTrack(_currentTrack!);
+          }
         }
       }
-    }
+    } catch (_) {}
   }
 
   void _nextTrack(List<HealingAudioTrack> tracks) {
@@ -1097,56 +1095,33 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
 
                       const SizedBox(height: 3),
 
-                      Row(
-                        children: [
-                          Text(
-                            track.artist,
-                            style: const TextStyle(
-                                fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text('•',
-                              style: TextStyle(fontSize: 11, color: AppColors.textHint)),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.access_time_rounded,
-                              size: 11, color: AppColors.textHint),
-                          const SizedBox(width: 3),
-                          Text(
-                            track.duration,
-                            style: const TextStyle(
-                                fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                        ],
+                      Text(
+                        track.artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary),
                       ),
                     ],
                   ),
                 ),
 
-                // Quick Actions with Haptic Heart Button
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _AnimatedHeartButton(
-                      isFavorite: isFavorite,
-                      onTap: () => _toggleFavorite(track.id),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        isPlayingThis
-                            ? Icons.pause_circle_filled_rounded
-                            : Icons.play_circle_fill_rounded,
-                        color: AppColors.primary,
-                        size: 34,
-                      ),
-                      onPressed: () {
-                        if (isPlayingThis) {
-                          _togglePlayPause();
-                        } else {
-                          _playTrack(track);
-                        }
-                      },
-                    ),
-                  ],
+                // Play / Pause Circle Action Button
+                IconButton(
+                  icon: Icon(
+                    isPlayingThis
+                        ? Icons.pause_circle_filled_rounded
+                        : Icons.play_circle_fill_rounded,
+                    color: AppColors.primary,
+                    size: 36,
+                  ),
+                  onPressed: () {
+                    if (isPlayingThis) {
+                      _togglePlayPause();
+                    } else {
+                      _playTrack(track);
+                    }
+                  },
                 ),
               ],
             ),
@@ -1188,65 +1163,79 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: GestureDetector(
-                onTap: () => _openFullPlayerModal(tracks),
-                child: Row(
-                  children: [
-                    RotationTransition(
-                      turns: _rotationController,
-                      child: Container(
-                        width: 42,
-                        height: 42,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.album_rounded,
-                            color: Colors.amberAccent, size: 28),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                children: [
+                  // Tapping album art or track title/artist opens full player modal
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _openFullPlayerModal(tracks),
+                      child: Row(
                         children: [
-                          Text(
-                            _currentTrack!.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                '${_currentTrack!.artist} • $currentPosStr / $totalDurStr',
-                                style: const TextStyle(color: Color(0xFFC7D2FE), fontSize: 10.5),
+                          RotationTransition(
+                            turns: _rotationController,
+                            child: Container(
+                              width: 42,
+                              height: 42,
+                              decoration: const BoxDecoration(
+                                color: AppColors.primary,
+                                shape: BoxShape.circle,
                               ),
-                              if (_isPlaying) ...[
-                                const SizedBox(width: 8),
-                                const _AnimatedEqualizerBars(
-                                    isPlaying: true, color: Colors.amberAccent),
+                              child: const Icon(Icons.album_rounded,
+                                  color: Colors.amberAccent, size: 28),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _currentTrack!.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${_currentTrack!.artist} • $currentPosStr / $totalDurStr',
+                                      style: const TextStyle(
+                                          color: Color(0xFFC7D2FE), fontSize: 10.5),
+                                    ),
+                                    if (_isPlaying) ...[
+                                      const SizedBox(width: 8),
+                                      const _AnimatedEqualizerBars(
+                                          isPlaying: true, color: Colors.amberAccent),
+                                    ],
+                                  ],
+                                ),
                               ],
-                            ],
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: Icon(_isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                          color: Colors.white, size: 28),
-                      onPressed: _togglePlayPause,
+                  ),
+
+                  // Independent Play/Pause and Next buttons
+                  IconButton(
+                    icon: Icon(
+                      _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      color: Colors.amberAccent,
+                      size: 32,
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 28),
-                      onPressed: () => _nextTrack(tracks),
-                    ),
-                  ],
-                ),
+                    onPressed: _togglePlayPause,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 28),
+                    onPressed: () => _nextTrack(tracks),
+                  ),
+                ],
               ),
             ),
           ],
@@ -1448,15 +1437,18 @@ class _FullAudioPlayerModal extends StatefulWidget {
 class _FullAudioPlayerModalState extends State<_FullAudioPlayerModal> {
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration>? _durationSub;
+  StreamSubscription<PlayerState>? _stateSub;
 
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
   double _progress = 0.0;
   bool _isSeeking = false;
+  late bool _isPlaying;
 
   @override
   void initState() {
     super.initState();
+    _isPlaying = widget.isPlaying;
     _initPlayerListeners();
   }
 
@@ -1464,8 +1456,10 @@ class _FullAudioPlayerModalState extends State<_FullAudioPlayerModal> {
     try {
       final p = await widget.audioPlayer.getCurrentPosition();
       final d = await widget.audioPlayer.getDuration();
+      final state = widget.audioPlayer.state;
       if (mounted) {
         setState(() {
+          _isPlaying = state == PlayerState.playing || widget.isPlaying;
           if (p != null) _position = p;
           if (d != null) _duration = d;
           if (_duration.inMilliseconds > 0) {
@@ -1474,6 +1468,14 @@ class _FullAudioPlayerModalState extends State<_FullAudioPlayerModal> {
         });
       }
     } catch (_) {}
+
+    _stateSub = widget.audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
+      }
+    });
 
     _positionSub = widget.audioPlayer.onPositionChanged.listen((p) {
       if (mounted && !_isSeeking) {
@@ -1499,6 +1501,7 @@ class _FullAudioPlayerModalState extends State<_FullAudioPlayerModal> {
   void dispose() {
     _positionSub?.cancel();
     _durationSub?.cancel();
+    _stateSub?.cancel();
     super.dispose();
   }
 
@@ -1705,7 +1708,12 @@ class _FullAudioPlayerModalState extends State<_FullAudioPlayerModal> {
                 onPressed: widget.onPrevious,
               ),
               GestureDetector(
-                onTap: widget.onPlayPauseToggle,
+                onTap: () {
+                  setState(() {
+                    _isPlaying = !_isPlaying;
+                  });
+                  widget.onPlayPauseToggle();
+                },
                 child: Container(
                   width: 64,
                   height: 64,
@@ -1721,7 +1729,7 @@ class _FullAudioPlayerModalState extends State<_FullAudioPlayerModal> {
                     ],
                   ),
                   child: Icon(
-                    widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                     color: const Color(0xFF1E1B4B),
                     size: 40,
                   ),
