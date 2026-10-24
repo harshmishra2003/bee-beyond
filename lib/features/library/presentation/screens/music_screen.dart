@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -114,6 +115,17 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
     _audioPlayer.dispose();
     _rotationController.dispose();
     super.dispose();
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inSeconds <= 0) return '00:00';
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (d.inHours > 0) {
+      final hours = d.inHours.toString().padLeft(2, '0');
+      return '$hours:$minutes:$seconds';
+    }
+    return '$minutes:$seconds';
   }
 
   Future<void> _playTrack(HealingAudioTrack track) async {
@@ -330,19 +342,18 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
       backgroundColor: Colors.transparent,
       builder: (context) => _FullAudioPlayerModal(
         track: _currentTrack!,
+        audioPlayer: _audioPlayer,
         isPlaying: _isPlaying,
         isFavorite: _favoriteTrackIds.contains(_currentTrack!.id),
         isDownloaded: _downloadedTrackIds.contains(_currentTrack!.id),
         isShuffle: _isShuffle,
         isRepeat: _isRepeat,
-        progress: _playbackProgress,
         rotationController: _rotationController,
         onPlayPauseToggle: _togglePlayPause,
         onNext: () => _nextTrack(tracks),
         onPrevious: () => _previousTrack(tracks),
         onFavoriteToggle: () => _toggleFavorite(_currentTrack!.id),
         onDownload: () => _downloadTrack(_currentTrack!),
-        onProgressChanged: (val) => setState(() => _playbackProgress = val),
         onShuffleToggle: () {
           HapticFeedback.selectionClick();
           setState(() => _isShuffle = !_isShuffle);
