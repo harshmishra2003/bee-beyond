@@ -28,6 +28,7 @@ class ProductDetailScreen extends ConsumerWidget {
       appBar: const CustomAppBar(title: 'Product Details'),
       body: productAsync.when(
         data: (product) {
+          debugPrint('🔍 [PRODUCT DETAIL VIEWED] Product ID: $productId, Name: "${product.title}", Price: ₹${product.price}');
           final discount = product.discountPercent;
           final savingsAmount = (product.originalPrice != null && product.originalPrice! > product.price)
               ? (product.originalPrice! - product.price)
@@ -339,6 +340,7 @@ class ProductDetailScreen extends ConsumerWidget {
                         if (isInCart) {
                           context.go(RoutePaths.cart);
                         } else {
+                          debugPrint('⚡ [BUY NOW CLICKED] Direct checkout for product: "${product.title}" (ID: ${product.id}), Price: ₹${product.price}');
                           context.push(
                             RoutePaths.checkout,
                             extra: CartItemEntity(
