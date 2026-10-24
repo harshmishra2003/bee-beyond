@@ -63,13 +63,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           final currentUser = ref.read(authStateProvider).user;
           final customerName = currentUser?.name.isNotEmpty == true
               ? currentUser!.name
-              : 'Bee Beeyond VIP Member';
+              : 'Bee Beyonnd VIP Member';
           final customerPhone = currentUser?.phone.isNotEmpty == true
               ? currentUser!.phone
               : 'Self-Service Pass';
           final customerEmail = currentUser?.email.isNotEmpty == true
               ? currentUser!.email
-              : 'member@beebeeyond.com';
+              : 'member@beebeyonnd.com';
 
           final basePrice = plan.price;
           final gstAmount = basePrice * 0.18;
@@ -1101,7 +1101,7 @@ class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
                         Row(
                           children: [
                             Text(
-                              'BEE BEEYOND HEALING PASSES',
+                              'BEE BEYONND HEALING PASSES',
                               style: TextStyle(
                                 color: Colors.amberAccent,
                                 fontSize: 10,
