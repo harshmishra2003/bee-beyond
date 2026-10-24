@@ -1018,24 +1018,28 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                       // Category Tag & Frequency Badge
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: track.categoryColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: track.categoryColor.withValues(alpha: 0.4),
-                                width: 0.8,
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: track.categoryColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: track.categoryColor.withValues(alpha: 0.4),
+                                  width: 0.8,
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              track.category.toUpperCase(),
-                              style: TextStyle(
-                                color: track.categoryColor,
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.4,
+                              child: Text(
+                                track.category.toUpperCase(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: track.categoryColor,
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.4,
+                                ),
                               ),
                             ),
                           ),
