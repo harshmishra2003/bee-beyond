@@ -6,6 +6,8 @@ class AssetPaths {
   static const String vastu = 'assets/images/vastu.png';
   static const String ancientHealing = 'assets/images/Ancient Healing Mastery.png';
   static const String bachFlower = 'assets/images/bach flower therapy.png';
+  static const String banner3 = 'assets/images/banner3.png';
+  static const String banner4 = 'assets/images/banner4.png';
   static const String placeholder = 'assets/images/placeholder.png';
   static const String emptyCart = 'assets/images/empty_cart.png';
   static const String emptyCourse = 'assets/images/empty_course.png';
