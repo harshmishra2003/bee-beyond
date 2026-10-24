@@ -448,9 +448,11 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
                 const SizedBox(height: 12),
 
                 ThreeDButton(
-                  text: 'Pay ${CurrencyUtils.formatINR(grandTotal)} & Enroll ▶',
+                  width: double.infinity,
+                  text: 'PAY ${CurrencyUtils.formatINR(grandTotal)} & ENROLL NOW ▶',
                   fontSize: 14.5,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  icon: const Icon(Icons.lock_rounded, color: Colors.amberAccent, size: 20),
                   onPressed: () {
                     Navigator.pop(ctx);
                     _executeCoursePayment(
