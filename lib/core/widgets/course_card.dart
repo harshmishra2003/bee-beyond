@@ -79,20 +79,22 @@ class CourseCard extends StatelessWidget {
     if (url.startsWith('assets/')) {
       return Image.asset(
         url,
-        width: 115,
-        height: 110,
-        fit: BoxFit.contain,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
         errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
       );
     } else if (url.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: url,
-        width: 115,
-        height: 110,
-        fit: BoxFit.contain,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
         placeholder: (context, url) => Container(
-          width: 115,
-          height: 110,
+          width: double.infinity,
+          height: double.infinity,
           color: const Color(0xFFF1F5F9),
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         ),
