@@ -460,8 +460,10 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                               unitType: product.unitType,
                               isInCart: isInCart,
                               cartQuantity: cartQuantity,
-                              onTap: () => context.push(
-                                  '${RoutePaths.productDetail}?id=${product.id}'),
+                              onTap: () {
+                                debugPrint('🛍️ [PRODUCT CLICKED] ID: ${product.id}, Name: "${product.title}", Price: ₹${product.price}');
+                                context.push('${RoutePaths.productDetail}?id=${product.id}');
+                              },
                               onAddToCart: () {
                                 if (isInCart && cartQuantity >= product.effectiveMaxQuantity) {
                                   AppAlertManager.showFloatingToast(
@@ -498,6 +500,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                                 );
                               },
                               onBuyNow: () {
+                                debugPrint('⚡ [BUY NOW CLICKED] Direct checkout for product: "${product.title}" (ID: ${product.id}), Price: ₹${product.price}');
                                 context.push(
                                   RoutePaths.checkout,
                                   extra: CartItemEntity(
