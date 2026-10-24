@@ -598,7 +598,8 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
         imageUrl,
         height: 85,
         width: double.infinity,
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
         errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
       );
     } else if (imageUrl.startsWith('http')) {
@@ -606,7 +607,8 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
         imageUrl: imageUrl,
         height: 85,
         width: double.infinity,
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
         placeholder: (context, url) => Container(
           height: 85,
           color: const Color(0xFFE0E7FF),
