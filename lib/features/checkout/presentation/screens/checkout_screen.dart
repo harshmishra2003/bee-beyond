@@ -357,13 +357,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         '${_streetController.text.trim()}, ${_cityController.text.trim()} - ${_pincodeController.text.trim()}';
 
     final receiptItems = items.isEmpty
-        ? [ReceiptItem(name: 'Bee Beeyond Order Items', quantity: 1, unitPrice: subtotal)]
+        ? [ReceiptItem(name: 'Bee Beyonnd Order Items', quantity: 1, unitPrice: subtotal)]
         : items.map((i) => ReceiptItem(name: i.title, quantity: i.quantity, unitPrice: i.price)).toList();
 
     final newReceipt = ReceiptEntity(
       receiptId: receiptId,
       orderId: orderId,
-      title: items.isNotEmpty ? items.first.title : 'Bee Beeyond Order',
+      title: items.isNotEmpty ? items.first.title : 'Bee Beyonnd Order',
       type: 'PRODUCT',
       customerName: _nameController.text.trim(),
       customerPhone: _phoneController.text.trim(),
@@ -459,7 +459,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'BEE BEEYOND',
+                            'BEE BEYONND',
                             style: TextStyle(
                               color: Colors.amberAccent,
                               fontSize: 10,
@@ -776,7 +776,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           ),
                         ))
                   else
-                    const Text('1x Bee Beeyond Healing Product Order', style: TextStyle(fontSize: 12.5, color: AppColors.textPrimary)),
+                    const Text('1x Bee Beyonnd Healing Product Order', style: TextStyle(fontSize: 12.5, color: AppColors.textPrimary)),
 
                   const Divider(height: 20, color: AppColors.divider),
 
