@@ -26,7 +26,7 @@ class _PriceSummaryCardState extends State<PriceSummaryCard> {
   bool _couponApplied = false;
 
   final List<Map<String, String>> _availableCoupons = const [
-    {'code': 'BEEBEEYOND10', 'desc': '10% OFF'},
+    {'code': 'BEEBEYONND10', 'desc': '10% OFF'},
     {'code': 'HOLISTIC20', 'desc': '20% OFF'},
     {'code': 'WELLNESS500', 'desc': '₹500 OFF'},
   ];
@@ -43,14 +43,14 @@ class _PriceSummaryCardState extends State<PriceSummaryCard> {
 
     FocusScope.of(context).unfocus();
 
-    if (cleanCode == 'BEEBEEYOND10') {
+    if (cleanCode == 'BEEBEYONND10' || cleanCode == 'BEEBEEYOND10') {
       setState(() {
         _appliedDiscount = widget.subtotal * 0.10;
         _couponApplied = true;
-        _appliedCode = cleanCode;
-        _couponController.text = cleanCode;
+        _appliedCode = 'BEEBEYONND10';
+        _couponController.text = 'BEEBEYONND10';
       });
-      _showSnack('Promo code "BEEBEEYOND10" applied! 10% discount added.', isSuccess: true);
+      _showSnack('Promo code "BEEBEYONND10" applied! 10% discount added.', isSuccess: true);
     } else if (cleanCode == 'HOLISTIC20') {
       setState(() {
         _appliedDiscount = widget.subtotal * 0.20;
@@ -68,7 +68,7 @@ class _PriceSummaryCardState extends State<PriceSummaryCard> {
       });
       _showSnack('Promo code "WELLNESS500" applied! ₹500 discount added.', isSuccess: true);
     } else {
-      _showSnack('Invalid coupon code. Try "BEEBEEYOND10" or "HOLISTIC20"', isSuccess: false);
+      _showSnack('Invalid coupon code. Try "BEEBEYONND10" or "HOLISTIC20"', isSuccess: false);
     }
   }
 
