@@ -76,7 +76,7 @@ class WhatsAppService {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Connecting to Bee Beeyond Customer Support...')),
+          const SnackBar(content: Text('Connecting to Bee Beyonnd Customer Support...')),
         );
       }
     } catch (_) {
