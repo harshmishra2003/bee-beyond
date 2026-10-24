@@ -878,7 +878,7 @@ class _CourseHeroBanner extends StatelessWidget {
           Icon(Icons.school_rounded, size: 54, color: Colors.amberAccent),
           SizedBox(height: 8),
           Text(
-            'Bee Beeyond Holistic Academy',
+            'Bee Beyonnd Holistic Academy',
             style: TextStyle(
               color: Colors.white,
               fontSize: 13,
