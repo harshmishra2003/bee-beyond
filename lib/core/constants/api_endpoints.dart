@@ -35,6 +35,8 @@ class ApiEndpoints {
   static const String cart = '/cart';
   static const String orders = '/orders.php';
   static const String checkout = '/checkout';
+  static const String createOrder = '/checkout/create_order.php';
+  static const String verifyPayment = '/checkout/verify-payment.php';
 
   // Profile
   static const String profile = '/user/profile';
