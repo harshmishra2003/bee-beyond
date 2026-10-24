@@ -13,6 +13,7 @@ import '../../../../routing/route_paths.dart';
 import '../../../checkout/presentation/providers/payment_provider.dart';
 import '../../../../core/services/razorpay_service.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import '../../../../core/widgets/status_dialog.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../providers/course_provider.dart';
 
@@ -530,13 +531,13 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
         if (paymentId == null || paymentId.isEmpty || signature == null || signature.isEmpty) {
           if (mounted) {
             setState(() => _isSubmitting = false);
-            AppAlertManager.showFloatingToast(
+            StatusDialog.show(
               context,
               title: 'Payment Incomplete',
-              message: 'No valid payment signature returned from payment gateway.',
-              icon: Icons.warning_amber_rounded,
-              backgroundColor: const Color(0xFF0F172A),
-              accentColor: const Color(0xFFF59E0B),
+              description: 'No valid payment signature returned from payment gateway.',
+              isSuccess: false,
+              onAction: () {},
+              actionText: 'OK',
             );
           }
           return;
@@ -544,26 +545,11 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
 
         if (!mounted) return;
 
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            content: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
-                  SizedBox(height: 20),
-                  Text(
-                    'Verifying Payment with Server...',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        StatusDialog.show(
+          context,
+          title: 'Verifying Course Payment...',
+          description: 'Checking payment signature & database status with server...',
+          isLoading: true,
         );
 
         try {
@@ -574,7 +560,9 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
           );
 
           if (mounted) {
-            Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
+            }
             setState(() => _isSubmitting = false);
 
             if (verification.isVerified) {
@@ -607,27 +595,29 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
                 },
               );
             } else {
-              AppAlertManager.showFloatingToast(
+              StatusDialog.show(
                 context,
                 title: 'Payment Verification Failed',
-                message: verification.message ?? 'Server signature check failed.',
-                icon: Icons.error_outline_rounded,
-                backgroundColor: const Color(0xFF0F172A),
-                accentColor: const Color(0xFFEF4444),
+                description: verification.message ?? 'Payment status in database is not successful.',
+                isSuccess: false,
+                onAction: () {},
+                actionText: 'CLOSE',
               );
             }
           }
         } catch (e) {
           if (mounted) {
-            Navigator.of(context, rootNavigator: true).pop();
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop();
+            }
             setState(() => _isSubmitting = false);
-            AppAlertManager.showFloatingToast(
+            StatusDialog.show(
               context,
               title: 'Verification Error',
-              message: 'Could not verify payment: $e',
-              icon: Icons.error_outline_rounded,
-              backgroundColor: const Color(0xFF0F172A),
-              accentColor: const Color(0xFFEF4444),
+              description: 'Could not verify payment with server: $e',
+              isSuccess: false,
+              onAction: () {},
+              actionText: 'RETRY',
             );
           }
         }
@@ -637,21 +627,23 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
         if (!mounted) return;
         setState(() => _isSubmitting = false);
 
-        final failureResp = response is PaymentFailureResponse ? response : null;
-        final int? code = failureResp?.code;
-        final String? msg = failureResp?.message;
+        final int? code = response.code;
+        final String? msg = response.message;
 
         final isCancelled = code == Razorpay.PAYMENT_CANCELLED ||
             (msg?.toLowerCase().contains('cancel') ?? false) ||
-            (msg?.toLowerCase().contains('dismiss') ?? false);
+            (msg?.toLowerCase().contains('dismiss') ?? false) ||
+            (msg?.toLowerCase().contains('back') ?? false);
 
-        AppAlertManager.showFloatingToast(
+        StatusDialog.show(
           context,
           title: isCancelled ? 'Payment Cancelled' : 'Payment Failed',
-          message: isCancelled ? 'Payment was cancelled or dismissed. No amount was charged.' : (msg ?? 'Transaction failed.'),
-          icon: isCancelled ? Icons.info_outline_rounded : Icons.error_outline_rounded,
-          backgroundColor: const Color(0xFF0F172A),
-          accentColor: isCancelled ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
+          description: isCancelled
+              ? 'Payment process was cancelled or dismissed. No amount was debited from your account.'
+              : (msg ?? 'Transaction was declined or failed. Please try again.'),
+          isSuccess: false,
+          onAction: () {},
+          actionText: 'OK',
         );
       };
 
