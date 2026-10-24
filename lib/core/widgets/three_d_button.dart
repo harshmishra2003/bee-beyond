@@ -9,6 +9,8 @@ class ThreeDButton extends StatefulWidget {
   final Color? shadowColor;
   final double fontSize;
   final EdgeInsets padding;
+  final double? width;
+  final Widget? icon;
 
   const ThreeDButton({
     super.key,
@@ -18,7 +20,9 @@ class ThreeDButton extends StatefulWidget {
     this.textColor = Colors.white,
     this.shadowColor,
     this.fontSize = 13.0,
-    this.padding = const EdgeInsets.symmetric(horizontal: 22, vertical: 7),
+    this.padding = const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+    this.width,
+    this.icon,
   });
 
   @override
@@ -32,58 +36,67 @@ class _ThreeDButtonState extends State<ThreeDButton> {
   Widget build(BuildContext context) {
     final effectiveShadow = widget.shadowColor ?? const Color(0xFF2B285E);
 
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onPressed();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        margin: EdgeInsets.only(top: _isPressed ? 3.0 : 0.0),
-        padding: widget.padding,
-        decoration: BoxDecoration(
-          color: widget.color,
-          gradient: widget.color == null ? AppColors.button3DGradient : null,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: _isPressed
-              ? []
-              : [
-                  BoxShadow(
-                    color: effectiveShadow,
-                    offset: const Offset(0, 3.5),
-                    blurRadius: 0,
+    return SizedBox(
+      width: widget.width,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          widget.onPressed();
+        },
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          margin: EdgeInsets.only(top: _isPressed ? 3.0 : 0.0),
+          padding: widget.padding,
+          decoration: BoxDecoration(
+            color: widget.color,
+            gradient: widget.color == null ? AppColors.button3DGradient : null,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: _isPressed
+                ? []
+                : [
+                    BoxShadow(
+                      color: effectiveShadow,
+                      offset: const Offset(0, 4.0),
+                      blurRadius: 0,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.16),
+                      offset: const Offset(0, 6),
+                      blurRadius: 8,
+                    ),
+                  ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.icon != null) ...[
+                widget.icon!,
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Text(
+                  widget.text,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: widget.textColor,
+                    fontSize: widget.fontSize,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                    shadows: const [
+                      Shadow(
+                        offset: Offset(0, 1),
+                        blurRadius: 2,
+                        color: Colors.black38,
+                      ),
+                    ],
                   ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    offset: const Offset(0, 5),
-                    blurRadius: 5,
-                  ),
-                ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              widget.text,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: widget.textColor,
-                fontSize: widget.fontSize,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
-                shadows: const [
-                  Shadow(
-                    offset: Offset(0, 1),
-                    blurRadius: 2,
-                    color: Colors.black38,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
