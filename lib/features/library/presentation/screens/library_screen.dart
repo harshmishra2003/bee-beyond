@@ -42,7 +42,7 @@ class LibraryScreen extends StatelessWidget {
                       Icon(Icons.menu_book_rounded, color: Colors.white, size: 28),
                       SizedBox(width: 8),
                       Text(
-                        'Bee Beeyond Digital Library',
+                        'Bee Beyonnd Digital Library',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 17,
