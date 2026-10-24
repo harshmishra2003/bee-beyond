@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/services/expiry_manager_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -14,10 +13,10 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../checkout/presentation/providers/payment_provider.dart';
 import '../../../../core/services/razorpay_service.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import '../../../../core/widgets/status_dialog.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
-import '../../../orders/presentation/screens/receipt_preview_screen.dart';
 import '../../domain/entities/membership_plan_entity.dart';
 import '../providers/expiry_provider.dart';
 import '../providers/membership_provider.dart';
@@ -327,13 +326,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
         if (paymentId == null || paymentId.isEmpty || signature == null || signature.isEmpty) {
           if (mounted) {
-            AppAlertManager.showFloatingToast(
+            StatusDialog.show(
               context,
               title: 'Payment Incomplete',
-              message: 'No valid payment signature returned from payment gateway.',
-              icon: Icons.warning_amber_rounded,
-              backgroundColor: const Color(0xFF0F172A),
-              accentColor: const Color(0xFFF59E0B),
+              description: 'No valid payment signature returned from payment gateway.',
+              isSuccess: false,
+              onAction: () {},
+              actionText: 'OK',
             );
           }
           return;
@@ -341,26 +340,11 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
         if (!mounted) return;
 
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            content: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(color: Color(0xFF312E81), strokeWidth: 3),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Verifying Membership Payment...',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        StatusDialog.show(
+          context,
+          title: 'Verifying Membership Payment...',
+          description: 'Checking payment signature & database status with server...',
+          isLoading: true,
         );
 
         try {
@@ -371,7 +355,9 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           );
 
           if (mounted) {
-            Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
+            }
 
             if (verification.isVerified) {
               final newReceipt = ReceiptEntity(
@@ -414,26 +400,28 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                 extra: newReceipt,
               );
             } else {
-              AppAlertManager.showFloatingToast(
+              StatusDialog.show(
                 context,
                 title: 'Payment Verification Failed',
-                message: verification.message ?? 'Server signature check failed.',
-                icon: Icons.error_outline_rounded,
-                backgroundColor: const Color(0xFF0F172A),
-                accentColor: const Color(0xFFEF4444),
+                description: verification.message ?? 'Payment status in database is not successful.',
+                isSuccess: false,
+                onAction: () {},
+                actionText: 'CLOSE',
               );
             }
           }
         } catch (e) {
           if (mounted) {
-            Navigator.of(context, rootNavigator: true).pop();
-            AppAlertManager.showFloatingToast(
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop();
+            }
+            StatusDialog.show(
               context,
               title: 'Verification Error',
-              message: 'Could not verify payment: $e',
-              icon: Icons.error_outline_rounded,
-              backgroundColor: const Color(0xFF0F172A),
-              accentColor: const Color(0xFFEF4444),
+              description: 'Could not verify payment with server: $e',
+              isSuccess: false,
+              onAction: () {},
+              actionText: 'RETRY',
             );
           }
         }
@@ -442,21 +430,23 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       _razorpayService?.onError = (response) {
         if (!mounted) return;
 
-        final failureResp = response is PaymentFailureResponse ? response : null;
-        final int? code = failureResp?.code;
-        final String? msg = failureResp?.message;
+        final int? code = response.code;
+        final String? msg = response.message;
 
         final isCancelled = code == Razorpay.PAYMENT_CANCELLED ||
             (msg?.toLowerCase().contains('cancel') ?? false) ||
-            (msg?.toLowerCase().contains('dismiss') ?? false);
+            (msg?.toLowerCase().contains('dismiss') ?? false) ||
+            (msg?.toLowerCase().contains('back') ?? false);
 
-        AppAlertManager.showFloatingToast(
+        StatusDialog.show(
           context,
           title: isCancelled ? 'Payment Cancelled' : 'Payment Failed',
-          message: isCancelled ? 'Payment was cancelled or dismissed. No amount was charged.' : (msg ?? 'Transaction failed.'),
-          icon: isCancelled ? Icons.info_outline_rounded : Icons.error_outline_rounded,
-          backgroundColor: const Color(0xFF0F172A),
-          accentColor: isCancelled ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
+          description: isCancelled
+              ? 'Payment process was cancelled or dismissed. No amount was debited from your account.'
+              : (msg ?? 'Transaction was declined or failed. Please try again.'),
+          isSuccess: false,
+          onAction: () {},
+          actionText: 'OK',
         );
       };
 
