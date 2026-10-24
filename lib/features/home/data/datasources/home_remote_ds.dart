@@ -139,18 +139,18 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       ),
       BannerModel(
         id: 'b_3',
-        imageUrl: AssetPaths.bachFlower,
-        title: 'Bach Flower Remedies - Natural Emotional Healing',
+        imageUrl: AssetPaths.banner3,
+        title: 'Bee Beyonnd - Special Offers & Featured Posters',
       ),
       BannerModel(
         id: 'b_4',
-        imageUrl: AssetPaths.beeBeyondImage1,
-        title: 'Bee Beeyond - Transform Mind, Body & Soul',
+        imageUrl: AssetPaths.banner4,
+        title: 'Holistic Academy & Wellness Workshops',
       ),
       BannerModel(
         id: 'b_5',
-        imageUrl: AssetPaths.beeBeyondImage2,
-        title: 'Certified Holistic Wellness Courses & Workshops',
+        imageUrl: AssetPaths.bachFlower,
+        title: 'Bach Flower Remedies - Natural Emotional Healing',
       ),
     ];
   }
