@@ -265,13 +265,6 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
     }
   }
 
-  Future<void> _seekAudio(double progressVal) async {
-    if (_duration.inMilliseconds > 0) {
-      final targetMs = (progressVal * _duration.inMilliseconds).toInt();
-      await _audioPlayer.seek(Duration(milliseconds: targetMs));
-    }
-  }
-
   void _nextTrack(List<HealingAudioTrack> tracks) {
     HapticFeedback.mediumImpact();
     if (_currentTrack == null || tracks.isEmpty) return;
@@ -478,35 +471,42 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  '$_selectedCategory Audios',
-                                  style: AppTextStyles.titleLarge.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEEF2FF),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: const Color(0xFFC7D2FE)),
-                                  ),
-                                  child: Text(
-                                    '${filteredTracks.length}',
-                                    style: const TextStyle(
-                                      color: AppColors.primary,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      '$_selectedCategory Audios',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTextStyles.titleLarge.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEEF2FF),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: const Color(0xFFC7D2FE)),
+                                    ),
+                                    child: Text(
+                                      '${filteredTracks.length}',
+                                      style: const TextStyle(
+                                        color: AppColors.primary,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             _AnimatedEqualizerBars(isPlaying: _isPlaying),
                           ],
                         ),
@@ -1159,8 +1159,14 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
   Widget _buildMiniPlayerBar(List<HealingAudioTrack> tracks) {
     if (_currentTrack == null) return const SizedBox.shrink();
 
+    final currentPosStr = _formatDuration(_position);
+    final totalDurStr = _duration.inSeconds > 0
+        ? _formatDuration(_duration)
+        : (_currentTrack!.duration.isNotEmpty && _currentTrack!.duration != '00:00'
+            ? _currentTrack!.duration
+            : '00:00');
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: const BoxDecoration(
         color: Color(0xFF1E1B4B),
         boxShadow: [
@@ -1169,65 +1175,81 @@ class _MusicScreenState extends ConsumerState<MusicScreen>
       ),
       child: SafeArea(
         top: false,
-        child: GestureDetector(
-          onTap: () => _openFullPlayerModal(tracks),
-          child: Row(
-            children: [
-              RotationTransition(
-                turns: _rotationController,
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.album_rounded,
-                      color: Colors.amberAccent, size: 28),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // TOP MINI PROGRESS BAR LINE
+            LinearProgressIndicator(
+              value: _playbackProgress.clamp(0.0, 1.0),
+              minHeight: 2.5,
+              backgroundColor: Colors.white12,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.amberAccent),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: GestureDetector(
+                onTap: () => _openFullPlayerModal(tracks),
+                child: Row(
                   children: [
-                    Text(
-                      _currentTrack!.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          '${_currentTrack!.artist} • ${_currentTrack!.frequency}',
-                          style: const TextStyle(color: Color(0xFFC7D2FE), fontSize: 10.5),
+                    RotationTransition(
+                      turns: _rotationController,
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
                         ),
-                        if (_isPlaying) ...[
-                          const SizedBox(width: 8),
-                          const _AnimatedEqualizerBars(
-                              isPlaying: true, color: Colors.amberAccent),
+                        child: const Icon(Icons.album_rounded,
+                            color: Colors.amberAccent, size: 28),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _currentTrack!.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                '${_currentTrack!.artist} • $currentPosStr / $totalDurStr',
+                                style: const TextStyle(color: Color(0xFFC7D2FE), fontSize: 10.5),
+                              ),
+                              if (_isPlaying) ...[
+                                const SizedBox(width: 8),
+                                const _AnimatedEqualizerBars(
+                                    isPlaying: true, color: Colors.amberAccent),
+                              ],
+                            ],
+                          ),
                         ],
-                      ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(_isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                          color: Colors.white, size: 28),
+                      onPressed: _togglePlayPause,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 28),
+                      onPressed: () => _nextTrack(tracks),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: Icon(_isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    color: Colors.white, size: 28),
-                onPressed: _togglePlayPause,
-              ),
-              IconButton(
-                icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 28),
-                onPressed: () => _nextTrack(tracks),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1384,45 +1406,124 @@ class _AnimatedHeartButtonState extends State<_AnimatedHeartButton>
 }
 
 // FULL SCREEN AUDIO PLAYER MODAL
-class _FullAudioPlayerModal extends StatelessWidget {
+class _FullAudioPlayerModal extends StatefulWidget {
   final HealingAudioTrack track;
+  final AudioPlayer audioPlayer;
   final bool isPlaying;
   final bool isFavorite;
   final bool isDownloaded;
   final bool isShuffle;
   final bool isRepeat;
-  final double progress;
   final AnimationController rotationController;
   final VoidCallback onPlayPauseToggle;
   final VoidCallback onNext;
   final VoidCallback onPrevious;
   final VoidCallback onFavoriteToggle;
   final VoidCallback onDownload;
-  final ValueChanged<double> onProgressChanged;
   final VoidCallback onShuffleToggle;
   final VoidCallback onRepeatToggle;
 
   const _FullAudioPlayerModal({
     required this.track,
+    required this.audioPlayer,
     required this.isPlaying,
     required this.isFavorite,
     required this.isDownloaded,
     required this.isShuffle,
     required this.isRepeat,
-    required this.progress,
     required this.rotationController,
     required this.onPlayPauseToggle,
     required this.onNext,
     required this.onPrevious,
     required this.onFavoriteToggle,
     required this.onDownload,
-    required this.onProgressChanged,
     required this.onShuffleToggle,
     required this.onRepeatToggle,
   });
 
   @override
+  State<_FullAudioPlayerModal> createState() => _FullAudioPlayerModalState();
+}
+
+class _FullAudioPlayerModalState extends State<_FullAudioPlayerModal> {
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration>? _durationSub;
+
+  Duration _position = Duration.zero;
+  Duration _duration = Duration.zero;
+  double _progress = 0.0;
+  bool _isSeeking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPlayerListeners();
+  }
+
+  void _initPlayerListeners() async {
+    try {
+      final p = await widget.audioPlayer.getCurrentPosition();
+      final d = await widget.audioPlayer.getDuration();
+      if (mounted) {
+        setState(() {
+          if (p != null) _position = p;
+          if (d != null) _duration = d;
+          if (_duration.inMilliseconds > 0) {
+            _progress = (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0);
+          }
+        });
+      }
+    } catch (_) {}
+
+    _positionSub = widget.audioPlayer.onPositionChanged.listen((p) {
+      if (mounted && !_isSeeking) {
+        setState(() {
+          _position = p;
+          if (_duration.inMilliseconds > 0) {
+            _progress = (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0);
+          }
+        });
+      }
+    });
+
+    _durationSub = widget.audioPlayer.onDurationChanged.listen((d) {
+      if (mounted) {
+        setState(() {
+          _duration = d;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _positionSub?.cancel();
+    _durationSub?.cancel();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inSeconds <= 0) return '00:00';
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (d.inHours > 0) {
+      final hours = d.inHours.toString().padLeft(2, '0');
+      return '$hours:$minutes:$seconds';
+    }
+    return '$minutes:$seconds';
+  }
+
+  Future<void> _seekAudio(double val) async {
+    if (_duration.inMilliseconds > 0) {
+      final targetMs = (val * _duration.inMilliseconds).toInt();
+      await widget.audioPlayer.seek(Duration(milliseconds: targetMs));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final track = widget.track;
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
@@ -1467,8 +1568,8 @@ class _FullAudioPlayerModal extends StatelessWidget {
                     letterSpacing: 1),
               ),
               _AnimatedHeartButton(
-                isFavorite: isFavorite,
-                onTap: onFavoriteToggle,
+                isFavorite: widget.isFavorite,
+                onTap: widget.onFavoriteToggle,
               ),
             ],
           ),
@@ -1488,7 +1589,7 @@ class _FullAudioPlayerModal extends StatelessWidget {
               child: Column(
                 children: [
                   RotationTransition(
-                    turns: rotationController,
+                    turns: widget.rotationController,
                     child: Container(
                       width: 180,
                       height: 180,
@@ -1539,27 +1640,53 @@ class _FullAudioPlayerModal extends StatelessWidget {
 
           const Spacer(),
 
-          // AUDIO PLAYER PROGRESS SLIDER
+          // AUDIO PLAYER PROGRESS SLIDER & DURATION TEXTS
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: Colors.amberAccent,
               inactiveTrackColor: Colors.white24,
               thumbColor: Colors.amberAccent,
-              trackHeight: 3,
+              trackHeight: 3.5,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
             ),
             child: Slider(
-              value: progress,
-              onChanged: onProgressChanged,
+              value: _progress.clamp(0.0, 1.0),
+              onChangeStart: (_) {
+                setState(() => _isSeeking = true);
+              },
+              onChanged: (val) {
+                setState(() {
+                  _progress = val;
+                  if (_duration.inMilliseconds > 0) {
+                    _position = Duration(milliseconds: (val * _duration.inMilliseconds).toInt());
+                  }
+                });
+              },
+              onChangeEnd: (val) async {
+                await _seekAudio(val);
+                setState(() => _isSeeking = false);
+              },
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('${(progress * 45).toInt()}:00',
-                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
-              Text(track.duration,
-                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
-            ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatDuration(_position),
+                  style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  _duration.inSeconds > 0
+                      ? _formatDuration(_duration)
+                      : (widget.track.duration.isNotEmpty && widget.track.duration != '00:00'
+                          ? widget.track.duration
+                          : '00:00'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -1569,16 +1696,16 @@ class _FullAudioPlayerModal extends StatelessWidget {
             children: [
               IconButton(
                 icon: Icon(Icons.shuffle_rounded,
-                    color: isShuffle ? Colors.amberAccent : Colors.white54),
-                onPressed: onShuffleToggle,
+                    color: widget.isShuffle ? Colors.amberAccent : Colors.white54),
+                onPressed: widget.onShuffleToggle,
               ),
               IconButton(
                 icon: const Icon(Icons.skip_previous_rounded,
                     color: Colors.white, size: 36),
-                onPressed: onPrevious,
+                onPressed: widget.onPrevious,
               ),
               GestureDetector(
-                onTap: onPlayPauseToggle,
+                onTap: widget.onPlayPauseToggle,
                 child: Container(
                   width: 64,
                   height: 64,
@@ -1594,7 +1721,7 @@ class _FullAudioPlayerModal extends StatelessWidget {
                     ],
                   ),
                   child: Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                     color: const Color(0xFF1E1B4B),
                     size: 40,
                   ),
@@ -1603,16 +1730,16 @@ class _FullAudioPlayerModal extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.skip_next_rounded,
                     color: Colors.white, size: 36),
-                onPressed: onNext,
+                onPressed: widget.onNext,
               ),
               IconButton(
                 icon: Icon(Icons.repeat_rounded,
-                    color: isRepeat ? Colors.amberAccent : Colors.white54),
-                onPressed: onRepeatToggle,
+                    color: widget.isRepeat ? Colors.amberAccent : Colors.white54),
+                onPressed: widget.onRepeatToggle,
               ),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: 16),
         ],
       ),
     );
