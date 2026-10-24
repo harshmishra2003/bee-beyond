@@ -46,9 +46,9 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 
   void _bookServiceSession(ServiceItem srv) async {
     final currentUser = ref.read(authStateProvider).user;
-    final customerName = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Bee Beeyond Patient';
+    final customerName = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Bee Beyonnd Patient';
     final customerPhone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : '9876543210';
-    final customerEmail = currentUser?.email.isNotEmpty == true ? currentUser!.email : 'patient@beebeeyond.com';
+    final customerEmail = currentUser?.email.isNotEmpty == true ? currentUser!.email : 'patient@beebeyonnd.com';
 
     final receiptId = 'REC-2025-${(5000 + srv.id.hashCode % 4999).abs()}';
 
@@ -141,7 +141,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 customerName: customerName,
                 customerPhone: customerPhone,
                 customerEmail: customerEmail,
-                deliveryAddress: 'Virtual Consultation Portal (Bee Beeyond Tele-Health)',
+                deliveryAddress: 'Virtual Consultation Portal (Bee Beyonnd Tele-Health)',
                 items: [
                   ReceiptItem(name: srv.serviceName, quantity: 1, unitPrice: srv.serviceCharge),
                 ],
