@@ -16,6 +16,10 @@ import '../../../orders/presentation/providers/receipt_provider.dart';
 import '../../../orders/presentation/screens/receipt_preview_screen.dart';
 import '../../domain/entities/service_item.dart';
 import '../providers/services_provider.dart';
+import '../../../../core/services/razorpay_service.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import '../../../../core/widgets/status_dialog.dart';
+import '../../../checkout/presentation/providers/payment_provider.dart';
 
 class ServicesScreen extends ConsumerStatefulWidget {
   const ServicesScreen({super.key});
@@ -26,66 +30,218 @@ class ServicesScreen extends ConsumerStatefulWidget {
 
 class _ServicesScreenState extends ConsumerState<ServicesScreen> {
   String _selectedCategory = 'All';
+  RazorpayService? _razorpayService;
 
-  void _bookServiceSession(ServiceItem srv) {
+  @override
+  void initState() {
+    super.initState();
+    _razorpayService = RazorpayService();
+  }
+
+  @override
+  void dispose() {
+    _razorpayService?.dispose();
+    super.dispose();
+  }
+
+  void _bookServiceSession(ServiceItem srv) async {
     final currentUser = ref.read(authStateProvider).user;
     final customerName = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Bee Beeyond Patient';
-    final customerPhone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : 'Self-Service Booking';
+    final customerPhone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : '9876543210';
     final customerEmail = currentUser?.email.isNotEmpty == true ? currentUser!.email : 'patient@beebeeyond.com';
 
-    final orderId = 'SRV-2025-${(1000 + srv.id.hashCode % 8999).abs()}';
     final receiptId = 'REC-2025-${(5000 + srv.id.hashCode % 4999).abs()}';
 
-    final newReceipt = ReceiptEntity(
-      receiptId: receiptId,
-      orderId: orderId,
-      title: srv.serviceName,
-      type: 'SERVICE',
-      customerName: customerName,
-      customerPhone: customerPhone,
-      customerEmail: customerEmail,
-      deliveryAddress: 'Virtual Consultation Portal (Bee Beeyond Tele-Health)',
-      items: [
-        ReceiptItem(name: srv.serviceName, quantity: 1, unitPrice: srv.serviceCharge),
-      ],
-      subtotal: srv.serviceCharge,
-      gstRate: 0.18,
-      deliveryFee: 0.0,
-      discount: 0.0,
-      paymentMethod: 'UPI / Online Portal',
-      date: DateTime.now(),
-    );
-
-    ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
-
-    ref.read(notificationsProvider.notifier).postNotification(
-      title: '🩺 Practitioner Session Reserved!',
-      message: '1-on-1 slot reserved for "${srv.serviceName}". View tax invoice & appointment details.',
-      category: 'services',
-    );
-
-    AppAlertManager.showFloatingToast(
-      context,
-      title: 'Consultation Session Booked!',
-      message: 'Reserved 1-on-1 slot for "${srv.serviceName}"',
-      icon: Icons.task_alt_rounded,
-      backgroundColor: const Color(0xFF0F172A),
-      accentColor: const Color(0xFF10B981),
-      actionLabel: 'VIEW INVOICE',
-      onAction: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+              SizedBox(height: 20),
+              Text(
+                'Creating Service Booking Order...',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
+              ),
+            ],
           ),
-        );
-      },
-    );
-
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
+        ),
       ),
     );
+
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+
+      final serverOrder = await paymentRepo.createServerOrder(
+        amount: srv.serviceCharge,
+        currency: 'INR',
+        receiptId: receiptId,
+        items: [
+          {
+            'product_id': srv.id,
+            'quantity': 1,
+          }
+        ],
+      );
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+      }
+
+      _razorpayService?.onSuccess = (response) async {
+        final paymentId = response.paymentId?.trim();
+        final signature = response.signature?.trim();
+
+        if (paymentId == null || paymentId.isEmpty || signature == null || signature.isEmpty) {
+          if (mounted) {
+            StatusDialog.show(
+              context,
+              title: 'Payment Incomplete',
+              description: 'No valid payment signature returned from payment gateway.',
+              isSuccess: false,
+              onAction: () {},
+              actionText: 'OK',
+            );
+          }
+          return;
+        }
+
+        if (!mounted) return;
+
+        StatusDialog.show(
+          context,
+          title: 'Verifying Service Payment...',
+          description: 'Checking payment signature & database status with server...',
+          isLoading: true,
+        );
+
+        try {
+          final verification = await paymentRepo.verifyPaymentSignature(
+            paymentId: paymentId,
+            orderId: response.orderId ?? serverOrder.gatewayOrderId,
+            signature: signature,
+          );
+
+          if (mounted) {
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop(); // Dismiss verification loading
+            }
+
+            if (verification.isVerified) {
+              final newReceipt = ReceiptEntity(
+                receiptId: receiptId,
+                orderId: serverOrder.orderId,
+                title: srv.serviceName,
+                type: 'SERVICE',
+                customerName: customerName,
+                customerPhone: customerPhone,
+                customerEmail: customerEmail,
+                deliveryAddress: 'Virtual Consultation Portal (Bee Beeyond Tele-Health)',
+                items: [
+                  ReceiptItem(name: srv.serviceName, quantity: 1, unitPrice: srv.serviceCharge),
+                ],
+                subtotal: srv.serviceCharge,
+                gstRate: 0.18,
+                deliveryFee: 0.0,
+                discount: 0.0,
+                paymentMethod: 'Razorpay Gateway',
+                date: DateTime.now(),
+              );
+
+              ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
+
+              ref.read(notificationsProvider.notifier).postNotification(
+                title: '🩺 Practitioner Session Reserved!',
+                message: '1-on-1 slot reserved for "${srv.serviceName}". View tax invoice & appointment details.',
+                category: 'services',
+              );
+
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ReceiptPreviewScreen(receipt: newReceipt),
+                ),
+              );
+            } else {
+              StatusDialog.show(
+                context,
+                title: 'Payment Verification Failed',
+                description: verification.message ?? 'Payment status in database is not successful.',
+                isSuccess: false,
+                onAction: () {},
+                actionText: 'CLOSE',
+              );
+            }
+          }
+        } catch (e) {
+          if (mounted) {
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop();
+            }
+            StatusDialog.show(
+              context,
+              title: 'Verification Error',
+              description: 'Could not verify payment with server: $e',
+              isSuccess: false,
+              onAction: () {},
+              actionText: 'RETRY',
+            );
+          }
+        }
+      };
+
+      _razorpayService?.onError = (response) {
+        if (!mounted) return;
+
+        final failureResp = response is PaymentFailureResponse ? response : null;
+        final int? code = failureResp?.code;
+        final String? msg = failureResp?.message;
+
+        final isCancelled = code == Razorpay.PAYMENT_CANCELLED ||
+            (msg?.toLowerCase().contains('cancel') ?? false) ||
+            (msg?.toLowerCase().contains('dismiss') ?? false) ||
+            (msg?.toLowerCase().contains('back') ?? false);
+
+        StatusDialog.show(
+          context,
+          title: isCancelled ? 'Payment Cancelled' : 'Payment Failed',
+          description: isCancelled
+              ? 'Payment process was cancelled or dismissed. No amount was debited from your account.'
+              : (msg ?? 'Transaction was declined or failed. Please try again.'),
+          isSuccess: false,
+          onAction: () {},
+          actionText: 'OK',
+        );
+      };
+
+      _razorpayService?.openCheckout(
+        keyId: serverOrder.keyId,
+        amountPaise: serverOrder.amountPaise,
+        gatewayOrderId: serverOrder.gatewayOrderId,
+        name: 'Bee Beyonnd',
+        description: 'Consultation: ${srv.serviceName}',
+        contact: customerPhone,
+        email: customerEmail,
+        customerName: customerName,
+      );
+
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+        StatusDialog.show(
+          context,
+          title: 'Order Creation Error',
+          description: '$e',
+          isSuccess: false,
+          onAction: () {},
+          actionText: 'OK',
+        );
+      }
+    }
   }
 
   void _showDescriptionImageModal(String imageUrl, String title) {
