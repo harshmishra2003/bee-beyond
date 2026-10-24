@@ -21,7 +21,7 @@ class OrderDetailScreen extends ConsumerWidget {
     final currentUser = ref.watch(authStateProvider).user;
     final name = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Customer';
     final phone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : 'Customer Portal';
-    final email = currentUser?.email.isNotEmpty == true ? currentUser!.email : 'customer@beebeeyond.com';
+    final email = currentUser?.email.isNotEmpty == true ? currentUser!.email : 'customer@beebeyonnd.com';
 
     final subtotal = order.totalAmount / 1.18;
     return ReceiptEntity(
@@ -35,7 +35,7 @@ class OrderDetailScreen extends ConsumerWidget {
       deliveryAddress: 'Delivery Address on File (${order.orderId})',
       items: [
         ReceiptItem(
-          name: 'Bee Beeyond Order (${order.totalItems} Items)',
+          name: 'Bee Beyonnd Order (${order.totalItems} Items)',
           quantity: order.totalItems,
           unitPrice: subtotal / (order.totalItems > 0 ? order.totalItems : 1),
         ),
@@ -60,7 +60,7 @@ class OrderDetailScreen extends ConsumerWidget {
   void _contactSupport(BuildContext context, OrderEntity order) {
     WhatsAppService.launchSupportChat(
       context: context,
-      message: 'Hello Bee Beeyond Support, I need assistance regarding my Order ${order.orderId}.',
+      message: 'Hello Bee Beyonnd Support, I need assistance regarding my Order ${order.orderId}.',
     );
   }
 
