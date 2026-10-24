@@ -25,83 +25,60 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   // Entrance Animations
   late Animation<double> _logoScaleAnim;
   late Animation<double> _logoOpacityAnim;
-  late Animation<double> _taglineOpacityAnim;
-  late Animation<double> _taglineSlideAnim;
+  late Animation<double> _subtitleOpacityAnim;
+  late Animation<double> _subtitleSlideAnim;
   late Animation<double> _dotsOpacityAnim;
-
-  // Typewriter Target Branding String
-  final String _targetText = "Bee Beyonnd";
-  int _visibleLetterCount = 0;
 
   @override
   void initState() {
     super.initState();
 
-    // 1. Looping Leaves & Subtle Floating Ambient Particle Animation
+    // 1. Looping Leaves & Floating Ambient Particle Animation (3.4s)
     _leavesController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3400),
     )..repeat(reverse: true);
 
-    // 2. Entrance Staggered Sequence (Total 3.8s)
+    // 2. Entrance Staggered Sequence (Total 3.2s)
     _entranceController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3800),
+      duration: const Duration(milliseconds: 3200),
     );
 
-    // Logo Emblem Spring Pop-up
+    // Official Logo Spring Pop-up & Fade
     _logoScaleAnim = CurvedAnimation(
       parent: _entranceController,
-      curve: const Interval(0.0, 0.38, curve: Curves.elasticOut),
+      curve: const Interval(0.0, 0.45, curve: Curves.elasticOut),
     );
 
     _logoOpacityAnim = CurvedAnimation(
       parent: _entranceController,
-      curve: const Interval(0.0, 0.25, curve: Curves.easeIn),
+      curve: const Interval(0.0, 0.30, curve: Curves.easeIn),
     );
 
-    // Tagline Slogan & Subtitles Slide Up & Fade
-    _taglineOpacityAnim = CurvedAnimation(
+    // Subtitle Slide Up & Fade
+    _subtitleOpacityAnim = CurvedAnimation(
       parent: _entranceController,
-      curve: const Interval(0.55, 0.85, curve: Curves.easeIn),
+      curve: const Interval(0.40, 0.75, curve: Curves.easeIn),
     );
 
-    _taglineSlideAnim = Tween<double>(begin: 22.0, end: 0.0).animate(
+    _subtitleSlideAnim = Tween<double>(begin: 20.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _entranceController,
-        curve: const Interval(0.55, 0.85, curve: Curves.fastOutSlowIn),
+        curve: const Interval(0.40, 0.75, curve: Curves.fastOutSlowIn),
       ),
     );
 
     // Pulsing Dots Fade-in
     _dotsOpacityAnim = CurvedAnimation(
       parent: _entranceController,
-      curve: const Interval(0.75, 1.0, curve: Curves.easeIn),
+      curve: const Interval(0.65, 1.0, curve: Curves.easeIn),
     );
-
-    // Typewriter Letter Animation Listener
-    _entranceController.addListener(() {
-      const startProgress = 0.22;
-      const endProgress = 0.65;
-
-      if (_entranceController.value >= startProgress) {
-        final progressInTypingPhase =
-            ((_entranceController.value - startProgress) /
-                    (endProgress - startProgress))
-                .clamp(0.0, 1.0);
-        final count = (progressInTypingPhase * _targetText.length).ceil();
-        if (count != _visibleLetterCount) {
-          setState(() {
-            _visibleLetterCount = count;
-          });
-        }
-      }
-    });
 
     // Auto-navigate after entrance animation completes
     _entranceController.addStatusListener((status) async {
       if (status == AnimationStatus.completed) {
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 400));
         if (mounted) {
           final authState = ref.read(authStateProvider);
           if (authState.status == AuthStatus.authenticated) {
@@ -154,19 +131,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
           // Glowing Radial Background Aura
           Positioned(
-            top: size.height * 0.22,
-            left: size.width * 0.5 - 120,
+            top: size.height * 0.28,
+            left: size.width * 0.5 - 130,
             child: Container(
-              width: 240,
-              height: 240,
+              width: 260,
+              height: 260,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0x1810B981),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0x1F6366F1).withValues(alpha: 0.15),
-                    blurRadius: 100,
-                    spreadRadius: 60,
+                    color: const Color(0x1F6366F1).withValues(alpha: 0.18),
+                    blurRadius: 110,
+                    spreadRadius: 70,
                   ),
                 ],
               ),
@@ -247,7 +224,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           ),
 
           // -------------------------------------------------------------------
-          // LAYER 3: Animated Logo, Name & Taglines
+          // LAYER 3: Single Official Logo & Single Tagline (Zero Duplication)
           // -------------------------------------------------------------------
           SafeArea(
             child: LayoutBuilder(
@@ -262,23 +239,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         children: [
                           const SizedBox(height: 24),
 
-                          // 3A. POP-UP OFFICIAL LOGO BANNER
+                          // SINGLE OFFICIAL BRAND LOGO BANNER (Includes Logo + Text + Slogan in Graphic)
                           AnimatedBuilder(
                             animation: _entranceController,
                             builder: (context, child) {
                               return Opacity(
                                 opacity: _logoOpacityAnim.value,
                                 child: Transform.scale(
-                                  scale: _logoScaleAnim.value.clamp(0.0, 1.4),
+                                  scale: _logoScaleAnim.value.clamp(0.0, 1.35),
                                   child: child,
                                 ),
                               );
                             },
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
                               child: Image.asset(
                                 AssetPaths.beeBeyondImage1,
-                                height: 110,
+                                width: size.width * 0.85,
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) =>
                                     _buildEmblemFallback(),
@@ -286,103 +263,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 36),
 
-                          // 3B. TYPEWRITER ONE-BY-ONE LETTER ANIMATION: "Bee Beyonnd"
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: List.generate(_targetText.length, (index) {
-                                  final isVisible = index < _visibleLetterCount;
-                                  final char = _targetText[index];
-
-                                  return AnimatedOpacity(
-                                    duration: const Duration(milliseconds: 180),
-                                    opacity: isVisible ? 1.0 : 0.0,
-                                    child: AnimatedScale(
-                                      duration: const Duration(milliseconds: 220),
-                                      scale: isVisible ? 1.0 : 0.3,
-                                      curve: Curves.easeOutBack,
-                                      child: ShaderMask(
-                                        shaderCallback: (bounds) => const LinearGradient(
-                                          colors: [
-                                            Color(0xFF0284C7), // Bright Ocean Blue
-                                            Color(0xFF1D4ED8), // Deep Royal Blue
-                                            Color(0xFF1E3A8A), // Dark Navy
-                                          ],
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                        ).createShader(bounds),
-                                        child: Text(
-                                          char == ' ' ? '  ' : char,
-                                          style: GoogleFonts.playfairDisplay(
-                                            fontSize: 36,
-                                            fontWeight: FontWeight.bold,
-                                            fontStyle: FontStyle.italic,
-                                            color: Colors.white,
-                                            shadows: [
-                                              const Shadow(
-                                                color: Color(0x20000000),
-                                                offset: Offset(1, 2),
-                                                blurRadius: 4,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          // 3C. TAGLINE 1: "STEPS TOWARDS PHYSICAL AND MENTAL WELLBEING"
+                          // SINGLE ELEGANT SUBTITLE TAGLINE
                           AnimatedBuilder(
                             animation: _entranceController,
                             builder: (context, child) {
                               return Opacity(
-                                opacity: _taglineOpacityAnim.value,
+                                opacity: _subtitleOpacityAnim.value,
                                 child: Transform.translate(
-                                  offset: Offset(0, _taglineSlideAnim.value),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'STEPS TOWARDS PHYSICAL AND MENTAL WELLBEING',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 10.0,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.6,
-                                    color: const Color(0xFFE11D48), // Vibrant Magenta / Rose
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 28),
-
-                          // 3D. TAGLINE 2: "A Healthier You Starts Here..."
-                          AnimatedBuilder(
-                            animation: _entranceController,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: _taglineOpacityAnim.value,
-                                child: Transform.translate(
-                                  offset: Offset(0, _taglineSlideAnim.value),
+                                  offset: Offset(0, _subtitleSlideAnim.value),
                                   child: child,
                                 ),
                               );
@@ -391,7 +281,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               'A Healthier You\nStarts Here...',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.playfairDisplay(
-                                fontSize: 22,
+                                fontSize: 24,
                                 fontWeight: FontWeight.w600,
                                 fontStyle: FontStyle.italic,
                                 color: const Color(0xFF1E1B4B), // Indigo Navy
@@ -400,9 +290,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 36),
 
-                          // 3E. PULSING COLOR DOTS: Rose, Purple, Emerald, Slate
+                          // PULSING BRAND COLOR DOTS: Rose, Purple, Emerald, Slate
                           AnimatedBuilder(
                             animation: _entranceController,
                             builder: (context, child) {
