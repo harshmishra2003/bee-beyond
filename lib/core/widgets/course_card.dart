@@ -63,7 +63,7 @@ class CourseCard extends StatelessWidget {
           Icon(Icons.school_rounded, size: 32, color: AppColors.primary),
           SizedBox(height: 4),
           Text(
-            'Bee Beeyond',
+            'Bee Beyonnd',
             style: TextStyle(
               color: AppColors.primary,
               fontSize: 9.5,
@@ -195,23 +195,29 @@ class CourseCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: isEnrolled ? const Color(0xFF059669) : AppColors.primary,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              isEnrolled ? 'ENROLLED ✓' : category.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.4,
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isEnrolled ? const Color(0xFF059669) : AppColors.primary,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                isEnrolled ? 'ENROLLED ✓' : category.toUpperCase(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.4,
+                                ),
                               ),
                             ),
                           ),
+                          const SizedBox(width: 6),
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
                               const SizedBox(width: 2),
@@ -250,15 +256,19 @@ class CourseCard extends StatelessWidget {
                         children: [
                           const Icon(Icons.access_time_rounded, size: 12, color: AppColors.textSecondary),
                           const SizedBox(width: 4),
-                          Text(
-                            duration,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
+                          Expanded(
+                            child: Text(
+                              duration,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 6),
                           const Icon(Icons.verified_user_rounded, size: 12, color: Color(0xFF059669)),
                           const SizedBox(width: 3),
                           const Text(
@@ -278,28 +288,34 @@ class CourseCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isEnrolled ? 'ENROLLED' : CurrencyUtils.formatINR(price),
-                                style: TextStyle(
-                                  color: isEnrolled ? const Color(0xFF059669) : AppColors.primary,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: isEnrolled ? 13 : 15,
-                                ),
-                              ),
-                              if (!isEnrolled && computedOriginalPrice != null)
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  CurrencyUtils.formatINR(computedOriginalPrice),
-                                  style: const TextStyle(
-                                    color: AppColors.textHint,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    decoration: TextDecoration.lineThrough,
+                                  isEnrolled ? 'ENROLLED' : CurrencyUtils.formatINR(price),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: isEnrolled ? const Color(0xFF059669) : AppColors.primary,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: isEnrolled ? 13 : 15,
                                   ),
                                 ),
-                            ],
+                                if (!isEnrolled && computedOriginalPrice != null)
+                                  Text(
+                                    CurrencyUtils.formatINR(computedOriginalPrice),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: AppColors.textHint,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
 
                           if (onJoinGroup != null)
