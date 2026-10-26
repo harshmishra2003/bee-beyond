@@ -675,23 +675,6 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
       ),
     );
   }
-                const SizedBox(height: 4),
-                Text(
-                  'Explore All\n$categoryName',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 9.5,
-                    height: 1.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   // DEFAULT BOOK COVER FALLBACK
   Widget _buildDefaultBookCover(BookItem book) {
@@ -909,20 +892,6 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 10,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10.5,
                           fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -1160,13 +1129,6 @@ class BookCategoryGridScreen extends StatelessWidget {
                                 color: AppColors.textSecondary,
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 10.5,
                               ),
                             ),
                             const SizedBox(height: 8),
