@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_constants.dart';
 import 'core/services/auto_data_sync_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/connection_lost_overlay.dart';
 import 'routing/app_router.dart';
 
 class BeeBeyondApp extends ConsumerWidget {
@@ -18,6 +19,11 @@ class BeeBeyondApp extends ConsumerWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: router,
+        builder: (context, child) {
+          return ConnectionLostOverlay(
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
       ),
     );
   }
