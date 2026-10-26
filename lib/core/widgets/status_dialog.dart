@@ -43,19 +43,6 @@ class StatusDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Logo
-            Image.asset(
-              AssetPaths.beeBeyondImage1,
-              height: 48,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.spa_rounded,
-                color: AppColors.primary,
-                size: 48,
-              ),
-            ),
-            const SizedBox(height: 24),
-            
             // Status Icon or Loading Indicator
             if (isLoading)
                const Padding(
