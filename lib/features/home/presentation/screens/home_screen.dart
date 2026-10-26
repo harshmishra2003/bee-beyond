@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -98,9 +99,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
-        leadingWidth: 54,
+        centerTitle: true,
+        toolbarHeight: 70,
+        leadingWidth: 52,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 10.0, top: 8.0, bottom: 8.0),
+          padding: const EdgeInsets.only(left: 8.0, top: 10.0, bottom: 10.0),
           child: InkWell(
             onTap: () => _scaffoldKey.currentState?.openDrawer(),
             borderRadius: BorderRadius.circular(12),
@@ -122,29 +125,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ),
-        title: Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: Image.asset(
-                AssetPaths.beeBeyondImage1,
-                height: 38,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.spa_rounded, color: AppColors.primary, size: 24),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Bee Beyonnd',
-                      style: AppTextStyles.titleLarge.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w900,
-                      ),
+        title: SizedBox(
+          height: 62,
+          child: Transform.scale(
+            scale: 1.35,
+            child: Image.asset(
+              AssetPaths.beeBeyondImage1,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    AssetPaths.beeBeyondEmblem,
+                    height: 38,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Bee Beyonnd',
+                    style: GoogleFonts.poppins(
+                      color: AppColors.primary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
