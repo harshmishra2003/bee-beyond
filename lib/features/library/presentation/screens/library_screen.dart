@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/membership_access_guard.dart';
 import '../../../../routing/route_paths.dart';
+import '../providers/library_provider.dart';
 
-class LibraryScreen extends StatefulWidget {
+class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
   @override
-  State<LibraryScreen> createState() => _LibraryScreenState();
+  ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen>
+class _LibraryScreenState extends ConsumerState<LibraryScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -52,6 +54,43 @@ class _LibraryScreenState extends State<LibraryScreen>
 
   @override
   Widget build(BuildContext context) {
+    final audioAsync = ref.watch(audioTracksProvider);
+    final videoAsync = ref.watch(videoWorkshopsProvider);
+    final booksAsync = ref.watch(booksAndMaterialsProvider);
+
+    final musicBadgeText = audioAsync.when(
+      data: (list) => '${list.length} AUDIOS',
+      loading: () => '... AUDIOS',
+      error: (e, s) => '0 AUDIOS',
+    );
+    final musicHeaderStat = audioAsync.when(
+      data: (list) => '${list.length}+ Audios',
+      loading: () => '... Audios',
+      error: (e, s) => '0 Audios',
+    );
+
+    final videoBadgeText = videoAsync.when(
+      data: (list) => '${list.length} VIDEOS',
+      loading: () => '... VIDEOS',
+      error: (e, s) => '0 VIDEOS',
+    );
+    final videoHeaderStat = videoAsync.when(
+      data: (list) => '${list.length}+ Videos',
+      loading: () => '... Videos',
+      error: (e, s) => '0 Videos',
+    );
+
+    final booksBadgeText = booksAsync.when(
+      data: (list) => '${list.length} HANDBOOKS',
+      loading: () => '... HANDBOOKS',
+      error: (e, s) => '0 HANDBOOKS',
+    );
+    final booksHeaderStat = booksAsync.when(
+      data: (list) => '${list.length}+ Handbooks',
+      loading: () => '... Handbooks',
+      error: (e, s) => '0 Handbooks',
+    );
+
     return MembershipAccessGuard(
       featureName: 'Digital Healing Library',
       featureDescription:
@@ -150,24 +189,24 @@ class _LibraryScreenState extends State<LibraryScreen>
                         ),
                         const SizedBox(height: 16),
 
-                        // QUICK STATS BADGES ROW
+                        // DYNAMIC QUICK STATS BADGES ROW
                         Row(
                           children: [
                             _buildHeaderStatChip(
                               icon: Icons.music_note_rounded,
-                              label: '50+ Audios',
+                              label: musicHeaderStat,
                               color: const Color(0xFFC7D2FE),
                             ),
                             const SizedBox(width: 8),
                             _buildHeaderStatChip(
                               icon: Icons.ondemand_video_rounded,
-                              label: '25+ Videos',
+                              label: videoHeaderStat,
                               color: const Color(0xFFA7F3D0),
                             ),
                             const SizedBox(width: 8),
                             _buildHeaderStatChip(
                               icon: Icons.menu_book_rounded,
-                              label: '15+ Handbooks',
+                              label: booksHeaderStat,
                               color: const Color(0xFFFDE68A),
                             ),
                           ],
@@ -197,13 +236,13 @@ class _LibraryScreenState extends State<LibraryScreen>
 
                   const SizedBox(height: 12),
 
-                  // 2. COLORFUL LIGHT-THEME MODULE CARDS
+                  // 2. DYNAMIC MODULE CARDS (Music, Video, Books)
                   _buildColorfulModuleCard(
                     context: context,
                     title: 'Healing Music & Meditation Audio',
                     subtitle:
                         '432Hz Raga therapy, Binaural beats, Relaxing nature sounds & Sacred Mantras',
-                    badgeText: '24 AUDIOS',
+                    badgeText: musicBadgeText,
                     badgeBg: const Color(0xFFF3E8FF),
                     badgeTextColor: const Color(0xFF7C3AED),
                     gradientColors: const [
@@ -223,7 +262,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                     title: 'Guided Video Workshops',
                     subtitle:
                         'Pranayama, Master Yoga, Vastu Shastra & Drugless Upchar video tutorials',
-                    badgeText: '18 VIDEOS',
+                    badgeText: videoBadgeText,
                     badgeBg: const Color(0xFFECFDF5),
                     badgeTextColor: const Color(0xFF059669),
                     gradientColors: const [
@@ -243,7 +282,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                     title: 'Books & Study PDF Materials',
                     subtitle:
                         'Bach Flower reference charts, Remedy dosage guides & Digital E-books',
-                    badgeText: '12 HANDBOOKS',
+                    badgeText: booksBadgeText,
                     badgeBg: const Color(0xFFFEF3C7),
                     badgeTextColor: const Color(0xFFD97706),
                     gradientColors: const [
@@ -254,26 +293,6 @@ class _LibraryScreenState extends State<LibraryScreen>
                     icon: Icons.menu_book_rounded,
                     tags: ['Downloadable PDFs', 'High-Res Charts', 'Offline Access'],
                     route: RoutePaths.material,
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  _buildColorfulModuleCard(
-                    context: context,
-                    title: 'Practitioner Support & Consultations',
-                    subtitle:
-                        'Connect 1-on-1 with certified Bach Flower specialists & holistic doctors',
-                    badgeText: 'LIVE ASSIST',
-                    badgeBg: const Color(0xFFE0F2FE),
-                    badgeTextColor: const Color(0xFF0284C7),
-                    gradientColors: const [
-                      Color(0xFF0284C7),
-                      Color(0xFF2563EB),
-                    ],
-                    accentBorderColor: const Color(0xFFBAE6FD),
-                    icon: Icons.medical_services_rounded,
-                    tags: ['1-on-1 Doctor Care', 'Custom Dosage', 'Expert Advice'],
-                    route: RoutePaths.support,
                   ),
 
                   const SizedBox(height: 28),
