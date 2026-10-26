@@ -371,7 +371,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                         imageAsset: AssetPaths.instagramIcon,
                         fallbackIcon: Icons.camera_alt_rounded,
                         gradientColors: const [Color(0xFFE4405F), Color(0xFFC13584), Color(0xFF833AB4)],
-                        onTap: () => _launchUrl('https://www.instagram.com/?hl=en'),
+                        onTap: _launchInstagram,
                       ),
 
                       // LINKEDIN
