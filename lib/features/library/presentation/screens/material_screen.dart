@@ -85,6 +85,12 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
     });
   }
 
+  String _formatAuthorName(String raw) {
+    final clean = raw.replaceAll(RegExp(r'^By\s+', caseSensitive: false), '').trim();
+    if (clean.isEmpty) return 'By Bee Beyonnd Vault';
+    return 'By $clean';
+  }
+
   List<String> _extractCategories(List<BookItem> books) {
     final Set<String> cats = {'All'};
     for (var b in books) {
@@ -375,7 +381,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
         // HORIZONTAL SCROLLABLE BOOKS LIST + SHINING VIEW MORE BUTTON AT END
         SizedBox(
-          height: 245,
+          height: 215,
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,
@@ -386,7 +392,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                 final book = books[index];
                 final isBookmarked = _bookmarkedIds.contains(book.id);
                 return Padding(
-                  padding: const EdgeInsets.only(right: 14),
+                  padding: const EdgeInsets.only(right: 12),
                   child: _buildHorizontalBookCard(book, isBookmarked),
                 );
               } else {
@@ -408,10 +414,10 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   // HORIZONTAL BOOK CARD (WITH FULL-FIT COVER & BEE BEYONND EMBLEM BADGE)
   Widget _buildHorizontalBookCard(BookItem book, bool isBookmarked) {
     return Container(
-      width: 142,
+      width: 126,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: book.categoryColor.withAlpha(60),
           width: 1.2,
@@ -419,25 +425,26 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
         boxShadow: const [
           BoxShadow(
             color: Color(0x0E4B489B),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            blurRadius: 8,
+            offset: Offset(0, 3),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           onTap: () => _openBookViewer(book),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // BOOK THUMBNAIL COVER FRAME (Fills Container Completely)
               ClipRRect(
                 borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(15)),
+                    const BorderRadius.vertical(top: Radius.circular(13)),
                 child: SizedBox(
-                  height: 150,
+                  height: 132,
                   width: double.infinity,
                   child: Stack(
                     fit: StackFit.expand,
@@ -457,12 +464,12 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
                       // OVERLAID BEE BEYONND EMBLEM BADGE (Top-Left)
                       Positioned(
-                        top: 8,
-                        left: 8,
+                        top: 6,
+                        left: 6,
                         child: Container(
-                          width: 28,
-                          height: 28,
-                          padding: const EdgeInsets.all(2.5),
+                          width: 25,
+                          height: 25,
+                          padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
@@ -484,7 +491,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(Icons.spa_rounded,
-                                      size: 16, color: AppColors.primary),
+                                      size: 14, color: AppColors.primary),
                             ),
                           ),
                         ),
@@ -492,12 +499,12 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
                       // OVERLAID BOOKMARK BUTTON (Top-Right)
                       Positioned(
-                        top: 6,
-                        right: 6,
+                        top: 5,
+                        right: 5,
                         child: GestureDetector(
                           onTap: () => _toggleBookmark(book.id),
                           child: Container(
-                            padding: const EdgeInsets.all(5),
+                            padding: const EdgeInsets.all(4),
                             decoration: const BoxDecoration(
                               color: Colors.white70,
                               shape: BoxShape.circle,
@@ -509,7 +516,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                               color: isBookmarked
                                   ? AppColors.primary
                                   : AppColors.textHint,
-                              size: 16,
+                              size: 15,
                             ),
                           ),
                         ),
@@ -517,20 +524,20 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
                       // OVERLAID PDF PAGES BADGE (Bottom-Right)
                       Positioned(
-                        bottom: 6,
-                        right: 6,
+                        bottom: 5,
+                        right: 5,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                              horizontal: 5, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.black.withAlpha(180),
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(5),
                           ),
                           child: Text(
                             '${book.totalPages} Pgs',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 8.5,
+                              fontSize: 8.0,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -541,32 +548,33 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                 ),
               ),
 
-              // BOOK TITLE & AUTHOR DETAILS
+              // BOOK TITLE & AUTHOR DETAILS (Neat, Compact & Cozy)
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.fromLTRB(7, 5, 7, 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       book.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
-                        height: 1.2,
+                        height: 1.15,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      book.author,
+                      _formatAuthorName(book.author),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 9.5,
                         color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -585,7 +593,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
     required List<BookItem> books,
   }) {
     return Container(
-      width: 125,
+      width: 115,
       margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -597,7 +605,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.amberAccent.withAlpha(140), width: 1.5),
         boxShadow: const [
           BoxShadow(
@@ -610,23 +618,23 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           onTap: () => _navigateToCategoryGrid(categoryName, books),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(10.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: Colors.amberAccent,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.amber.withAlpha(100),
-                        blurRadius: 12,
+                        blurRadius: 10,
                         spreadRadius: 2,
                       ),
                     ],
@@ -634,20 +642,39 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                   child: const Icon(
                     Icons.arrow_forward_rounded,
                     color: Color(0xFF1E1B4B),
-                    size: 26,
+                    size: 22,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 const Text(
                   'VIEW MORE',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.amberAccent,
-                    fontSize: 11.5,
+                    fontSize: 11,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.8,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Explore All\n$categoryName',
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 9.0,
+                    height: 1.15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
                 const SizedBox(height: 4),
                 Text(
                   'Explore All\n$categoryName',
@@ -723,9 +750,9 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.62,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
+        childAspectRatio: 0.65,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
       ),
       itemCount: books.length,
       itemBuilder: (context, index) {
@@ -741,7 +768,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: book.categoryColor.withAlpha(80),
           width: 1.2,
@@ -749,25 +776,25 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
         boxShadow: const [
           BoxShadow(
             color: Color(0x0C4B489B),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            blurRadius: 8,
+            offset: Offset(0, 3),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           onTap: () => _openBookViewer(book),
           child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // BOOK COVER FRAME (Fills Box Completely)
                 Expanded(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(11),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -785,12 +812,12 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
                         // EMBLEM BADGE
                         Positioned(
-                          top: 6,
-                          left: 6,
+                          top: 5,
+                          left: 5,
                           child: Container(
-                            width: 26,
-                            height: 26,
-                            padding: const EdgeInsets.all(2),
+                            width: 24,
+                            height: 24,
+                            padding: const EdgeInsets.all(1.8),
                             decoration: const BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
@@ -801,7 +828,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) =>
                                     const Icon(Icons.spa_rounded,
-                                        size: 16, color: AppColors.primary),
+                                        size: 14, color: AppColors.primary),
                               ),
                             ),
                           ),
@@ -809,12 +836,12 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
                         // BOOKMARK
                         Positioned(
-                          top: 6,
-                          right: 6,
+                          top: 5,
+                          right: 5,
                           child: GestureDetector(
                             onTap: () => _toggleBookmark(book.id),
                             child: Container(
-                              padding: const EdgeInsets.all(4),
+                              padding: const EdgeInsets.all(3.5),
                               decoration: const BoxDecoration(
                                 color: Colors.white70,
                                 shape: BoxShape.circle,
@@ -826,7 +853,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                                 color: isBookmarked
                                     ? AppColors.primary
                                     : AppColors.textHint,
-                                size: 16,
+                                size: 15,
                               ),
                             ),
                           ),
@@ -836,7 +863,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
 
                 Text(
                   book.title,
@@ -845,25 +872,26 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12.5,
-                    height: 1.2,
+                    fontSize: 11.5,
+                    height: 1.15,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
-                  book.author,
+                  _formatAuthorName(book.author),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: AppColors.textSecondary,
-                    fontSize: 10.5,
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
 
                 // READ BUTTON
                 SizedBox(
-                  height: 32,
+                  height: 30,
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
@@ -875,9 +903,23 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                     ),
                     onPressed: () => _openBookViewer(book),
                     icon: const Icon(Icons.auto_stories_rounded,
-                        color: Colors.white, size: 14),
+                        color: Colors.white, size: 13),
                     label: const Text(
                       'READ BOOK',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 10.5,
@@ -957,6 +999,12 @@ class BookCategoryGridScreen extends StatelessWidget {
     required this.onOpenBook,
   });
 
+  String _formatAuthorName(String raw) {
+    final clean = raw.replaceAll(RegExp(r'^By\s+', caseSensitive: false), '').trim();
+    if (clean.isEmpty) return 'By Bee Beyonnd Vault';
+    return 'By $clean';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -976,9 +1024,9 @@ class BookCategoryGridScreen extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.62,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
+                childAspectRatio: 0.65,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
               ),
               itemCount: books.length,
               itemBuilder: (context, index) {
@@ -988,7 +1036,7 @@ class BookCategoryGridScreen extends StatelessWidget {
                 return Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: book.categoryColor.withAlpha(80),
                       width: 1.2,
@@ -996,25 +1044,25 @@ class BookCategoryGridScreen extends StatelessWidget {
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x0C4B489B),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
+                        blurRadius: 8,
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(16),
                       onTap: () => onOpenBook(book),
                       child: Padding(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // COVER FRAME (Fills Container Completely)
                             Expanded(
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(11),
                                 child: Stack(
                                   fit: StackFit.expand,
                                   children: [
@@ -1033,12 +1081,12 @@ class BookCategoryGridScreen extends StatelessWidget {
 
                                     // BEE BEYONND EMBLEM ICON BADGE
                                     Positioned(
-                                      top: 6,
-                                      left: 6,
+                                      top: 5,
+                                      left: 5,
                                       child: Container(
-                                        width: 26,
-                                        height: 26,
-                                        padding: const EdgeInsets.all(2),
+                                        width: 24,
+                                        height: 24,
+                                        padding: const EdgeInsets.all(1.8),
                                         decoration: const BoxDecoration(
                                           color: Colors.white,
                                           shape: BoxShape.circle,
@@ -1051,7 +1099,7 @@ class BookCategoryGridScreen extends StatelessWidget {
                                                 (context, error, stackTrace) =>
                                                     const Icon(
                                                         Icons.spa_rounded,
-                                                        size: 16,
+                                                        size: 14,
                                                         color:
                                                             AppColors.primary),
                                           ),
@@ -1061,13 +1109,13 @@ class BookCategoryGridScreen extends StatelessWidget {
 
                                     // BOOKMARK
                                     Positioned(
-                                      top: 6,
-                                      right: 6,
+                                      top: 5,
+                                      right: 5,
                                       child: GestureDetector(
                                         onTap: () =>
                                             onToggleBookmark(book.id),
                                         child: Container(
-                                          padding: const EdgeInsets.all(4),
+                                          padding: const EdgeInsets.all(3.5),
                                           decoration: const BoxDecoration(
                                             color: Colors.white70,
                                             shape: BoxShape.circle,
@@ -1080,7 +1128,7 @@ class BookCategoryGridScreen extends StatelessWidget {
                                             color: isBookmarked
                                                 ? AppColors.primary
                                                 : AppColors.textHint,
-                                            size: 16,
+                                            size: 15,
                                           ),
                                         ),
                                       ),
@@ -1090,7 +1138,7 @@ class BookCategoryGridScreen extends StatelessWidget {
                               ),
                             ),
 
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
 
                             Text(
                               book.title,
@@ -1099,13 +1147,21 @@ class BookCategoryGridScreen extends StatelessWidget {
                               style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12.5,
-                                height: 1.2,
+                                fontSize: 11.5,
+                                height: 1.15,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 2),
                             Text(
-                              book.author,
+                              _formatAuthorName(book.author),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
