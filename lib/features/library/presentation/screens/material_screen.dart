@@ -23,15 +23,50 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   String _selectedCategory = 'All';
   final Set<String> _bookmarkedIds = {};
 
-  void _openBookViewer(BookItem book) {
-    AppPdfBookViewer.show(
-      context,
-      title: book.title,
-      pdfUrl: book.pdfUrl,
-      subtitle: '${book.author} • ${book.category}',
-      description: book.description,
-      samplePagesContent: book.samplePagesContent,
-    );
+  void _openBookViewer(BookItem book) async {
+    if (book.pdfUrl.isEmpty) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+
+      try {
+        final detailedBook = await ref.read(libraryRepositoryProvider).getBookDetail(book.id);
+        if (mounted && Navigator.of(context, rootNavigator: true).canPop()) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+
+        if (mounted) {
+          AppPdfBookViewer.show(
+            context,
+            title: detailedBook.title.isNotEmpty ? detailedBook.title : book.title,
+            pdfUrl: detailedBook.pdfUrl.isNotEmpty ? detailedBook.pdfUrl : book.pdfUrl,
+            subtitle: '${detailedBook.author} • ${detailedBook.category}',
+            description: detailedBook.description.isNotEmpty ? detailedBook.description : book.description,
+            samplePagesContent: detailedBook.samplePagesContent.isNotEmpty ? detailedBook.samplePagesContent : book.samplePagesContent,
+          );
+        }
+        return;
+      } catch (_) {
+        if (mounted && Navigator.of(context, rootNavigator: true).canPop()) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+      }
+    }
+
+    if (mounted) {
+      AppPdfBookViewer.show(
+        context,
+        title: book.title,
+        pdfUrl: book.pdfUrl,
+        subtitle: '${book.author} • ${book.category}',
+        description: book.description,
+        samplePagesContent: book.samplePagesContent,
+      );
+    }
   }
 
   void _toggleBookmark(String bookId) {
