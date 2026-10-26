@@ -36,4 +36,7 @@ class AssetPaths {
   static const String elevateMembershipBanner = 'assets/Membership Banners/ELEVATE.png';
   static const String transformMembershipBanner = 'assets/Membership Banners/TRANSFORM.png';
   static const String infinityMembershipBanner = 'assets/Membership Banners/INFINITY.png';
+
+  // Splash Screen
+  static const String splashScreenImage = 'assets/images/Splash Screen.png';
 }
