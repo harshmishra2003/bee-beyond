@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,8 +18,6 @@ class SplashScreen extends ConsumerStatefulWidget {
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   late final AnimationController _introController;
-  late final AnimationController _floatController;
-  late final AnimationController _glowController;
   late final AnimationController _loadingController;
 
   Timer? _navigationTimer;
@@ -31,18 +28,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _introController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 1400),
     );
-
-    _floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
-
-    _glowController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
 
     _loadingController = AnimationController(
       vsync: this,
@@ -74,8 +61,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void dispose() {
     _navigationTimer?.cancel();
     _introController.dispose();
-    _floatController.dispose();
-    _glowController.dispose();
     _loadingController.dispose();
     super.dispose();
   }
@@ -83,11 +68,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9F5FF),
       body: AnimatedBuilder(
         animation: Listenable.merge([
           _introController,
-          _floatController,
-          _glowController,
           _loadingController,
         ]),
         builder: (context, child) {
@@ -95,199 +79,78 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             _introController.value,
           );
 
-          final floating = math.sin(_floatController.value * math.pi) * 8.0;
-          final glow = 0.15 + (_glowController.value * 0.15);
-
-          return Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFF9F5FF),
-                  Color(0xFFFFFFFF),
-                  Color(0xFFFFF0F7),
-                  Color(0xFFF0ECFF),
-                ],
-                stops: [0.0, 0.38, 0.72, 1.0],
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // 1. FULL-SCREEN EDGE-TO-EDGE SPLASH IMAGE (Fills 100% Mobile & Tablet Screens)
+              Opacity(
+                opacity: entrance.clamp(0.0, 1.0),
+                child: Transform.scale(
+                  scale: 1.02 + (0.04 * (1 - entrance)),
+                  child: Image.asset(
+                    AssetPaths.splashScreenImage,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        AssetPaths.beeBeyondImage1,
+                        fit: BoxFit.contain,
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
-            child: Stack(
-              clipBehavior: Clip.hardEdge,
-              children: [
-                // Soft ambient background glows
-                Positioned(
-                  top: -100,
-                  right: -90,
-                  child: _orb(270, const Color(0xFFD9C4FF), glow),
-                ),
-                Positioned(
-                  bottom: -110,
-                  left: -100,
-                  child: _orb(300, const Color(0xFFFFC8E5), glow),
-                ),
-                Positioned(
-                  top: 180,
-                  left: -70,
-                  child: _orb(140, const Color(0xFFE9D9FF), glow),
-                ),
 
-                // Main brand splash content
-                SafeArea(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 20,
-                      ),
-                      child: Opacity(
-                        opacity: entrance.clamp(0.0, 1.0),
-                        child: Transform.translate(
-                          offset: Offset(0, 24 * (1 - entrance)),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Hero Splash Card Artwork
-                              Transform.translate(
-                                offset: Offset(0, -floating),
-                                child: Transform.scale(
-                                  scale: 0.85 + (0.15 * entrance),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(28),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF8D5DE8)
-                                              .withValues(alpha: glow),
-                                          blurRadius: 48,
-                                          spreadRadius: 8,
-                                          offset: const Offset(0, 12),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(28),
-                                      child: Image.asset(
-                                        AssetPaths.splashScreenImage,
-                                        width: MediaQuery.of(context).size.width * 0.88,
-                                        height: MediaQuery.of(context).size.height * 0.46,
-                                        fit: BoxFit.contain,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Image.asset(
-                                            AssetPaths.beeBeyondImage1,
-                                            width: 280,
-                                            height: 180,
-                                            fit: BoxFit.contain,
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 28),
-
-                              // Brand Headers
-                              Text(
-                                'YOUR WELLNESS,',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  letterSpacing: 4.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF7951B6),
-                                ),
-                              ),
-
-                              const SizedBox(height: 6),
-
-                              Text(
-                                'Your Journey Begins Here',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.playfairDisplay(
-                                  fontSize: 24,
-                                  height: 1.25,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.3,
-                                  color: const Color(0xFF392064),
-                                ),
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              Text(
-                                'Steps towards physical and mental wellbeing',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12.5,
-                                  height: 1.5,
-                                  letterSpacing: 0.3,
-                                  color: const Color(0xFF756987),
-                                ),
-                              ),
-
-                              const SizedBox(height: 36),
-
-                              // Animated Loading Progress Bar
-                              SizedBox(
-                                width: 110,
-                                height: 4,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: LinearProgressIndicator(
-                                    value: _loadingController.value,
-                                    backgroundColor: const Color(0xFFE9DDFB),
-                                    valueColor: const AlwaysStoppedAnimation(
-                                      Color(0xFF8246D8),
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 14),
-
-                              Text(
-                                'PREPARING YOUR EXPERIENCE',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  letterSpacing: 2.2,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF9584AE),
-                                ),
-                              ),
-                            ],
+              // 2. BOTTOM FLOATING ANIMATED PROGRESS INDICATOR
+              Positioned(
+                bottom: MediaQuery.of(context).padding.bottom + 28,
+                left: 0,
+                right: 0,
+                child: Opacity(
+                  opacity: entrance.clamp(0.0, 1.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Linear Progress Indicator
+                      SizedBox(
+                        width: 120,
+                        height: 4,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: LinearProgressIndicator(
+                            value: _loadingController.value,
+                            backgroundColor: Colors.white.withValues(alpha: 0.6),
+                            valueColor: const AlwaysStoppedAnimation(
+                              Color(0xFF8246D8),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'PREPARING YOUR EXPERIENCE',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10.5,
+                          letterSpacing: 2.5,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF5B21B6),
+                          shadows: const [
+                            Shadow(
+                              color: Colors.white,
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _orb(double size, Color color, double opacity) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color.withValues(alpha: opacity),
-              color.withValues(alpha: 0),
-            ],
-          ),
-        ),
       ),
     );
   }
