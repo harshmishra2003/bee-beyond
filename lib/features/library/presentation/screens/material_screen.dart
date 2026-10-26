@@ -469,30 +469,21 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                         child: Container(
                           width: 25,
                           height: 25,
-                          padding: const EdgeInsets.all(2),
+                          padding: const EdgeInsets.all(1.5),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Colors.black.withAlpha(40),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.amberAccent,
-                              width: 1.2,
+                              color: Colors.white70,
+                              width: 1.0,
                             ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
                           ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              AssetPaths.beeBeyondEmblem,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.spa_rounded,
-                                      size: 14, color: AppColors.primary),
-                            ),
+                          child: Image.asset(
+                            AssetPaths.beeBeyondEmblem,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.spa_rounded,
+                                    size: 14, color: Colors.amberAccent),
                           ),
                         ),
                       ),
@@ -800,19 +791,21 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                           child: Container(
                             width: 24,
                             height: 24,
-                            padding: const EdgeInsets.all(1.8),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
+                            padding: const EdgeInsets.all(1.5),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withAlpha(40),
                               shape: BoxShape.circle,
-                            ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                AssetPaths.beeBeyondEmblem,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.spa_rounded,
-                                        size: 14, color: AppColors.primary),
+                              border: Border.all(
+                                color: Colors.white70,
+                                width: 1.0,
                               ),
+                            ),
+                            child: Image.asset(
+                              AssetPaths.beeBeyondEmblem,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.spa_rounded,
+                                      size: 14, color: Colors.amberAccent),
                             ),
                           ),
                         ),
@@ -1055,23 +1048,25 @@ class BookCategoryGridScreen extends StatelessWidget {
                                       child: Container(
                                         width: 24,
                                         height: 24,
-                                        padding: const EdgeInsets.all(1.8),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
+                                        padding: const EdgeInsets.all(1.5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withAlpha(40),
                                           shape: BoxShape.circle,
-                                        ),
-                                        child: ClipOval(
-                                          child: Image.asset(
-                                            AssetPaths.beeBeyondEmblem,
-                                            fit: BoxFit.contain,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    const Icon(
-                                                        Icons.spa_rounded,
-                                                        size: 14,
-                                                        color:
-                                                            AppColors.primary),
+                                          border: Border.all(
+                                            color: Colors.white70,
+                                            width: 1.0,
                                           ),
+                                        ),
+                                        child: Image.asset(
+                                          AssetPaths.beeBeyondEmblem,
+                                          fit: BoxFit.contain,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  const Icon(
+                                                      Icons.spa_rounded,
+                                                      size: 14,
+                                                      color:
+                                                          Colors.amberAccent),
                                         ),
                                       ),
                                     ),
