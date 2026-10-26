@@ -68,7 +68,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F5FF),
+      backgroundColor: const Color(0xFF280E53),
       body: AnimatedBuilder(
         animation: Listenable.merge([
           _introController,
@@ -79,76 +79,97 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             _introController.value,
           );
 
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              // 1. FULL-SCREEN EDGE-TO-EDGE SPLASH IMAGE (Fills 100% Mobile & Tablet Screens)
-              Opacity(
-                opacity: entrance.clamp(0.0, 1.0),
-                child: Transform.scale(
-                  scale: 1.02 + (0.04 * (1 - entrance)),
-                  child: Image.asset(
-                    AssetPaths.splashScreenImage,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.center,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Image.asset(
-                        AssetPaths.beeBeyondImage1,
-                        fit: BoxFit.contain,
-                      );
-                    },
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFFEBF3FC), // Sky top blend
+                  Color(0xFFFAF5FF), // Middle lavender blend
+                  Color(0xFF280E53), // Deep royal purple bottom blend
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0.0, 0.45, 1.0],
+              ),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 1. FULLY CONTAINED UNCROPPED SPLASH ARTWORK (0% Crop on any screen)
+                Opacity(
+                  opacity: entrance.clamp(0.0, 1.0),
+                  child: Transform.scale(
+                    scale: 0.96 + (0.04 * entrance),
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Image.asset(
+                          AssetPaths.splashScreenImage,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Image.asset(
+                              AssetPaths.beeBeyondImage1,
+                              fit: BoxFit.contain,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
 
-              // 2. BOTTOM FLOATING ANIMATED PROGRESS INDICATOR
-              Positioned(
-                bottom: MediaQuery.of(context).padding.bottom + 28,
-                left: 0,
-                right: 0,
-                child: Opacity(
-                  opacity: entrance.clamp(0.0, 1.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Linear Progress Indicator
-                      SizedBox(
-                        width: 120,
-                        height: 4,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: LinearProgressIndicator(
-                            value: _loadingController.value,
-                            backgroundColor: Colors.white.withValues(alpha: 0.6),
-                            valueColor: const AlwaysStoppedAnimation(
-                              Color(0xFF8246D8),
+                // 2. BOTTOM FLOATING ANIMATED PROGRESS INDICATOR
+                Positioned(
+                  bottom: MediaQuery.of(context).padding.bottom + 16,
+                  left: 0,
+                  right: 0,
+                  child: Opacity(
+                    opacity: entrance.clamp(0.0, 1.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          height: 4,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: LinearProgressIndicator(
+                              value: _loadingController.value,
+                              backgroundColor: Colors.white.withValues(alpha: 0.35),
+                              valueColor: const AlwaysStoppedAnimation(
+                                Colors.amberAccent,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'PREPARING YOUR EXPERIENCE',
-                        style: GoogleFonts.poppins(
-                          fontSize: 10.5,
-                          letterSpacing: 2.5,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF5B21B6),
-                          shadows: const [
-                            Shadow(
-                              color: Colors.white,
-                              blurRadius: 10,
-                            ),
-                          ],
+                        const SizedBox(height: 8),
+                        Text(
+                          'PREPARING YOUR EXPERIENCE',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            letterSpacing: 2.2,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white70,
+                            shadows: const [
+                              Shadow(
+                                color: Colors.black54,
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
