@@ -9,6 +9,7 @@ import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/app_pdf_book_viewer.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/digital_clock_countdown.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
 import '../../domain/entities/course_entity.dart';
@@ -283,6 +284,16 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                                 ],
                               ),
                             ),
+
+                            // LIVE DIGITAL COUNTDOWN TIMER
+                            if (course.isLive || course.batchStartDate != null) ...[
+                              const SizedBox(height: 14),
+                              DigitalClockCountdown(
+                                targetDate: course.batchStartDate ??
+                                    DateTime.now().add(const Duration(days: 2)),
+                                label: 'COURSE BATCH STARTS IN',
+                              ),
+                            ],
 
                             if (isEnrolled) ...[
                               const SizedBox(height: 14),
