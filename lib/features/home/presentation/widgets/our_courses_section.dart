@@ -1,16 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/widgets/animated_clock_icon.dart';
 import '../../../../core/widgets/shining_view_all_button.dart';
-import '../../../../routing/route_paths.dart';
-import '../../../courses/domain/entities/course_entity.dart';
 import '../../../courses/presentation/providers/course_provider.dart';
-import '../../../courses/presentation/widgets/live_course_carousel.dart';
-import '../../../courses/presentation/widgets/live_course_info_dialog.dart';
 
 class OurCoursesSection extends ConsumerWidget {
   final VoidCallback onViewAllTap;
@@ -22,16 +17,6 @@ class OurCoursesSection extends ConsumerWidget {
     required this.onCourseTap,
   });
 
-  void _handleJoinNowTap(BuildContext context, CourseEntity course) {
-    LiveCourseInfoDialog.show(
-      context,
-      course: course,
-      onProceedToEnrollment: () {
-        context.push('${RoutePaths.courseEnrollment}?id=${course.id}');
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final coursesAsync = ref.watch(allCoursesProvider);
@@ -39,7 +24,7 @@ class OurCoursesSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Section Ribbon Header
+        // Section Ribbon Header - FEATURED COURSES
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
@@ -84,7 +69,7 @@ class OurCoursesSection extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'LIVE COURSES & PROGRAMS',
+                      'FEATURED COURSES',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 14.5,
@@ -93,7 +78,7 @@ class OurCoursesSection extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      'Interactive masterclasses with certified doctors',
+                      'Explore top certified programs',
                       style: TextStyle(
                         color: Color(0xFFC7D2FE),
                         fontSize: 9.5,
@@ -187,72 +172,31 @@ class OurCoursesSection extends ConsumerWidget {
               );
             }
 
-            // Create Live Course Instances for Carousel
-            final List<CourseEntity> liveCourses = courses.map((c) {
-              return CourseEntity(
-                id: c.id,
-                title: c.title,
-                description: c.description,
-                category: c.category,
-                subCategory: c.subCategory,
-                imageUrl: c.imageUrl,
-                trailerUrl: c.trailerUrl,
-                price: c.price,
-                duration: c.duration,
-                rating: c.rating,
-                modulesCount: c.modulesCount,
-                learnings: c.learnings,
-                modulesList: c.modulesList,
-                createdAt: c.createdAt,
-                isLive: true,
-                batchStartDate: c.batchStartDate ?? DateTime.now().add(const Duration(days: 2)),
-                batchEndDate: c.batchEndDate ?? DateTime.now().add(const Duration(days: 17)),
-                registrationDeadline: c.registrationDeadline ?? DateTime.now().add(const Duration(hours: 18)),
-                courseDurationDays: c.courseDurationDays > 0 ? c.courseDurationDays : 15,
-                meetingLink: c.meetingLink.isNotEmpty ? c.meetingLink : 'https://zoom.us/j/1234567890',
-                outcomes: c.learnings,
-              );
-            }).toList();
-
-            return Column(
-              children: [
-                // 3D SCROLLING SLIDING LIVE COURSE CAROUSEL
-                LiveCourseCarousel(
-                  liveCourses: liveCourses,
-                  onCourseTap: (c) => onCourseTap(c.id),
-                  onJoinNowTap: (c) => _handleJoinNowTap(context, c),
-                ),
-
-                const SizedBox(height: 12),
-
-                // STANDARD COURSES LIST
-                SizedBox(
-                  height: 220,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: courses.length,
-                    itemBuilder: (context, index) {
-                      final c = courses[index];
-                      return _OurCourseCard(
-                        course: {
-                          'id': c.id,
-                          'title': c.title,
-                          'price': '₹ ${c.price.toInt()}',
-                          'originalPrice': '₹ ${(c.price * 1.3).toInt()}',
-                          'duration': c.duration,
-                          'rating': '${c.rating}',
-                          'category': c.category,
-                          'badge': 'FEATURED',
-                          'image': c.imageUrl,
-                        },
-                        onCourseTap: onCourseTap,
-                      );
+            return SizedBox(
+              height: 220,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: courses.length,
+                itemBuilder: (context, index) {
+                  final c = courses[index];
+                  return _OurCourseCard(
+                    course: {
+                      'id': c.id,
+                      'title': c.title,
+                      'price': '₹ ${c.price.toInt()}',
+                      'originalPrice': '₹ ${(c.price * 1.3).toInt()}',
+                      'duration': c.duration,
+                      'rating': '${c.rating}',
+                      'category': c.category,
+                      'badge': 'FEATURED',
+                      'image': c.imageUrl,
                     },
-                  ),
-                ),
-              ],
+                    onCourseTap: onCourseTap,
+                  );
+                },
+              ),
             );
           },
           loading: () => const SizedBox(
