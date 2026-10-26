@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/services/receipt_pdf_service.dart';
 import '../../../../core/services/whatsapp_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -122,13 +121,10 @@ class OrderDetailScreen extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      Image.asset(
-                        AssetPaths.beeBeyondImage1,
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.spa_rounded, color: Colors.white, size: 40),
+                      const Icon(
+                        Icons.inventory_2_rounded,
+                        color: Colors.amberAccent,
+                        size: 36,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
