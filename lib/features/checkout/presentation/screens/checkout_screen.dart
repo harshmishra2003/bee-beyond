@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_alert_manager.dart';
@@ -447,11 +446,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 ),
                 child: Row(
                   children: [
-                    Image.asset(
-                      AssetPaths.beeBeyondImage1,
-                      height: 48,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.security_rounded, color: Colors.amberAccent, size: 36),
+                    const Icon(
+                      Icons.shield_rounded,
+                      color: Colors.amberAccent,
+                      size: 36,
                     ),
                     const SizedBox(width: 14),
                     const Expanded(
