@@ -43,6 +43,15 @@ class CourseEntity extends Equatable {
   final List<ModuleItemEntity> modulesList;
   final DateTime? createdAt;
 
+  // LIVE COURSES FIELDS
+  final bool isLive;
+  final DateTime? batchStartDate;
+  final DateTime? batchEndDate;
+  final DateTime? registrationDeadline;
+  final int courseDurationDays;
+  final String meetingLink;
+  final List<String> outcomes;
+
   const CourseEntity({
     required this.id,
     required this.title,
@@ -58,6 +67,13 @@ class CourseEntity extends Equatable {
     this.learnings = const [],
     this.modulesList = const [],
     this.createdAt,
+    this.isLive = false,
+    this.batchStartDate,
+    this.batchEndDate,
+    this.registrationDeadline,
+    this.courseDurationDays = 15,
+    this.meetingLink = '',
+    this.outcomes = const [],
   });
 
   bool get isNewCourse {
@@ -65,6 +81,27 @@ class CourseEntity extends Equatable {
     final now = DateTime.now();
     final diffInHours = now.difference(createdAt!).inHours;
     return diffInHours >= 0 && diffInHours <= 48;
+  }
+
+  bool get isRegistrationUrgent {
+    if (registrationDeadline == null) return false;
+    final now = DateTime.now();
+    final remaining = registrationDeadline!.difference(now);
+    return remaining.inHours >= 0 && remaining.inHours <= 24;
+  }
+
+  Duration get timeUntilStart {
+    if (batchStartDate == null) return Duration.zero;
+    final now = DateTime.now();
+    final diff = batchStartDate!.difference(now);
+    return diff.isNegative ? Duration.zero : diff;
+  }
+
+  Duration get timeUntilDeadline {
+    if (registrationDeadline == null) return Duration.zero;
+    final now = DateTime.now();
+    final diff = registrationDeadline!.difference(now);
+    return diff.isNegative ? Duration.zero : diff;
   }
 
   @override
@@ -83,5 +120,12 @@ class CourseEntity extends Equatable {
         learnings,
         modulesList,
         createdAt,
+        isLive,
+        batchStartDate,
+        batchEndDate,
+        registrationDeadline,
+        courseDurationDays,
+        meetingLink,
+        outcomes,
       ];
 }
