@@ -19,6 +19,7 @@ import '../widgets/home_banner_slider.dart';
 import '../widgets/home_drawer.dart';
 import '../widgets/joined_courses_section.dart';
 import '../widgets/kpi_action_grid.dart';
+import '../widgets/live_courses_section.dart';
 import '../widgets/our_courses_section.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -416,7 +417,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 24),
 
-              // OUR COURSES Section with Purple Header & Shining View All Button
+              // DEDICATED LIVE COURSES SECTION
+              LiveCoursesSection(
+                onViewAllTap: () => context.go(RoutePaths.courses),
+                onCourseTap: (courseId) => context.push('${RoutePaths.courseDetail}?id=$courseId'),
+              ),
+              const SizedBox(height: 24),
+
+              // FEATURED COURSES SECTION
               OurCoursesSection(
                 onViewAllTap: () => context.go(RoutePaths.courses),
                 onCourseTap: (courseId) => context.push('${RoutePaths.courseDetail}?id=$courseId'),
