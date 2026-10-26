@@ -19,7 +19,8 @@ class ApiEndpoints {
 
   // Library & Media
   static const String library = '/library';
-  static const String books = '/library/books';
+  static const String books = '/books.php';
+  static const String bookDetail = '/book_details.php';
   static const String music = '/music.php';
   static const String video = '/videos.php';
 
