@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/course_card.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -301,17 +300,11 @@ class _CoursesListScreenState extends ConsumerState<CoursesListScreen> {
                   ),
                 ],
               ),
-              child: Center(
-                child: Image.asset(
-                  AssetPaths.beeBeyondImage2,
-                  width: 58,
-                  height: 58,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.search_off_rounded,
-                    size: 44,
-                    color: AppColors.primary,
-                  ),
+              child: const Center(
+                child: Icon(
+                  Icons.school_rounded,
+                  size: 48,
+                  color: AppColors.primary,
                 ),
               ),
             ),
