@@ -575,10 +575,12 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
                     initialProgress: 0.1,
                   );
 
-              ref.read(notificationsProvider.notifier).postNotification(
-                    title: '🎓 Course Enrollment Confirmed!',
-                    message: 'Welcome to ${course.title}! Access your official study guide & handbook now.',
-                    category: 'courses',
+              ref.read(notificationsProvider.notifier).postLiveCourseEnrollmentNotification(
+                    courseTitle: course.title,
+                    batchDates: course.batchStartDate != null
+                        ? '${DateFormat('MMM d').format(course.batchStartDate!)} - ${DateFormat('MMM d, yyyy').format(course.batchEndDate ?? course.batchStartDate!.add(Duration(days: course.courseDurationDays)))}'
+                        : '${course.courseDurationDays} Days Live Masterclass',
+                    studentName: studentName,
                   );
 
               context.push(
