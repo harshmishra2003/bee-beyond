@@ -100,8 +100,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         backgroundColor: Colors.white,
         elevation: 0.5,
         centerTitle: true,
-        toolbarHeight: 70,
-        leadingWidth: 52,
+        toolbarHeight: 72,
+        leadingWidth: 50,
         leading: Padding(
           padding: const EdgeInsets.only(left: 8.0, top: 10.0, bottom: 10.0),
           child: InkWell(
@@ -126,21 +126,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         title: SizedBox(
-          height: 62,
+          height: 60,
           child: Transform.scale(
-            scale: 1.35,
+            scale: 1.4,
             child: Image.asset(
               AssetPaths.beeBeyondImage1,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset(
-                    AssetPaths.beeBeyondEmblem,
-                    height: 38,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(width: 8),
+                  const Icon(Icons.spa_rounded, color: AppColors.primary, size: 28),
+                  const SizedBox(width: 6),
                   Text(
                     'Bee Beyonnd',
                     style: GoogleFonts.poppins(
