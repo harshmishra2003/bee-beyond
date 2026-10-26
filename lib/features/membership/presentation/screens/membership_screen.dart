@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/services/expiry_manager_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -31,7 +32,6 @@ class MembershipScreen extends ConsumerStatefulWidget {
 class _MembershipScreenState extends ConsumerState<MembershipScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _shimmerController;
-
   RazorpayService? _razorpayService;
 
   @override
@@ -101,25 +101,29 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: plan.gradientColors,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: plan.cardLightBg,
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: plan.cardThemeColor.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
-                      Icon(plan.icon, color: Colors.amberAccent, size: 32),
-                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: plan.cardThemeColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(plan.icon, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               plan.displayName,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: plan.cardThemeColor,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -128,7 +132,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                             Text(
                               'Validity: ${plan.durationLabel} • VIP Access Pass',
                               style: const TextStyle(
-                                color: Colors.white70,
+                                color: AppColors.textSecondary,
                                 fontSize: 11.5,
                               ),
                             ),
@@ -186,12 +190,12 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                               style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF312E81))),
+                                  color: AppColors.textPrimary)),
                           Text(CurrencyUtils.formatINR(grandTotal),
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: Color(0xFF312E81))),
+                                  color: plan.cardThemeColor)),
                         ],
                       ),
                     ],
@@ -290,7 +294,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(color: Color(0xFF312E81), strokeWidth: 3),
+              const CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
               const SizedBox(height: 20),
               Text(
                 'Creating Membership Order...',
@@ -493,7 +497,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF312E81) : const Color(0xFFE2E8F0),
+            color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
             width: isSelected ? 1.8 : 1.0,
           ),
         ),
@@ -505,13 +509,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF312E81) : const Color(0xFF94A3B8),
+                  color: isSelected ? AppColors.primary : const Color(0xFF94A3B8),
                   width: isSelected ? 6.0 : 1.5,
                 ),
               ),
             ),
             const SizedBox(width: 10),
-            Icon(icon, color: const Color(0xFF312E81), size: 22),
+            Icon(icon, color: AppColors.primary, size: 22),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -548,10 +552,10 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     final activePass = ref.watch(activePassProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF7F7FD), // Clean Off-White Light Theme
       appBar: const CustomAppBar(title: 'VIP Membership Cards'),
       body: RefreshIndicator(
-        color: const Color(0xFF312E81),
+        color: AppColors.primary,
         onRefresh: () async {
           ref.invalidate(membershipPlansProvider);
         },
@@ -568,7 +572,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
               const SizedBox(height: 20),
 
-              // MEMBERSHIP CARDS LIST (DYNAMIC API RESPONSE)
+              // MEMBERSHIP CARDS LIST WITH FULL-SIZE LIGHT THEME ARTWORK BANNERS
               plansAsync.when(
                 skipLoadingOnRefresh: true,
                 data: (plans) {
@@ -579,10 +583,10 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: plans.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 20),
+                    separatorBuilder: (context, index) => const SizedBox(height: 24),
                     itemBuilder: (context, index) {
                       final plan = plans[index];
-                      return _buildShimmeringMembershipCard(plan);
+                      return _buildFullSizeLightMembershipCard(plan);
                     },
                   );
                 },
@@ -599,11 +603,11 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
   }
 
   Widget _buildActivePassStatusCard(UserPassSubscription activePass) {
-    Color statusColor = const Color(0xFF10B981); // Emerald for active
+    Color statusColor = const Color(0xFF10B981);
     if (activePass.status == AccessStatus.expiringSoon) {
-      statusColor = const Color(0xFFF59E0B); // Amber for expiring soon
+      statusColor = const Color(0xFFF59E0B);
     } else if (activePass.isExpired) {
-      statusColor = const Color(0xFFEF4444); // Red for expired
+      statusColor = const Color(0xFFEF4444);
     }
 
     return Container(
@@ -611,12 +615,12 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: statusColor.withValues(alpha: 0.5), width: 1.5),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: statusColor.withValues(alpha: 0.4), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: statusColor.withValues(alpha: 0.12),
-            blurRadius: 12,
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
@@ -632,7 +636,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.15),
+                      color: statusColor.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -660,7 +664,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -670,9 +674,9 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
+                  color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   activePass.statusLabel,
@@ -688,7 +692,6 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
 
           const SizedBox(height: 14),
 
-          // Subscription Duration Progress Bar
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
@@ -708,7 +711,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       children: List.generate(
         3,
         (index) => Container(
-          height: 220,
+          height: 240,
           margin: const EdgeInsets.only(bottom: 20),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -726,12 +729,12 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Color(0xFF312E81)),
+              CircularProgressIndicator(color: AppColors.primary),
               SizedBox(height: 12),
               Text(
-                'Fetching VIP Membership Plans...',
+                'Fetching VIP Membership Cards...',
                 style: TextStyle(
-                  color: Color(0xFF312E81),
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                 ),
@@ -753,7 +756,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       ),
       child: Column(
         children: [
-          const Icon(Icons.workspace_premium_rounded, size: 48, color: Color(0xFF312E81)),
+          const Icon(Icons.workspace_premium_rounded, size: 48, color: AppColors.primary),
           const SizedBox(height: 12),
           const Text(
             'No Membership Plans Found',
@@ -767,7 +770,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           const SizedBox(height: 16),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF312E81),
+              backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => ref.invalidate(membershipPlansProvider),
@@ -804,7 +807,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           const SizedBox(height: 16),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF312E81),
+              backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => ref.invalidate(membershipPlansProvider),
@@ -816,215 +819,217 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     );
   }
 
-  // SHIMMERING METALLIC CARD BUILDER
-  Widget _buildShimmeringMembershipCard(MembershipPlanEntity plan) {
-    return AnimatedBuilder(
-      animation: _shimmerController,
-      builder: (context, child) {
-        final shimmerPos = Tween<double>(begin: -1.3, end: 2.3).transform(
-          CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOutSine).value,
-        );
-
-        return Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: plan.gradientColors,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: plan.isPopular ? Colors.amberAccent : Colors.white.withAlpha(120),
-                  width: plan.isPopular ? 2.0 : 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: plan.gradientColors.first.withAlpha(90),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+  // FULL-SIZE LIGHT THEME MEMBERSHIP CARD BUILDER
+  Widget _buildFullSizeLightMembershipCard(MembershipPlanEntity plan) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: plan.cardThemeColor.withValues(alpha: 0.3),
+          width: plan.isPopular ? 2.0 : 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: plan.cardThemeColor.withValues(alpha: 0.15),
+            blurRadius: 24,
+            spreadRadius: 1,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. FULL SIZE OFFICIAL MEMBERSHIP ARTWORK BANNER
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                child: AspectRatio(
+                  aspectRatio: 1.05,
+                  child: Image.asset(
+                    plan.bannerAssetPath,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: plan.cardLightBg,
+                        height: 220,
+                        child: Center(
+                          child: Icon(plan.icon, size: 80, color: plan.cardThemeColor),
+                        ),
+                      );
+                    },
                   ),
-                ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Card Header Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
+
+              // FLOATING POPULAR BADGE PILL OVERLAY
+              if (plan.isPopular || plan.badgeText.isNotEmpty)
+                Positioned(
+                  top: 14,
+                  right: 14,
+                  child: _ZoomingWidget(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            plan.cardThemeColor,
+                            plan.cardThemeColor.withValues(alpha: 0.85),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: plan.cardThemeColor.withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(plan.icon, color: plan.isPopular ? Colors.amberAccent : Colors.white, size: 26),
-                          const SizedBox(width: 8),
+                          const Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 14),
+                          const SizedBox(width: 4),
                           Text(
-                            plan.displayTagline,
-                            style: TextStyle(
-                              color: plan.isPopular ? Colors.amberAccent : Colors.white70,
+                            plan.displayBadgeText,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
                               fontSize: 10,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w800,
                               letterSpacing: 0.8,
                             ),
                           ),
-                          if (plan.isPopular) ...[
-                            const SizedBox(width: 8),
-                            _ZoomingWidget(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: Colors.amberAccent,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: const [
-                                    BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
-                                  ],
-                                ),
-                                child: Text(
-                                  plan.displayBadgeText,
-                                  style: const TextStyle(color: Color(0xFF78350F), fontSize: 9, fontWeight: FontWeight.w900),
-                                ),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
-                      // Reserved Space for Top Right Brand Emblem
-                      const SizedBox(width: 36),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    plan.displayName,
-                    style: TextStyle(
-                      color: plan.textColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.2,
                     ),
                   ),
+                ),
+            ],
+          ),
 
-                  const SizedBox(height: 8),
+          // 2. CARD BODY & DETAILS (LIGHT THEME)
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // PRICE & DURATION HEADER ROW
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        _DigitalClockRollCounter(
+                          targetAmount: plan.price,
+                          style: GoogleFonts.poppins(
+                            color: AppColors.textPrimary,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'INR',
+                          style: GoogleFonts.poppins(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
 
-                  // DIGITAL CLOCK ROLL-DOWN ANIMATED PRICE COUNTER
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      _DigitalClockRollCounter(
-                        targetAmount: plan.price,
-                        style: TextStyle(
-                          color: plan.textColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
+                    // DURATION PILL BADGE
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: plan.cardLightBg,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: plan.cardThemeColor.withValues(alpha: 0.3),
+                          width: 1,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '/ ${plan.durationLabel}',
-                        style: TextStyle(color: plan.textColor.withAlpha(200), fontSize: 11, fontWeight: FontWeight.bold),
+                      child: Text(
+                        plan.durationLabel,
+                        style: GoogleFonts.poppins(
+                          color: plan.cardThemeColor,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
 
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Divider(color: Colors.white30, height: 1),
-                  ),
+                const SizedBox(height: 14),
 
-                  // Benefits Checklist
-                  ...plan.features.map((b) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 16),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                b,
-                                style: TextStyle(
-                                  color: plan.textColor.withAlpha(230),
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.3,
-                                ),
-                              ),
+                const Divider(height: 1, color: AppColors.divider),
+
+                const SizedBox(height: 14),
+
+                // FEATURES LIST
+                ...plan.features.map(
+                  (feature) => Padding(
+                    padding: const EdgeInsets.only(bottom: 9.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: plan.cardThemeColor.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.check_rounded,
+                            color: plan.cardThemeColor,
+                            size: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            feature,
+                            style: GoogleFonts.poppins(
+                              color: AppColors.textSecondary,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              height: 1.35,
                             ),
-                          ],
+                          ),
                         ),
-                      )),
-
-                  const SizedBox(height: 20),
-
-                  // Shiny Glossy Pulsing Subscribe Button
-                  _ShiningPulsingSubscribeButton(
-                    plan: plan,
-                    onPressed: () => _openMembershipCheckoutModal(plan),
-                  ),
-                ],
-              ),
-            ),
-
-            // BACKGROUND TRANSPARENT COLOR-ADAPTIVE EMBLEM WATERMARK
-            Positioned(
-              right: -15,
-              bottom: -15,
-              child: IgnorePointer(
-                child: Opacity(
-                  opacity: 0.22,
-                  child: Image.asset(
-                    AssetPaths.beeBeyondEmblem,
-                    width: 165,
-                    height: 165,
-                    fit: BoxFit.contain,
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // TOP RIGHT CORNER TRANSPARENT EMBLEM LOGO (NO WHITE BG)
-            Positioned(
-              top: 14,
-              right: 14,
-              child: Image.asset(
-                AssetPaths.beeBeyondEmblem,
-                width: 36,
-                height: 36,
-                fit: BoxFit.contain,
-              ),
-            ),
+                const SizedBox(height: 20),
 
-            // COLOR-SPECIFIC METALLIC SHIMMER LIGHT STREAK OVERLAY
-            Positioned.fill(
-              child: IgnorePointer(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: ShaderMask(
-                    shaderCallback: (bounds) {
-                      return LinearGradient(
-                        colors: plan.shineColors,
-                        stops: const [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0],
-                        begin: Alignment(shimmerPos - 1.0, -0.6),
-                        end: Alignment(shimmerPos, 0.6),
-                      ).createShader(bounds);
-                    },
-                    blendMode: BlendMode.srcATop,
-                    child: Container(color: Colors.white.withAlpha(1)),
-                  ),
+                // SHINING PULSING SUBSCRIBE BUTTON
+                _ShiningPulsingSubscribeButton(
+                  plan: plan,
+                  onPressed: () => _openMembershipCheckoutModal(plan),
                 ),
-              ),
+              ],
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 }
 
-// ANIMATED & CRISP HEADER ANNOUNCEMENT BANNER WIDGET
+// HEADER BANNER WIDGET IN LIGHT / BRAND GRADIENT
 class _AnimatedHeaderBanner extends StatefulWidget {
   const _AnimatedHeaderBanner();
 
@@ -1058,83 +1063,73 @@ class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
       builder: (context, child) {
         final animVal = _controller.value;
 
-        return Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color.lerp(const Color(0xFF312E81), const Color(0xFF4338CA), animVal)!,
-                    Color.lerp(const Color(0xFF4F46E5), const Color(0xFF1E1B4B), animVal)!,
-                    Color.lerp(const Color(0xFF6366F1), const Color(0xFF3730A3), animVal)!,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.amberAccent.withAlpha(100), width: 1.2),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x334B489B),
-                    blurRadius: 14,
-                    offset: Offset(0, 5),
-                  ),
-                ],
+        return Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.lerp(AppColors.primaryDark, AppColors.primary, animVal)!,
+                Color.lerp(AppColors.primary, AppColors.secondary, animVal)!,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.25),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
-              child: Row(
-                children: [
-                  // Fully Transparent Bee Beeyond Emblem Logo
-                  Image.asset(
-                    AssetPaths.beeBeyondEmblem,
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.contain,
-                  ),
-
-                  const SizedBox(width: 14),
-
-                  // Header Texts
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                AssetPaths.beeBeyondEmblem,
+                width: 48,
+                height: 48,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              'BEE BEYONND HEALING PASSES',
-                              style: TextStyle(
-                                color: Colors.amberAccent,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                            SizedBox(width: 4),
-                            Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 12),
-                          ],
-                        ),
-                        SizedBox(height: 3),
                         Text(
-                          'Select Your Preferred Plan',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                          'BEE BEYONND VIP MEMBERSHIP',
+                          style: GoogleFonts.poppins(
+                            color: Colors.amberAccent,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
                           ),
                         ),
-                        SizedBox(height: 2),
-                        Text(
-                          'Unlock discounts, live webinars & 1-on-1 doctor guidance.',
-                          style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.2),
-                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 12),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      'Choose Your Healing Pass',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Unlock discounts, live webinars & 1-on-1 doctor guidance.',
+                      style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11, height: 1.2),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -1202,7 +1197,7 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final pulseScale = 1.0 + (_pulseController.value * 0.03);
+        final pulseScale = 1.0 + (_pulseController.value * 0.02);
 
         return Transform.scale(
           scale: pulseScale,
@@ -1215,24 +1210,46 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
                 alignment: Alignment.center,
                 children: [
                   Positioned.fill(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: widget.plan.isPopular ? Colors.amberAccent : Colors.white,
-                        foregroundColor: widget.plan.isPopular ? const Color(0xFF78350F) : widget.plan.accentColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        elevation: widget.plan.isPopular ? 4 : 0,
-                      ),
-                      onPressed: widget.onPressed,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'CLAIM ${widget.plan.displayTagline}',
-                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            widget.plan.cardThemeColor,
+                            widget.plan.cardThemeColor.withValues(alpha: 0.85),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.plan.cardThemeColor.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_rounded, size: 18),
                         ],
+                      ),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        onPressed: widget.onPressed,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'CLAIM ${widget.plan.name.toUpperCase()} PASS',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward_rounded, size: 18),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1253,13 +1270,10 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
                                   gradient: LinearGradient(
                                     colors: [
                                       Colors.white.withValues(alpha: 0.0),
-                                      Colors.white.withValues(alpha: 0.9),
-                                      widget.plan.isPopular
-                                          ? Colors.white.withValues(alpha: 0.95)
-                                          : Colors.amberAccent.withValues(alpha: 0.7),
+                                      Colors.white.withValues(alpha: 0.7),
                                       Colors.white.withValues(alpha: 0.0),
                                     ],
-                                    stops: const [0.0, 0.35, 0.65, 1.0],
+                                    stops: const [0.0, 0.5, 1.0],
                                   ),
                                 ),
                               ),
