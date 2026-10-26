@@ -36,6 +36,30 @@ class _AboutScreenState extends State<AboutScreen> {
     }
   }
 
+  Future<void> _launchInstagram() async {
+    const handles = ['bee.beyonnd', 'beebeyonnd.in', 'beebeeyond'];
+
+    // 1. Try opening directly in Instagram Native App
+    for (final handle in handles) {
+      try {
+        final appUri = Uri.parse('instagram://user?username=$handle');
+        if (await canLaunchUrl(appUri)) {
+          await launchUrl(appUri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // 2. Fallback: Open profile in external web browser
+    for (final handle in handles) {
+      try {
+        final webUri = Uri.parse('https://www.instagram.com/$handle/');
+        await launchUrl(webUri, mode: LaunchMode.externalApplication);
+        return;
+      } catch (_) {}
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -399,7 +423,7 @@ class _AboutScreenState extends State<AboutScreen> {
                         imageAsset: AssetPaths.instagramIcon,
                         fallbackIcon: Icons.camera_alt_rounded,
                         gradientColors: const [Color(0xFFE4405F), Color(0xFFC13584), Color(0xFF833AB4)],
-                        onTap: () => _launchUrl('https://instagram.com/beebeeyond'),
+                        onTap: _launchInstagram,
                       ),
 
                       // LINKEDIN
@@ -408,7 +432,7 @@ class _AboutScreenState extends State<AboutScreen> {
                         imageAsset: AssetPaths.linkedinIcon,
                         fallbackIcon: Icons.business_center_rounded,
                         gradientColors: const [Color(0xFF0077B5), Color(0xFF00A0DC)],
-                        onTap: () => _launchUrl('https://linkedin.com/company/beebeeyond'),
+                        onTap: () => _launchUrl('https://www.linkedin.com/company/bee-beyonnd/'),
                       ),
 
                       // FACEBOOK
@@ -416,7 +440,7 @@ class _AboutScreenState extends State<AboutScreen> {
                         label: 'Follow on Facebook',
                         fallbackIcon: Icons.facebook_rounded,
                         gradientColors: const [Color(0xFF1877F2), Color(0xFF3B5998)],
-                        onTap: () => _launchUrl('https://facebook.com/beebeeyond'),
+                        onTap: () => _launchUrl('https://www.facebook.com/share/1XL3i9DhC8/'),
                       ),
 
                       // WEBSITE
@@ -424,7 +448,7 @@ class _AboutScreenState extends State<AboutScreen> {
                         label: 'Visit Official Website',
                         fallbackIcon: Icons.language_rounded,
                         gradientColors: const [Color(0xFF0F0C20), Color(0xFF312E81)],
-                        onTap: () => _launchUrl('https://metricstestingapp.xyz'),
+                        onTap: () => _launchUrl('https://beebeyonnd.in/'),
                       ),
                     ],
                   ),
