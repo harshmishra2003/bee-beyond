@@ -29,4 +29,11 @@ class AssetPaths {
   static const String lottieSuccess = 'assets/lottie/success.json';
   static const String lottieEmpty = 'assets/lottie/empty.json';
   static const String lottieNewBadge = 'assets/lottie/New badge.json';
+  static const String lottieConnectionLost = 'assets/lottie/Connection Lost.json';
+
+  // Membership Banners
+  static const String bloomMembershipBanner = 'assets/Membership Banners/BLOOM.png';
+  static const String elevateMembershipBanner = 'assets/Membership Banners/ELEVATE.png';
+  static const String transformMembershipBanner = 'assets/Membership Banners/TRANSFORM.png';
+  static const String infinityMembershipBanner = 'assets/Membership Banners/INFINITY.png';
 }
