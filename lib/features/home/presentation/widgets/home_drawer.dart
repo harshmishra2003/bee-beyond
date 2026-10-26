@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign_out_dialog.dart';
 import '../../../../routing/route_paths.dart';
@@ -329,11 +328,10 @@ class HomeDrawer extends ConsumerWidget {
             color: Colors.white,
             child: Row(
               children: [
-                Image.asset(
-                  AssetPaths.beeBeyondImage1,
-                  height: 22,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.spa_rounded, color: AppColors.primary, size: 20),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.primary,
+                  size: 20,
                 ),
                 const SizedBox(width: 8),
                 const Text(
