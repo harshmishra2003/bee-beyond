@@ -16,6 +16,13 @@ class CourseModel extends CourseEntity {
     super.learnings = const [],
     super.modulesList = const [],
     super.createdAt,
+    super.isLive = false,
+    super.batchStartDate,
+    super.batchEndDate,
+    super.registrationDeadline,
+    super.courseDurationDays = 15,
+    super.meetingLink = '',
+    super.outcomes = const [],
   });
 
   static String _formatUrl(String? url) {
@@ -323,6 +330,46 @@ class CourseModel extends CourseEntity {
       parsedCreatedAt = DateTime.now();
     }
 
+    final bool isLiveFlag = json['is_live'] == true ||
+        json['is_live']?.toString() == '1' ||
+        json['isLive'] == true ||
+        json['isLive']?.toString() == '1' ||
+        (json['type']?.toString().toLowerCase().contains('live') ?? false);
+
+    DateTime? batchStart;
+    final rawBatchStart = json['batch_start_date']?.toString() ??
+        json['batch_start']?.toString() ??
+        json['start_date']?.toString();
+    if (rawBatchStart != null && rawBatchStart.isNotEmpty) {
+      batchStart = DateTime.tryParse(rawBatchStart);
+    }
+
+    DateTime? batchEnd;
+    final rawBatchEnd = json['batch_end_date']?.toString() ??
+        json['batch_end']?.toString() ??
+        json['end_date']?.toString();
+    if (rawBatchEnd != null && rawBatchEnd.isNotEmpty) {
+      batchEnd = DateTime.tryParse(rawBatchEnd);
+    }
+
+    DateTime? regDeadline;
+    final rawDeadline = json['registration_deadline']?.toString() ??
+        json['deadline']?.toString() ??
+        json['cutoff_date']?.toString();
+    if (rawDeadline != null && rawDeadline.isNotEmpty) {
+      regDeadline = DateTime.tryParse(rawDeadline);
+    }
+
+    final int durationDays = (json['course_duration_days'] as num?)?.toInt() ??
+        (json['duration_days'] as num?)?.toInt() ??
+        int.tryParse(json['days']?.toString() ?? '15') ??
+        15;
+
+    final String meetingLinkUrl = json['meeting_link']?.toString() ??
+        json['zoom_link']?.toString() ??
+        json['meet_link']?.toString() ??
+        '';
+
     return CourseModel(
       id: json['id']?.toString() ??
           json['course_id']?.toString() ??
@@ -369,6 +416,13 @@ class CourseModel extends CourseEntity {
       learnings: parsedLearnings,
       modulesList: parsedModules,
       createdAt: parsedCreatedAt,
+      isLive: isLiveFlag,
+      batchStartDate: batchStart,
+      batchEndDate: batchEnd,
+      registrationDeadline: regDeadline,
+      courseDurationDays: durationDays,
+      meetingLink: meetingLinkUrl,
+      outcomes: parsedLearnings,
     );
   }
 
