@@ -27,6 +27,7 @@ class ApiEndpoints {
   // Services & Membership
   static const String services = '/services.php';
   static const String membershipPlans = '/membership.php';
+  static const String membershipPlanDetails = '/membership_plan_details.php';
 
   // Products
   static const String products = '/products.php';
