@@ -126,22 +126,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         title: SizedBox(
-          height: 60,
+          height: 80,
           child: Transform.scale(
-            scale: 1.4,
+            scale: 2.2,
             child: Image.asset(
               AssetPaths.beeBeyondImage1,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.spa_rounded, color: AppColors.primary, size: 28),
+                  const Icon(Icons.spa_rounded, color: AppColors.primary, size: 32),
                   const SizedBox(width: 6),
                   Text(
                     'Bee Beyonnd',
                     style: GoogleFonts.poppins(
                       color: AppColors.primary,
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
