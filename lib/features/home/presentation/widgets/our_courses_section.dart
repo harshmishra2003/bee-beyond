@@ -249,7 +249,7 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
     final bool showNewLottie = isNewFlag || (createdAt != null && DateTime.now().difference(createdAt).inHours <= 48);
 
     return Container(
-      width: 240,
+      width: 260,
       margin: const EdgeInsets.only(right: 12),
       // SLEEK OVAL-RECTANGULAR DARK FRAME
       decoration: BoxDecoration(
@@ -596,7 +596,7 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
     if (imageUrl.startsWith('assets/')) {
       return Image.asset(
         imageUrl,
-        height: 85,
+        height: 98,
         width: double.infinity,
         fit: BoxFit.cover,
         alignment: Alignment.center,
@@ -605,12 +605,12 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
     } else if (imageUrl.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: imageUrl,
-        height: 85,
+        height: 98,
         width: double.infinity,
         fit: BoxFit.cover,
         alignment: Alignment.center,
         placeholder: (context, url) => Container(
-          height: 85,
+          height: 98,
           color: const Color(0xFFE0E7FF),
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         ),
@@ -623,7 +623,7 @@ class _OurCourseCardState extends ConsumerState<_OurCourseCard> {
 
   Widget _buildPlaceholder() {
     return Container(
-      height: 85,
+      height: 98,
       width: double.infinity,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
