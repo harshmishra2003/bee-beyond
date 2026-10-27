@@ -114,48 +114,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Single
           SafeArea(
             child: Column(
               children: [
-                // Top Action Bar: WELCOME JOURNEY Pill Badge + SKIP Button
+                // Top Action Bar: SKIP Button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Welcome Journey Pill Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE6F4EA), width: 1.2),
-                          boxShadow: const [
-                            BoxShadow(color: Color(0x0C000000), blurRadius: 6, offset: Offset(0, 2)),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF006A37),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'WELCOME JOURNEY',
-                              style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0,
-                                color: const Color(0xFF006A37),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
                       // Top Skip Button
                       TextButton(
                         onPressed: _finishOnboarding,
