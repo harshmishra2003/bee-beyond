@@ -1037,6 +1037,86 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
   }
 }
 
+// SHINING IMAGE WRAPPER WITH PERIODIC DIAGONAL LIGHT BEAM SWEEP
+class ShiningImageWrapper extends StatefulWidget {
+  final Widget child;
+  final BorderRadius borderRadius;
+
+  const ShiningImageWrapper({
+    super.key,
+    required this.child,
+    this.borderRadius = const BorderRadius.vertical(top: Radius.circular(24)),
+  });
+
+  @override
+  State<ShiningImageWrapper> createState() => _ShiningImageWrapperState();
+}
+
+class _ShiningImageWrapperState extends State<ShiningImageWrapper>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: widget.borderRadius,
+      child: Stack(
+        children: [
+          widget.child,
+
+          // Periodic Diagonal Shining Light Glint Sweep
+          AnimatedBuilder(
+            animation: _shimmerController,
+            builder: (context, child) {
+              final val = _shimmerController.value;
+              if (val > 0.45) return const SizedBox.shrink();
+
+              final progress = val / 0.45;
+              final alignX = -2.0 + progress * 4.0;
+
+              return Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment(alignX - 0.5, -1.0),
+                        end: Alignment(alignX + 0.5, 1.0),
+                        colors: [
+                          Colors.transparent,
+                          Colors.white.withValues(alpha: 0.05),
+                          Colors.white.withValues(alpha: 0.45),
+                          Colors.white.withValues(alpha: 0.05),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.35, 0.5, 0.65, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // DIGITAL CLOCK ROLL-DOWN ANIMATED COUNTER
 class _DigitalClockRollCounter extends StatelessWidget {
   final double targetAmount;
