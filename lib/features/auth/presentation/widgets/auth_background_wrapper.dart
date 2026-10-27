@@ -233,14 +233,14 @@ class _AuthBackgroundWrapperState extends State<AuthBackgroundWrapper>
 
                     const SizedBox(height: 6),
 
-                    // Cursive Script Brand Title
+                    // Cursive Calligraphy Script Brand Title
                     Text(
                       'Bee Beyonnd',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.dancingScript(
-                        fontSize: 38,
+                      style: GoogleFonts.greatVibes(
+                        fontSize: 42,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF382481),
+                        color: const Color(0xFF2B1B6D),
                       ),
                     ),
 
