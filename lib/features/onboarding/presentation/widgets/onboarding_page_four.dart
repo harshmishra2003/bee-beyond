@@ -44,46 +44,7 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Eyebrow Chip
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFFFDBCC), width: 1.2),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0C000000),
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: Color(0xFF9C3E00),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'YOUR TRANSFORMATION AWAITS',
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                      color: const Color(0xFF9C3E00),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
           // Main Headline
           Center(
@@ -216,15 +177,6 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
                           );
                         },
                       ),
-                    ),
-                  ),
-
-                  // Orbiting Pillar Charm 1: Top - Body
-                  Positioned(
-                    top: 2,
-                    child: _buildOrbitPillarTag(
-                      color: const Color(0xFF006A37),
-                      label: 'Body',
                     ),
                   ),
 
