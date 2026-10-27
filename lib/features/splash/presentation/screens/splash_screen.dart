@@ -293,7 +293,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       style: GoogleFonts.greatVibes(
                         fontSize: 44,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2B1B6D),
+                        color: const Color(0xFF6845C4),
                       ),
                     ),
 
