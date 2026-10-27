@@ -30,6 +30,7 @@ class AssetPaths {
   static const String lottieEmpty = 'assets/lottie/empty.json';
   static const String lottieNewBadge = 'assets/lottie/New badge.json';
   static const String lottieConnectionLost = 'assets/lottie/Connection Lost.json';
+  static const String lottiePausePlay = 'assets/lottie/Pause  Play.json';
 
   // Membership Banners
   static const String bloomMembershipBanner = 'assets/Membership Banners/BLOOM.png';
