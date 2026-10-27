@@ -46,6 +46,7 @@ class RoutePaths {
 
   // Membership & Services
   static const String membership = '/membership';
+  static const String membershipDetail = '/membership/detail';
   static const String myMemberships = '/membership/history';
   static const String services = '/services';
 
