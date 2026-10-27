@@ -20,6 +20,8 @@ import '../features/library/presentation/screens/material_screen.dart';
 import '../features/library/presentation/screens/music_screen.dart';
 import '../features/library/presentation/screens/video_screen.dart';
 import '../features/main_layout/presentation/screens/main_screen.dart';
+import '../features/membership/domain/entities/membership_plan_entity.dart';
+import '../features/membership/presentation/screens/membership_plan_detail_screen.dart';
 import '../features/membership/presentation/screens/membership_screen.dart';
 import '../features/membership/presentation/screens/my_memberships_screen.dart';
 import '../features/notifications/presentation/screens/notifications_screen.dart';
@@ -358,6 +360,25 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: const MembershipScreen(),
           type: AppTransitionType.slideUp,
         ),
+      ),
+      GoRoute(
+        path: RoutePaths.membershipDetail,
+        name: 'membershipDetail',
+        pageBuilder: (context, state) {
+          final planId = state.uri.queryParameters['id'] ?? '1';
+          final initialPlan = state.extra is MembershipPlanEntity
+              ? state.extra as MembershipPlanEntity
+              : null;
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: MembershipPlanDetailScreen(
+              planId: planId,
+              initialPlan: initialPlan,
+            ),
+            type: AppTransitionType.slideRight,
+          );
+        },
       ),
       GoRoute(
         path: RoutePaths.myMemberships,
