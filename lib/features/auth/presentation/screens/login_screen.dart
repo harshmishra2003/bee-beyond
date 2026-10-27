@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../routing/route_paths.dart';
@@ -37,15 +36,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
-      // Show Smart Loading Dialog
       AppAlertManager.showLoading(context, message: "Authenticating...");
 
       try {
         await ref.read(authStateProvider.notifier).login(email, password);
 
-        // Pop the loading dialog
         if (mounted) {
-           Navigator.of(context, rootNavigator: true).pop();
+          Navigator.of(context, rootNavigator: true).pop();
         }
 
         if (!mounted) return;
@@ -57,13 +54,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           autoDismissAfter: const Duration(seconds: 2),
         );
       } catch (e) {
-        // Pop the loading dialog
         if (mounted) {
-           Navigator.of(context, rootNavigator: true).pop();
+          Navigator.of(context, rootNavigator: true).pop();
         }
         if (!mounted) return;
 
-        // Show Smart Error Dialog
         AppAlertManager.showError(context, e, customTitle: "Login Failed");
       }
     }
@@ -74,17 +69,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return AuthBackgroundWrapper(
       showBackButton: false,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppColors.borderSubtle, width: 1.5),
+          border: Border.all(color: Colors.white, width: 1.5),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x184B489B),
-              blurRadius: 24,
+              color: Color(0x1A4C3592),
+              blurRadius: 28,
               spreadRadius: 2,
-              offset: Offset(0, 8),
+              offset: Offset(0, 10),
             ),
           ],
         ),
@@ -92,37 +87,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title
-              Text(
-                'Welcome Back',
-                style: GoogleFonts.poppins(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              // Subtitle
-              Text(
-                'Login to continue your journey\ntowards better health and happiness',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textSecondary,
-                  height: 1.35,
+              // Header Title & Subtitle
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'Welcome Back',
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Login to continue your journey towards better health and happiness',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF64748B),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
               const SizedBox(height: 22),
 
-              // Email Field
+              // Email Address Field
+              _buildFieldLabel('Email Address'),
+              const SizedBox(height: 6),
               _buildCustomTextField(
                 controller: _emailController,
-                hintText: 'Email Address',
+                hintText: 'name@example.com',
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) {
@@ -133,18 +134,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               // Password Field
+              _buildFieldLabel('Password'),
+              const SizedBox(height: 6),
               _buildCustomTextField(
                 controller: _passwordController,
-                hintText: 'Password',
+                hintText: '••••••••••••',
                 prefixIcon: Icons.lock_outline,
                 obscureText: _obscurePassword,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                    color: AppColors.textSecondary,
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: const Color(0xFF94A3B8),
                     size: 20,
                   ),
                   onPressed: () {
@@ -161,23 +166,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
-              // Remember Me & Forgot Password Row (Flexible & Responsive)
+              // Remember Me & Forgot Password Controls
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _rememberMe = !_rememberMe;
+                      });
+                    },
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: 18,
+                          height: 18,
                           child: Checkbox(
                             value: _rememberMe,
-                            activeColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                            activeColor: const Color(0xFF4C3592),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                             onChanged: (val) {
                               setState(() {
                                 _rememberMe = val ?? false;
@@ -185,22 +197,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             },
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            'Remember Me',
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              fontSize: 11.5,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Remember Me',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: const Color(0xFF475569),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 4),
                   GestureDetector(
                     onTap: () {
                       context.push(RoutePaths.forgotPassword);
@@ -208,8 +216,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Text(
                       'Forgot Password?',
                       style: GoogleFonts.poppins(
-                        fontSize: 11.5,
-                        color: AppColors.primary,
+                        fontSize: 12,
+                        color: const Color(0xFF6845C4),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -219,140 +227,143 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 22),
 
-              // Gradient Login Button
-              _buildGradientButton(
+              // Primary Login Button
+              _buildGradientSubmitButton(
                 text: 'Login',
                 onTap: _onLogin,
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
-              // OR Divider
-              Row(
+              // OR CONTINUE WITH Divider
+              Stack(
+                alignment: Alignment.center,
                 children: [
-                  const Expanded(child: Divider(color: AppColors.divider)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  const Divider(color: Color(0xFFE2E8F0)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                    ),
                     child: Text(
-                      'OR',
+                      'OR CONTINUE WITH',
                       style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textHint,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF94A3B8),
+                        letterSpacing: 0.8,
                       ),
                     ),
                   ),
-                  const Expanded(child: Divider(color: AppColors.divider)),
                 ],
               ),
 
               const SizedBox(height: 18),
 
-              // Google & Apple Social Sign-In Buttons
+              // Social Sign-In Buttons (Google & Apple)
               Row(
                 children: [
                   // Google Sign-In Button
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                         AppAlertManager.showError(
-                            context, 
-                            const PermissionFailure("Google Sign-In is temporarily unavailable."),
-                            customTitle: "Not Available",
-                          );
+                        AppAlertManager.showError(
+                          context,
+                          const PermissionFailure("Google Sign-In is temporarily unavailable."),
+                          customTitle: "Not Available",
+                        );
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                        side: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                        backgroundColor: const Color(0xFFFAF9FF),
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              AssetPaths.googleIcon,
-                              width: 20,
-                              height: 20,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                Icons.g_mobiledata,
-                                size: 22,
-                                color: Colors.red,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Google',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
+                        backgroundColor: Colors.white,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            AssetPaths.googleIcon,
+                            width: 18,
+                            height: 18,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => const Icon(
+                              Icons.g_mobiledata,
+                              size: 22,
+                              color: Colors.red,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Google',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF334155),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
 
                   // Apple Sign-In Button
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                          AppAlertManager.showError(
-                            context, 
-                            const PermissionFailure("Apple Sign-In is temporarily unavailable."),
-                            customTitle: "Not Available",
-                          );
+                        AppAlertManager.showError(
+                          context,
+                          const PermissionFailure("Apple Sign-In is temporarily unavailable."),
+                          customTitle: "Not Available",
+                        );
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                        side: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                        backgroundColor: const Color(0xFFFAF9FF),
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              AssetPaths.appleIcon,
-                              width: 20,
-                              height: 20,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                Icons.apple,
-                                size: 20,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Apple',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
+                        backgroundColor: Colors.white,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            AssetPaths.appleIcon,
+                            width: 18,
+                            height: 18,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => const Icon(
+                              Icons.apple,
+                              size: 20,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Apple',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF334155),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 22),
 
-              // Sign Up Link (Fitted to avoid overflow on narrow screens)
-              FittedBox(
-                fit: BoxFit.scaleDown,
+              // Sign Up Link Footer
+              Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -360,7 +371,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       "Don't have an account? ",
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: const Color(0xFF64748B),
                       ),
                     ),
                     GestureDetector(
@@ -372,13 +383,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                              color: const Color(0xFF4C3592),
                             ),
                           ),
                           const Icon(
                             Icons.arrow_forward_rounded,
                             size: 14,
-                            color: AppColors.primary,
+                            color: Color(0xFF4C3592),
                           ),
                         ],
                       ),
@@ -393,7 +404,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  // Custom Form TextField Builder
+  Widget _buildFieldLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.poppins(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF475569),
+      ),
+    );
+  }
+
   Widget _buildCustomTextField({
     required TextEditingController controller,
     required String hintText,
@@ -408,55 +429,65 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textPrimary),
+      style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF0F172A)),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: GoogleFonts.poppins(fontSize: 12.5, color: AppColors.textHint),
-        prefixIcon: Icon(prefixIcon, color: AppColors.primary, size: 19),
+        hintStyle: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF94A3B8)),
+        prefixIcon: Icon(prefixIcon, color: const Color(0xFF94A3B8), size: 19),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xFFF7F6FF),
+        fillColor: const Color(0xFFF8FAFF),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFF6845C4), width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red, width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red, width: 1.6),
         ),
       ),
     );
   }
 
-  // Gradient Action Button Builder
-  Widget _buildGradientButton({required String text, required VoidCallback onTap}) {
+  Widget _buildGradientSubmitButton({
+    required String text,
+    required VoidCallback onTap,
+  }) {
     return Container(
       width: double.infinity,
-      height: 48,
+      height: 50,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF059669),
+            Color(0xFF6845C4),
+            Color(0xFF4C3592),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x334B489B),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            color: Color(0x336845C4),
+            blurRadius: 14,
+            offset: Offset(0, 5),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -464,7 +495,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 text,
                 style: GoogleFonts.poppins(
-                  fontSize: 14.5,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -473,7 +504,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const Icon(
                 Icons.arrow_forward_rounded,
                 color: Colors.white,
-                size: 17,
+                size: 18,
               ),
             ],
           ),
