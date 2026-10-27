@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -20,6 +23,16 @@ class MaterialScreen extends ConsumerStatefulWidget {
 class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   String _selectedCategory = 'All';
   final Set<String> _bookmarkedIds = {};
+
+  bool _isLottieActive = true;
+  DateTime? _dataResponseTime;
+  Timer? _postResponseTimer;
+
+  @override
+  void dispose() {
+    _postResponseTimer?.cancel();
+    super.dispose();
+  }
 
   void _openBookViewer(BookItem book) async {
     if (book.pdfUrl.isEmpty) {
@@ -126,9 +139,166 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
     );
   }
 
+  Widget _buildBooksLottieLoadingOverlay() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFFFAF9FE),
+            Color(0xFFFFFFFF),
+            Color(0xFFF2F0FC),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFE6F4EA), width: 1.2),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0C000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF006A37),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'BOOKS & STUDY VAULT',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        color: const Color(0xFF006A37),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFE6F4EA), width: 2),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x1A006A37),
+                      blurRadius: 30,
+                      spreadRadius: 4,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Lottie.asset(
+                  AssetPaths.lottieBooks,
+                  width: 180,
+                  height: 180,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.menu_book_rounded,
+                    size: 80,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'Loading Study Library...',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Fetching research notes, PDF handbooks & digital eBooks',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 12.5,
+                  color: const Color(0xFF64748B),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final booksAsync = ref.watch(booksAndMaterialsProvider);
+
+    // API-Connected Response Listener: Extends animation by 2.5s post-response
+    booksAsync.whenData((_) {
+      if (_dataResponseTime == null) {
+        _dataResponseTime = DateTime.now();
+        _postResponseTimer?.cancel();
+        _postResponseTimer = Timer(const Duration(milliseconds: 2500), () {
+          if (mounted) {
+            setState(() {
+              _isLottieActive = false;
+            });
+          }
+        });
+      }
+    });
+
+    if (booksAsync.hasError && _dataResponseTime == null) {
+      _dataResponseTime = DateTime.now();
+      _postResponseTimer?.cancel();
+      _postResponseTimer = Timer(const Duration(milliseconds: 2500), () {
+        if (mounted) {
+          setState(() {
+            _isLottieActive = false;
+          });
+        }
+      });
+    }
+
+    if (_isLottieActive || booksAsync.isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFFAF9FE),
+        body: _buildBooksLottieLoadingOverlay(),
+      );
+    }
 
     return MembershipAccessGuard(
       featureName: 'Books & Study Handbooks',
