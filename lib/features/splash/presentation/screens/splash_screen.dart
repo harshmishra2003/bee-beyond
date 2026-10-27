@@ -24,7 +24,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Timer? _navigationTimer;
   Timer? _affirmationTimer;
-  bool _isMuted = false;
   int _affirmationIndex = 0;
 
   final List<String> _affirmations = [
@@ -126,41 +125,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // TOP BAR: Sound Toggle Button
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _isMuted = !_isMuted;
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.2),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x0C000000),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                            color: const Color(0xFF006A37),
-                            size: 19,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // CENTERPIECE BRAND STAGE: Lotus Backdrop + Orbit Ring + Central Medallion
                     SizedBox(
