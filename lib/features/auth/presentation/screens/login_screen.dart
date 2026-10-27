@@ -227,8 +227,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 22),
 
-              // Primary Login Button
-              _buildGradientSubmitButton(
+              // SHINING 3D PUSH-DOWN LOGIN BUTTON
+              _Shining3DLoginButton(
                 text: 'Login',
                 onTap: _onLogin,
               ),
@@ -457,56 +457,165 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
+}
 
-  Widget _buildGradientSubmitButton({
-    required String text,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      width: double.infinity,
-      height: 50,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF059669),
-            Color(0xFF6845C4),
-            Color(0xFF4C3592),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x336845C4),
-            blurRadius: 14,
-            offset: Offset(0, 5),
+class _Shining3DLoginButton extends StatefulWidget {
+  final String text;
+  final VoidCallback onTap;
+
+  const _Shining3DLoginButton({
+    required this.text,
+    required this.onTap,
+  });
+
+  @override
+  State<_Shining3DLoginButton> createState() => _Shining3DLoginButtonState();
+}
+
+class _Shining3DLoginButtonState extends State<_Shining3DLoginButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _shineController;
+  late Animation<double> _shineAnimation;
+  bool _isPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _shineController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+
+    _shineAnimation = Tween<double>(begin: -1.2, end: 2.2).animate(
+      CurvedAnimation(parent: _shineController, curve: Curves.easeInOutCubic),
+    );
+
+    _startShineLoop();
+  }
+
+  void _startShineLoop() async {
+    while (mounted) {
+      await Future.delayed(const Duration(milliseconds: 2000));
+      if (mounted) {
+        await _shineController.forward(from: 0.0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _shineController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          margin: EdgeInsets.only(top: _isPressed ? 3.0 : 0.0),
+          width: double.infinity,
+          height: 50,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF059669),
+                Color(0xFF6845C4),
+                Color(0xFF4C3592),
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            boxShadow: _isPressed
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF382481).withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: const Color(0xFF6845C4).withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFF059669).withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                text,
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Button Text & Icon Content
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.text,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 19,
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.arrow_forward_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-            ],
+
+                // Periodic Shining Light Beam Overlay
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: AnimatedBuilder(
+                      animation: _shineAnimation,
+                      builder: (context, child) {
+                        return FractionalTranslation(
+                          translation: Offset(_shineAnimation.value, 0),
+                          child: Transform.rotate(
+                            angle: 0.35,
+                            child: Container(
+                              width: 32,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.0),
+                                    Colors.white.withValues(alpha: 0.85),
+                                    Colors.amberAccent.withValues(alpha: 0.6),
+                                    Colors.white.withValues(alpha: 0.0),
+                                  ],
+                                  stops: const [0.0, 0.35, 0.65, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
