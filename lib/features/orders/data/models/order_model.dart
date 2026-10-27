@@ -7,6 +7,14 @@ class OrderModel extends OrderEntity {
     required super.totalAmount,
     required super.orderDate,
     required super.totalItems,
+    super.title,
+    super.imageUrl,
+    super.paymentStatus,
+    super.paymentMethod,
+    super.subtotalAmount,
+    super.discountAmount,
+    super.shippingFee,
+    super.taxAmount,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -56,12 +64,64 @@ class OrderModel extends OrderEntity {
       itemsCount = int.tryParse(rawItems.toString()) ?? 1;
     }
 
+    final rawTitle = json['title']?.toString() ??
+        json['product_title']?.toString() ??
+        json['item_title']?.toString() ??
+        json['name']?.toString() ??
+        json['product_name']?.toString() ??
+        '';
+
+    final rawImageUrl = json['image_url']?.toString() ??
+        json['image']?.toString() ??
+        json['thumbnail']?.toString() ??
+        json['product_image']?.toString() ??
+        '';
+
+    final rawPaymentStatus = json['payment_status']?.toString() ??
+        json['paid_status']?.toString() ??
+        json['pay_status']?.toString() ??
+        (rawStatus.toLowerCase().contains('delivered') ||
+                rawStatus.toLowerCase().contains('transit') ||
+                rawStatus.toLowerCase().contains('access') ||
+                rawStatus.toLowerCase().contains('completed') ||
+                rawStatus.toLowerCase().contains('processing')
+            ? 'PAID'
+            : 'PENDING');
+
+    final rawPaymentMethod = json['payment_method']?.toString() ??
+        json['pay_method']?.toString() ??
+        'Razorpay UPI / Online';
+
+    double subtotal = double.tryParse(json['subtotal']?.toString() ?? '') ??
+        double.tryParse(json['subtotal_amount']?.toString() ?? '') ??
+        (amount > 0 ? (amount * 1.1) : 0.0);
+
+    double discount = double.tryParse(json['discount']?.toString() ?? '') ??
+        double.tryParse(json['discount_amount']?.toString() ?? '') ??
+        (subtotal > amount ? (subtotal - amount) : 0.0);
+
+    double shipping = double.tryParse(json['shipping_fee']?.toString() ?? '') ??
+        double.tryParse(json['delivery_charge']?.toString() ?? '') ??
+        0.0;
+
+    double tax = double.tryParse(json['tax']?.toString() ?? '') ??
+        double.tryParse(json['tax_amount']?.toString() ?? '') ??
+        0.0;
+
     return OrderModel(
       orderId: rawOrderId,
       status: rawStatus,
       totalAmount: amount,
       orderDate: date,
       totalItems: itemsCount > 0 ? itemsCount : 1,
+      title: rawTitle,
+      imageUrl: rawImageUrl,
+      paymentStatus: rawPaymentStatus.toUpperCase(),
+      paymentMethod: rawPaymentMethod,
+      subtotalAmount: subtotal,
+      discountAmount: discount,
+      shippingFee: shipping,
+      taxAmount: tax,
     );
   }
 
@@ -72,6 +132,14 @@ class OrderModel extends OrderEntity {
       'total_amount': totalAmount,
       'order_date': orderDate.toIso8601String(),
       'total_items': totalItems,
+      'title': title,
+      'image_url': imageUrl,
+      'payment_status': paymentStatus,
+      'payment_method': paymentMethod,
+      'subtotal_amount': subtotalAmount,
+      'discount_amount': discountAmount,
+      'shipping_fee': shippingFee,
+      'tax_amount': taxAmount,
     };
   }
 }
