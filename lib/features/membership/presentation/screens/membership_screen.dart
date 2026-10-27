@@ -585,7 +585,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           // 1. FULL SIZE OFFICIAL MEMBERSHIP ARTWORK BANNER
           Stack(
             children: [
-              ClipRRect(
+              ShiningImageWrapper(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                 child: AspectRatio(
                   aspectRatio: 1.05,
