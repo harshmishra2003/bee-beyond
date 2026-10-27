@@ -26,11 +26,13 @@ class AssetPaths {
 
   // Lottie
   static const String lottieLoading = 'assets/lottie/loading.json';
+  static const String lottieProductsLoading = 'assets/lottie/loading (1).json';
   static const String lottieSuccess = 'assets/lottie/success.json';
   static const String lottieEmpty = 'assets/lottie/empty.json';
   static const String lottieNewBadge = 'assets/lottie/New badge.json';
   static const String lottieConnectionLost = 'assets/lottie/Connection Lost.json';
   static const String lottiePausePlay = 'assets/lottie/Pause  Play.json';
+  static const String lottieBooks = 'assets/lottie/books.json';
 
   // Membership Banners
   static const String bloomMembershipBanner = 'assets/Membership Banners/BLOOM.png';
