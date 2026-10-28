@@ -356,13 +356,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Explore Categories',
-                      style: AppTextStyles.titleLarge.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        'Explore Categories',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.titleLarge.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     ShiningViewAllButton(
                       onPressed: () => context.go(RoutePaths.courses),
                     ),
@@ -384,13 +389,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Featured Posters & Offers',
-                      style: AppTextStyles.titleLarge.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        'Featured Posters & Offers',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.titleLarge.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     ShiningViewAllButton(
                       onPressed: () => context.go(RoutePaths.courses),
                     ),
