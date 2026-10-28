@@ -563,21 +563,24 @@ class _AboutScreenState extends State<AboutScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Banner Image
+          // Banner Image (Fit to Card - Edge to Edge)
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: Stack(
               children: [
-                Image.asset(
-                  imagePath,
-                  height: 140,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 120,
-                    color: const Color(0xFFEEF2FF),
-                    child: const Center(
-                      child: Icon(Icons.spa_rounded, color: AppColors.primary, size: 48),
+                AspectRatio(
+                  aspectRatio: 2.05,
+                  child: Image.asset(
+                    imagePath,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.fill, // Full-bleed edge-to-edge fit to card with zero side gaps or margins
+                    alignment: Alignment.center,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: const Color(0xFFEEF2FF),
+                      child: const Center(
+                        child: Icon(Icons.spa_rounded, color: AppColors.primary, size: 48),
+                      ),
                     ),
                   ),
                 ),
