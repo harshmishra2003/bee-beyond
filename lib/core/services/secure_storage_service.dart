@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/storage_keys.dart';
 
 class SecureStorageService {
@@ -7,7 +8,10 @@ class SecureStorageService {
   SecureStorageService([FlutterSecureStorage? storage])
       : _storage = storage ??
             const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
+              aOptions: AndroidOptions(
+                encryptedSharedPreferences: true,
+                resetOnError: true,
+              ),
               iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
             );
 
@@ -15,11 +19,28 @@ class SecureStorageService {
     try {
       await _storage.write(key: StorageKeys.authToken, value: token);
     } catch (_) {}
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(StorageKeys.authToken, token);
+    } catch (_) {}
   }
 
   Future<String?> getAuthToken() async {
+    String? token;
     try {
-      return await _storage.read(key: StorageKeys.authToken);
+      token = await _storage.read(key: StorageKeys.authToken).timeout(
+        const Duration(milliseconds: 400),
+        onTimeout: () => null,
+      );
+    } catch (_) {}
+
+    if (token != null && token.isNotEmpty) {
+      return token;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(StorageKeys.authToken);
     } catch (_) {
       return null;
     }
@@ -29,17 +50,38 @@ class SecureStorageService {
     try {
       await _storage.delete(key: StorageKeys.authToken);
     } catch (_) {}
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(StorageKeys.authToken);
+    } catch (_) {}
   }
 
   Future<void> saveUserData(String userDataJson) async {
     try {
       await _storage.write(key: StorageKeys.userData, value: userDataJson);
     } catch (_) {}
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(StorageKeys.userData, userDataJson);
+    } catch (_) {}
   }
 
   Future<String?> getUserData() async {
+    String? data;
     try {
-      return await _storage.read(key: StorageKeys.userData);
+      data = await _storage.read(key: StorageKeys.userData).timeout(
+        const Duration(milliseconds: 400),
+        onTimeout: () => null,
+      );
+    } catch (_) {}
+
+    if (data != null && data.isNotEmpty) {
+      return data;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(StorageKeys.userData);
     } catch (_) {
       return null;
     }
@@ -49,11 +91,20 @@ class SecureStorageService {
     try {
       await _storage.delete(key: StorageKeys.userData);
     } catch (_) {}
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(StorageKeys.userData);
+    } catch (_) {}
   }
 
   Future<void> clearAll() async {
     try {
       await _storage.deleteAll();
+    } catch (_) {}
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(StorageKeys.authToken);
+      await prefs.remove(StorageKeys.userData);
     } catch (_) {}
   }
 }
