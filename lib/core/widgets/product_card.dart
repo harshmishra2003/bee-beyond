@@ -99,9 +99,9 @@ class _ProductCardState extends State<ProductCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // FULLY VISIBLE PRODUCT THUMBNAIL (NO CROP) WITH EMBLEM & BADGES
+            // COMPACT PRODUCT THUMBNAIL (NO CROP) WITH EMBLEM & BADGES
             Container(
-              height: 125,
+              height: 85,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: isCartActive
@@ -119,11 +119,11 @@ class _ProductCardState extends State<ProductCard> {
                       child: widget.imageUrl.startsWith('http')
                           ? CachedNetworkImage(
                               imageUrl: widget.imageUrl,
-                              height: 125,
+                              height: 85,
                               width: double.infinity,
                               fit: BoxFit.contain, // FULL IMAGE VISIBLE
                               placeholder: (context, url) => const SizedBox(
-                                height: 125,
+                                height: 85,
                                 child: Center(
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2)),
@@ -216,214 +216,217 @@ class _ProductCardState extends State<ProductCard> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Category Tag & Unit Weight Badge Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: frameColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            widget.category.toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w900,
-                              color: frameColor,
-                              letterSpacing: 0.3,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(6, 2, 6, 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category Tag & Unit Weight Badge Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: frameColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              widget.category.toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 8.0,
+                                fontWeight: FontWeight.w900,
+                                color: frameColor,
+                                letterSpacing: 0.3,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          widget.unitType,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF64748B),
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  SizedBox(
-                    height: 32,
-                    child: Text(
-                      widget.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.labelLarge.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.5,
-                        height: 1.22,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // Discount Percentage Badge
-                  if (discountPercent > 0)
-                    Text(
-                      '$discountPercent% OFF',
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF059669), // Green discount tag
-                      ),
-                    ),
-
-                  const SizedBox(height: 2),
-
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          CurrencyUtils.formatINR(widget.price),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.titleMedium.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 14.5,
-                          ),
-                        ),
-                      ),
-                      if (widget.originalPrice != null &&
-                          widget.originalPrice! > widget.price) ...[
-                        const SizedBox(width: 5),
-                        Text(
-                          CurrencyUtils.formatINR(widget.originalPrice!),
-                          style: AppTextStyles.labelSmall.copyWith(
-                            decoration: TextDecoration.lineThrough,
-                            color: AppColors.textHint,
-                            fontSize: 10,
+                          child: Text(
+                            widget.unitType,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF64748B),
+                            ),
                           ),
                         ),
                       ],
-                    ],
-                  ),
+                    ),
 
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 3),
 
-                  // SMART ANIMATED COMPACT ICON ACTIONS ROW
-                  Row(
-                    children: [
-                      if (isCartActive) ...[
-                        // Quantity Counter Pill in Emerald Green
-                        Container(
-                          height: 32,
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF5),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFA7F3D0)),
+                    SizedBox(
+                      height: 28,
+                      child: Text(
+                        widget.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.labelLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11.5,
+                          height: 1.18,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    // Discount Percentage Badge
+                    if (discountPercent > 0)
+                      Text(
+                        '$discountPercent% OFF',
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF059669), // Green discount tag
+                        ),
+                      ),
+
+                    const SizedBox(height: 2),
+
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            CurrencyUtils.formatINR(widget.price),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14.5,
+                            ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              InkWell(
-                                onTap: widget.onDecrementQuantity,
-                                borderRadius: BorderRadius.circular(6),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(2.0),
-                                  child: Icon(Icons.remove_rounded,
-                                      color: Color(0xFF059669), size: 15),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 5),
-                                child: Text(
-                                  '$displayQty',
-                                  style: const TextStyle(
-                                    color: Color(0xFF065F46),
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w900,
+                        ),
+                        if (widget.originalPrice != null &&
+                            widget.originalPrice! > widget.price) ...[
+                          const SizedBox(width: 5),
+                          Text(
+                            CurrencyUtils.formatINR(widget.originalPrice!),
+                            style: AppTextStyles.labelSmall.copyWith(
+                              decoration: TextDecoration.lineThrough,
+                              color: AppColors.textHint,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // SMART ANIMATED COMPACT ICON ACTIONS ROW
+                    Row(
+                      children: [
+                        if (isCartActive) ...[
+                          // Quantity Counter Pill in Emerald Green
+                          Container(
+                            height: 32,
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFECFDF5),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFA7F3D0)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                InkWell(
+                                  onTap: widget.onDecrementQuantity,
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Icon(Icons.remove_rounded,
+                                        color: Color(0xFF059669), size: 15),
                                   ),
                                 ),
-                              ),
-                              InkWell(
-                                onTap: widget.onIncrementQuantity,
-                                borderRadius: BorderRadius.circular(6),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(2.0),
-                                  child: Icon(Icons.add_rounded,
-                                      color: Color(0xFF059669), size: 15),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 5),
+                                  child: Text(
+                                    '$displayQty',
+                                    style: const TextStyle(
+                                      color: Color(0xFF065F46),
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                                InkWell(
+                                  onTap: widget.onIncrementQuantity,
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Icon(Icons.add_rounded,
+                                        color: Color(0xFF059669), size: 15),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        // View Cart Shining Button in Emerald Green
-                        Expanded(
-                          child: ShiningBuyNowButton(
-                            label: 'CART',
-                            backgroundColor: const Color(0xFF059669),
-                            onPressed: widget.onBuyNow ?? widget.onTap,
+                          const SizedBox(width: 6),
+                          // View Cart Shining Button in Emerald Green
+                          Expanded(
+                            child: ShiningBuyNowButton(
+                              label: 'CART',
+                              backgroundColor: const Color(0xFF059669),
+                              onPressed: widget.onBuyNow ?? widget.onTap,
+                            ),
                           ),
-                        ),
-                      ] else ...[
-                        // Add To Cart Animated Icon Button
-                        _AnimatedIconButton(
-                          icon: Icons.add_shopping_cart_rounded,
-                          backgroundColor: const Color(0xFFEEF2FF),
-                          iconColor: AppColors.primary,
-                          onTap: () {
-                            setState(() {
-                              _optimisticAdded = true;
-                            });
-                            widget.onAddToCart();
-                          },
-                          tooltip: 'Add to Cart',
-                        ),
-                        const SizedBox(width: 6),
-                        // Quick Buy Shining Button with Light Beam Glint
-                        Expanded(
-                          child: ShiningBuyNowButton(
-                            label: 'BUY NOW',
-                            backgroundColor: AppColors.primary,
-                            onPressed: () {
+                        ] else ...[
+                          // Add To Cart Animated Icon Button
+                          _AnimatedIconButton(
+                            icon: Icons.add_shopping_cart_rounded,
+                            backgroundColor: const Color(0xFFEEF2FF),
+                            iconColor: AppColors.primary,
+                            onTap: () {
                               setState(() {
                                 _optimisticAdded = true;
                               });
-                              if (widget.onBuyNow != null) {
-                                widget.onBuyNow!();
-                              } else {
-                                widget.onAddToCart();
-                              }
+                              widget.onAddToCart();
                             },
+                            tooltip: 'Add to Cart',
                           ),
-                        ),
+                          const SizedBox(width: 6),
+                          // Quick Buy Shining Button with Light Beam Glint
+                          Expanded(
+                            child: ShiningBuyNowButton(
+                              label: 'BUY NOW',
+                              backgroundColor: AppColors.primary,
+                              onPressed: () {
+                                setState(() {
+                                  _optimisticAdded = true;
+                                });
+                                if (widget.onBuyNow != null) {
+                                  widget.onBuyNow!();
+                                } else {
+                                  widget.onAddToCart();
+                                }
+                              },
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
