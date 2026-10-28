@@ -598,20 +598,38 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
 
                   const SizedBox(height: 14),
 
-                  // Products Grid
+                  // Products Grid - Responsive for Foldable Devices, Tablets & Phones
                   filteredProducts.isNotEmpty
-                      ? GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.63,
-                            crossAxisSpacing: 14,
-                            mainAxisSpacing: 14,
-                          ),
-                          itemCount: filteredProducts.length,
-                          itemBuilder: (context, index) {
+                      ? LayoutBuilder(
+                          builder: (context, constraints) {
+                            final screenWidth = constraints.maxWidth;
+                            int crossAxisCount = 2;
+                            double childAspectRatio = 0.68;
+
+                            if (screenWidth >= 900) {
+                              crossAxisCount = 4;
+                              childAspectRatio = 0.60;
+                            } else if (screenWidth >= 600) {
+                              crossAxisCount = 3;
+                              childAspectRatio = 0.56;
+                            } else if (screenWidth <= 360) {
+                              childAspectRatio = 0.48;
+                            } else {
+                              childAspectRatio = 0.51;
+                            }
+
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                childAspectRatio: childAspectRatio,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                              ),
+                              itemCount: filteredProducts.length,
+                              itemBuilder: (context, index) {
                             final product = filteredProducts[index];
                             final cartItemIndex = cartItems.indexWhere((i) =>
                                 i.id == product.id ||
@@ -693,8 +711,10 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                               },
                             );
                           },
-                        )
-                      : Padding(
+                        );
+                      },
+                    )
+                  : Padding(
                           padding: const EdgeInsets.symmetric(vertical: 40),
                           child: Center(
                             child: Column(
