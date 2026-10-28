@@ -1,3 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +30,7 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
 
   final List<String> _filters = [
     'All',
-    'Delivered',
+    'Ordered',
     'In Transit',
     'Digital Access',
     'Processing'
@@ -609,36 +611,79 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
     );
   }
 
+  Widget _buildProductThumbnail(String imageUrl, String productId, Color accentColor) {
+    Widget childWidget;
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      childWidget = CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(color: const Color(0xFFF1F5F9)),
+        errorWidget: (context, url, error) => _buildFallbackThumbnail(accentColor),
+      );
+    } else if (imageUrl.isNotEmpty) {
+      childWidget = Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildFallbackThumbnail(accentColor),
+      );
+    } else {
+      childWidget = _buildFallbackThumbnail(accentColor);
+    }
+
+    return GestureDetector(
+      onTap: () {
+        final idToNav = productId.isNotEmpty ? productId : '1';
+        context.push('${RoutePaths.productDetail}?id=$idToNav');
+      },
+      child: Tooltip(
+        message: 'Tap to view product details',
+        child: Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: accentColor.withValues(alpha: 0.5), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.18),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ClipOval(child: childWidget),
+        ),
+      ),
+    );
+  }
+
   Widget _buildExpandableOrderCard(OrderEntity order, bool isExpanded) {
     final statusLower = order.status.toLowerCase();
 
-    Color topAccentColor = const Color(0xFF059669);
+    Color topAccentColor = const Color(0xFF10B981);
     Color statusBadgeBg = const Color(0xFFECFDF5);
-    Color statusBadgeText = const Color(0xFF059669);
-    IconData statusIcon = Icons.check_circle_rounded;
-    String statusDisplay = 'DELIVERED';
+    Color statusBadgeText = const Color(0xFF047857);
+    String statusDisplay = 'ORDERED';
 
     if (statusLower.contains('transit') || statusLower.contains('out') || statusLower.contains('ship')) {
       topAccentColor = const Color(0xFFF59E0B);
       statusBadgeBg = const Color(0xFFFEF3C7);
       statusBadgeText = const Color(0xFFB45309);
-      statusIcon = Icons.local_shipping_rounded;
       statusDisplay = 'OUT FOR DELIVERY';
     } else if (statusLower.contains('access') || statusLower.contains('unlock') || statusLower.contains('digital')) {
       topAccentColor = const Color(0xFF7C3AED);
       statusBadgeBg = const Color(0xFFF3E8FF);
       statusBadgeText = const Color(0xFF6D28D9);
-      statusIcon = Icons.verified_rounded;
       statusDisplay = 'ACCESS UNLOCKED';
     } else if (statusLower.contains('process') || statusLower.contains('pend')) {
       topAccentColor = const Color(0xFF0288D1);
       statusBadgeBg = const Color(0xFFE0F2FE);
       statusBadgeText = const Color(0xFF0288D1);
-      statusIcon = Icons.sync_rounded;
       statusDisplay = 'PROCESSING';
     }
 
-    final itemTitle = order.title.isNotEmpty ? order.title : 'Ayurvedic Wellness Herbal Kit';
+    final itemTitle = order.title.isNotEmpty ? order.title : 'Ayurvedic Wellness Product';
+    final formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(order.orderDate);
 
     return Container(
       decoration: BoxDecoration(
@@ -669,7 +714,7 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Row: Order ID & Status Badge
+                // Header Row: Order ID & Status Badge with Blinking Pulsing Green Dot Light
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -699,11 +744,18 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                       decoration: BoxDecoration(
                         color: statusBadgeBg,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: statusBadgeText.withValues(alpha: 0.2)),
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(statusIcon, size: 12, color: statusBadgeText),
-                          const SizedBox(width: 4),
+                          if (statusDisplay == 'ORDERED') ...[
+                            const _BlinkingPulsingGreenDot(),
+                            const SizedBox(width: 6),
+                          ] else ...[
+                            Icon(Icons.check_circle_rounded, size: 12, color: statusBadgeText),
+                            const SizedBox(width: 4),
+                          ],
                           Text(
                             statusDisplay,
                             style: GoogleFonts.poppins(
@@ -721,58 +773,40 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
 
                 const SizedBox(height: 10),
 
-                // Main Info Row: Thumbnail Image + Title & Meta
+                // Main Info Row: Thumbnail Image (Clickable to navigate to Product Details) + Title & Meta
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Circular Thumbnail
-                    Container(
-                      width: 58,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: topAccentColor.withValues(alpha: 0.4), width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: topAccentColor.withValues(alpha: 0.15),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: order.imageUrl.isNotEmpty
-                            ? Image.asset(
-                                order.imageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    _buildFallbackThumbnail(topAccentColor),
-                              )
-                            : _buildFallbackThumbnail(topAccentColor),
-                      ),
-                    ),
+                    // Clickable Product Image
+                    _buildProductThumbnail(order.imageUrl, order.productId, topAccentColor),
                     const SizedBox(width: 12),
 
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            itemTitle,
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0F172A),
-                              height: 1.25,
+                          GestureDetector(
+                            onTap: () {
+                              final idToNav = order.productId.isNotEmpty ? order.productId : '1';
+                              context.push('${RoutePaths.productDetail}?id=$idToNav');
+                            },
+                            child: Text(
+                              itemTitle,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF0F172A),
+                                height: 1.25,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            'Placed ${AppDateUtils.formatDate(order.orderDate)} • ${order.totalItems} Item${order.totalItems > 1 ? 's' : ''}',
+                            'Placed: $formattedDate • Qty: ${order.totalItems}',
                             style: GoogleFonts.poppins(
-                              fontSize: 11.5,
+                              fontSize: 11,
                               color: const Color(0xFF64748B),
                             ),
                           ),
@@ -788,13 +822,33 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      CurrencyUtils.formatINR(order.totalAmount),
-                      style: GoogleFonts.poppins(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0F172A),
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          CurrencyUtils.formatINR(order.totalAmount),
+                          style: GoogleFonts.poppins(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Payment: ${order.paymentStatus}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF166534),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
                     Row(
@@ -1112,6 +1166,63 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BlinkingPulsingGreenDot extends StatefulWidget {
+  const _BlinkingPulsingGreenDot();
+
+  @override
+  State<_BlinkingPulsingGreenDot> createState() => _BlinkingPulsingGreenDotState();
+}
+
+class _BlinkingPulsingGreenDotState extends State<_BlinkingPulsingGreenDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final opacity = 0.35 + (_controller.value * 0.65);
+        final scale = 0.85 + (_controller.value * 0.25);
+
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: opacity),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF10B981).withValues(alpha: opacity),
+                  blurRadius: 6,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
