@@ -19,7 +19,9 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 401) {
+    final path = err.requestOptions.path.toLowerCase();
+    // Only trigger onUnauthorized logout if the path is explicitly an auth/user profile verification route
+    if (err.response?.statusCode == 401 && (path.contains('/user/profile') || path.contains('/auth/verify'))) {
       onUnauthorized?.call();
     }
     return super.onError(err, handler);
