@@ -848,24 +848,25 @@ class _CourseHeroBanner extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
-        child: Container(
-          height: 230,
-          width: double.infinity,
-          color: const Color(0xFF0F172A),
-          child: course.imageUrl.startsWith('http')
-              ? CachedNetworkImage(
-                  imageUrl: course.imageUrl,
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
-                  placeholder: (context, url) => const SizedBox(
-                    height: 230,
-                    child: Center(child: CircularProgressIndicator(color: Colors.amberAccent)),
-                  ),
-                  errorWidget: (context, url, error) => _buildPlaceholderPoster(),
-                )
-              : _buildPlaceholderPoster(),
+        child: AspectRatio(
+          aspectRatio: 1.6, // Perfect 16:10 aspect ratio matching course hero image proportions
+          child: Container(
+            width: double.infinity,
+            color: const Color(0xFF0F172A),
+            child: course.imageUrl.startsWith('http')
+                ? CachedNetworkImage(
+                    imageUrl: course.imageUrl,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover, // Full-bleed edge-to-edge fit to card with zero side gaps
+                    alignment: Alignment.center,
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator(color: Colors.amberAccent),
+                    ),
+                    errorWidget: (context, url, error) => _buildPlaceholderPoster(),
+                  )
+                : _buildPlaceholderPoster(),
+          ),
         ),
       ),
     );
@@ -873,7 +874,6 @@ class _CourseHeroBanner extends StatelessWidget {
 
   Widget _buildPlaceholderPoster() {
     return Container(
-      height: 230,
       width: double.infinity,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
