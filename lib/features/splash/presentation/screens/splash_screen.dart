@@ -23,8 +23,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final AnimationController _pulseController;
 
   Timer? _navigationTimer;
+  Timer? _failsafeTimer;
   Timer? _affirmationTimer;
   int _affirmationIndex = 0;
+  bool _minDurationPassed = false;
+  bool _hasNavigated = false;
 
   final List<String> _affirmations = [
     "Inhale tranquil clarity, exhale noise...",
@@ -62,16 +65,54 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
     });
 
-    // Auto-navigate after 3.5 seconds
-    _navigationTimer = Timer(const Duration(milliseconds: 3500), () {
+    // Minimum animation duration for smooth splash intro (1200ms)
+    _navigationTimer = Timer(const Duration(milliseconds: 1200), () {
       if (mounted) {
-        _navigateToNextScreen();
+        _minDurationPassed = true;
+        _checkAndNavigate();
+      }
+    });
+
+    // Failsafe timer (2500ms): Guarantee instant navigation under any circumstance
+    _failsafeTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (mounted && !_hasNavigated) {
+        _minDurationPassed = true;
+        _forceNavigate();
       }
     });
   }
 
-  void _navigateToNextScreen() {
+  void _checkAndNavigate() {
+    if (_hasNavigated || !mounted || !_minDurationPassed) return;
+
     final authState = ref.read(authStateProvider);
+    if (authState.status == AuthStatus.loading) {
+      // Still loading auth state; ref.listen or failsafe timer will trigger transition
+      return;
+    }
+
+    _performNavigation(authState);
+  }
+
+  void _forceNavigate() {
+    if (_hasNavigated || !mounted) return;
+    final authState = ref.read(authStateProvider);
+    if (authState.status == AuthStatus.loading) {
+      _hasNavigated = true;
+      if (!authState.hasSeenOnboarding) {
+        context.go(RoutePaths.onboarding);
+      } else {
+        context.go(RoutePaths.login);
+      }
+      return;
+    }
+    _performNavigation(authState);
+  }
+
+  void _performNavigation(AuthState authState) {
+    if (_hasNavigated || !mounted) return;
+    _hasNavigated = true;
+
     if (authState.status == AuthStatus.authenticated) {
       context.go(RoutePaths.home);
     } else if (!authState.hasSeenOnboarding) {
@@ -84,6 +125,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   void dispose() {
     _navigationTimer?.cancel();
+    _failsafeTimer?.cancel();
     _affirmationTimer?.cancel();
     _orbitController.dispose();
     _lotusController.dispose();
@@ -93,6 +135,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authStateProvider, (previous, next) {
+      if (next.status != AuthStatus.loading && _minDurationPassed) {
+        _checkAndNavigate();
+      }
+    });
+
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
