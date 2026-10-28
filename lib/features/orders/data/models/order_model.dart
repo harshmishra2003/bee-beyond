@@ -3,6 +3,7 @@ import '../../domain/entities/order_entity.dart';
 class OrderModel extends OrderEntity {
   const OrderModel({
     required super.orderId,
+    super.productId = '1',
     required super.status,
     required super.totalAmount,
     required super.orderDate,
@@ -23,6 +24,11 @@ class OrderModel extends OrderEntity {
         json['id']?.toString() ??
         json['receipt_id']?.toString() ??
         'ORD-${DateTime.now().millisecondsSinceEpoch}';
+
+    final rawProductId = json['product_id']?.toString() ??
+        json['productId']?.toString() ??
+        json['item_id']?.toString() ??
+        '1';
 
     final rawStatus = json['status']?.toString() ??
         json['order_status']?.toString() ??
@@ -64,11 +70,12 @@ class OrderModel extends OrderEntity {
       itemsCount = int.tryParse(rawItems.toString()) ?? 1;
     }
 
-    final rawTitle = json['title']?.toString() ??
+    final rawTitle = json['product_name']?.toString() ??
         json['product_title']?.toString() ??
+        json['item_name']?.toString() ??
         json['item_title']?.toString() ??
+        json['title']?.toString() ??
         json['name']?.toString() ??
-        json['product_name']?.toString() ??
         '';
 
     final rawImageUrl = json['image_url']?.toString() ??
@@ -110,6 +117,7 @@ class OrderModel extends OrderEntity {
 
     return OrderModel(
       orderId: rawOrderId,
+      productId: rawProductId,
       status: rawStatus,
       totalAmount: amount,
       orderDate: date,
