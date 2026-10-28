@@ -8,6 +8,7 @@ import '../../../../core/services/secure_storage_service.dart';
 import '../../data/datasources/auth_remote_ds.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/auth_state.dart';
+import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
@@ -59,17 +60,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
 
       final token = await _secureStorage.getAuthToken();
-      final user = await _repository.getCurrentUser();
-
-      if (token != null && token.isNotEmpty && user != null) {
-        state = AuthState.authenticated(user, hasSeenOnboarding: hasSeenOnboarding);
-      } else {
-        state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
+      if (token != null && token.trim().isNotEmpty) {
+        final user = await _repository.getCurrentUser();
+        if (user != null) {
+          state = AuthState.authenticated(user, hasSeenOnboarding: hasSeenOnboarding);
+          return;
+        }
       }
-    } catch (_) {
-      final prefs = await SharedPreferences.getInstance();
-      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+
       state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
+    } catch (_) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+        state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
+      } catch (_) {
+        state = const AuthState(status: AuthStatus.unauthenticated, user: null, hasSeenOnboarding: false);
+      }
     }
   }
 
