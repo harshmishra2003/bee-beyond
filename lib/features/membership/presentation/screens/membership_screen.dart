@@ -20,6 +20,7 @@ import '../../../../core/widgets/status_dialog.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../orders/domain/entities/receipt_entity.dart';
 import '../../../orders/presentation/providers/receipt_provider.dart';
+import 'package:intl/intl.dart';
 import '../../domain/entities/membership_plan_entity.dart';
 import '../providers/expiry_provider.dart';
 import '../providers/membership_provider.dart';
@@ -48,6 +49,14 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       vsync: this,
       duration: const Duration(milliseconds: 4500),
     )..repeat(reverse: true);
+
+    _postResponseTimer = Timer(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        setState(() {
+          _isLottieActive = false;
+        });
+      }
+    });
   }
 
   @override
@@ -255,33 +264,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     final plansAsync = ref.watch(membershipPlansProvider);
     final activePass = ref.watch(activePassProvider);
 
-    plansAsync.whenData((_) {
-      if (_dataResponseTime == null) {
-        _dataResponseTime = DateTime.now();
-        _postResponseTimer?.cancel();
-        _postResponseTimer = Timer(const Duration(milliseconds: 2500), () {
-          if (mounted) {
-            setState(() {
-              _isLottieActive = false;
-            });
-          }
-        });
-      }
-    });
-
-    if (plansAsync.hasError && _dataResponseTime == null) {
-      _dataResponseTime = DateTime.now();
-      _postResponseTimer?.cancel();
-      _postResponseTimer = Timer(const Duration(milliseconds: 2500), () {
-        if (mounted) {
-          setState(() {
-            _isLottieActive = false;
-          });
-        }
-      });
-    }
-
-    if (_isLottieActive || plansAsync.isLoading) {
+    if (_isLottieActive || (plansAsync.isLoading && !plansAsync.hasValue)) {
       return Scaffold(
         backgroundColor: const Color(0xFFFAF9FE),
         body: _buildMembershipLottieLoadingOverlay(),
@@ -302,7 +285,10 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           child: Column(
             children: [
               // ACTIVE PASS STATUS CARD
-              if (activePass != null) _buildActivePassStatusCard(activePass),
+              if (activePass != null)
+                _buildActivePassStatusCard(activePass)
+              else
+                _buildNoActivePassCard(),
 
               // ANIMATED HEADER BANNER
               const _AnimatedHeaderBanner(),
@@ -323,7 +309,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                     separatorBuilder: (context, index) => const SizedBox(height: 24),
                     itemBuilder: (context, index) {
                       final plan = plans[index];
-                      return _buildFullSizeLightMembershipCard(plan);
+                      return _buildFullSizeLightMembershipCard(plan, activePass);
                     },
                   );
                 },
@@ -335,6 +321,74 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildNoActivePassCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFEF3C7),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.stars_rounded,
+              color: Color(0xD9D97706),
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'NO ACTIVE VIP MEMBERSHIP',
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF94A3B8),
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Unlock VIP Passes Below',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                Text(
+                  'Choose a pass below to get flat discounts & VIP access.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -556,19 +610,183 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     );
   }
 
+  void _showAlreadyActivePlanDialog(BuildContext context, UserPassSubscription pass) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        elevation: 12,
+        child: Padding(
+          padding: const EdgeInsets.all(22.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF059669), Color(0xFF10B981)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Colors.white,
+                  size: 34,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Plan Already Active!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      pass.passName.toUpperCase(),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF047857),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Valid until: ${DateFormat('dd MMM yyyy, hh:mm a').format(pass.expiresAt)}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF065F46),
+                      ),
+                    ),
+                    Text(
+                      'Time Remaining: ${pass.formattedLiveCountdown}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF059669),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'You already hold an active subscription for this membership pass. You do not need to purchase it again while active.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: const Color(0xFF64748B),
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text(
+                        'Back / Close',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF475569),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: const Color(0xFF059669),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        context.push(RoutePaths.myMemberships);
+                      },
+                      child: Text(
+                        'My Passes',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // FULL-SIZE LIGHT THEME MEMBERSHIP CARD BUILDER
-  Widget _buildFullSizeLightMembershipCard(MembershipPlanEntity plan) {
-    return GestureDetector(
-      onTap: () {
+  Widget _buildFullSizeLightMembershipCard(
+    MembershipPlanEntity plan,
+    UserPassSubscription? activePass,
+  ) {
+    final isCurrentActive = activePass != null && activePass.isMatchingPlanActive(plan.id, plan.slug);
+
+    void handleCardTap() {
+      if (isCurrentActive) {
+        _showAlreadyActivePlanDialog(context, activePass);
+      } else {
         context.push('${RoutePaths.membershipDetail}?id=${plan.id}', extra: plan);
-      },
+      }
+    }
+
+    return GestureDetector(
+      onTap: handleCardTap,
       child: Container(
         decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
         border: Border.all(
-          color: plan.cardThemeColor.withValues(alpha: 0.3),
-          width: plan.isPopular ? 2.0 : 1.2,
+          color: isCurrentActive
+              ? const Color(0xFF10B981)
+              : plan.cardThemeColor.withValues(alpha: 0.3),
+          width: isCurrentActive ? 2.2 : (plan.isPopular ? 2.0 : 1.2),
         ),
         boxShadow: [
           BoxShadow(
@@ -759,9 +977,8 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                 // SHINING PULSING SUBSCRIBE BUTTON
                 _ShiningPulsingSubscribeButton(
                   plan: plan,
-                  onPressed: () {
-                    context.push('${RoutePaths.membershipDetail}?id=${plan.id}', extra: plan);
-                  },
+                  activePass: activePass,
+                  onPressed: handleCardTap,
                 ),
               ],
             ),
@@ -883,10 +1100,12 @@ class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
 // SHINING PULSING SUBSCRIBE BUTTON WITH PERIODIC LIGHT BEAM
 class _ShiningPulsingSubscribeButton extends StatefulWidget {
   final MembershipPlanEntity plan;
+  final UserPassSubscription? activePass;
   final VoidCallback onPressed;
 
   const _ShiningPulsingSubscribeButton({
     required this.plan,
+    required this.activePass,
     required this.onPressed,
   });
 
@@ -938,6 +1157,31 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
 
   @override
   Widget build(BuildContext context) {
+    final pass = widget.activePass;
+    final isCurrentActive = pass != null && pass.isMatchingPlanActive(widget.plan.id, widget.plan.slug);
+    final isCurrentExpired = pass != null && pass.isMatchingPlanExpired(widget.plan.id, widget.plan.slug);
+
+    List<Color> gradientColors;
+    String buttonText;
+    IconData buttonIcon;
+
+    if (isCurrentActive) {
+      gradientColors = const [Color(0xFF047857), Color(0xFF10B981)];
+      buttonText = 'CLAIMED / ACTIVE PASS';
+      buttonIcon = Icons.check_circle_rounded;
+    } else if (isCurrentExpired) {
+      gradientColors = const [Color(0xFFD97706), Color(0xFFF59E0B)];
+      buttonText = 'RENEW MEMBERSHIP PASS';
+      buttonIcon = Icons.autorenew_rounded;
+    } else {
+      gradientColors = [
+        widget.plan.cardThemeColor,
+        widget.plan.cardThemeColor.withValues(alpha: 0.85),
+      ];
+      buttonText = 'CLAIM ${widget.plan.name.toUpperCase()} PASS';
+      buttonIcon = Icons.arrow_forward_rounded;
+    }
+
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
@@ -956,16 +1200,11 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            widget.plan.cardThemeColor,
-                            widget.plan.cardThemeColor.withValues(alpha: 0.85),
-                          ],
-                        ),
+                        gradient: LinearGradient(colors: gradientColors),
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: widget.plan.cardThemeColor.withValues(alpha: 0.35),
+                            color: gradientColors[0].withValues(alpha: 0.35),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -983,7 +1222,7 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'CLAIM ${widget.plan.name.toUpperCase()} PASS',
+                              buttonText,
                               style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -991,7 +1230,7 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(Icons.arrow_forward_rounded, size: 18),
+                            Icon(buttonIcon, size: 18),
                           ],
                         ),
                       ),
