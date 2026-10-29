@@ -19,6 +19,7 @@ class ProductCard extends StatefulWidget {
   final VoidCallback onTap;
   final VoidCallback onAddToCart;
   final VoidCallback? onBuyNow;
+  final VoidCallback? onViewCart;
   final VoidCallback? onIncrementQuantity;
   final VoidCallback? onDecrementQuantity;
   final VoidCallback? onFavoriteToggle;
@@ -39,6 +40,7 @@ class ProductCard extends StatefulWidget {
     required this.onTap,
     required this.onAddToCart,
     this.onBuyNow,
+    this.onViewCart,
     this.onIncrementQuantity,
     this.onDecrementQuantity,
     this.onFavoriteToggle,
@@ -435,7 +437,13 @@ class _ProductCardState extends State<ProductCard> {
                             child: ShiningBuyNowButton(
                               label: 'CART',
                               backgroundColor: const Color(0xFF059669),
-                              onPressed: widget.onBuyNow ?? widget.onTap,
+                              onPressed: () {
+                                if (widget.onViewCart != null) {
+                                  widget.onViewCart!();
+                                } else {
+                                  widget.onTap();
+                                }
+                              },
                             ),
                           ),
                         ] else ...[
