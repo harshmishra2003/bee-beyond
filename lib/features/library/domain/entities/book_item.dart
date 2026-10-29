@@ -13,6 +13,13 @@ class BookItem extends Equatable {
   final String pdfUrl;
   final List<String> samplePagesContent;
 
+  // DYNAMIC E-COMMERCE & ACCESS FIELDS
+  final String accessType; // 'free', 'paid', 'membership'
+  final double price;
+  final double? originalPrice;
+  final bool isPurchased;
+  final String coverImageUrl;
+
   const BookItem({
     required this.id,
     required this.title,
@@ -24,7 +31,19 @@ class BookItem extends Equatable {
     required this.description,
     this.pdfUrl = '',
     required this.samplePagesContent,
+    this.accessType = 'free',
+    this.price = 0.0,
+    this.originalPrice,
+    this.isPurchased = false,
+    this.coverImageUrl = '',
   });
+
+  int get discountPercent {
+    if (originalPrice != null && originalPrice! > price && originalPrice! > 0) {
+      return (((originalPrice! - price) / originalPrice!) * 100).round();
+    }
+    return 0;
+  }
 
   static String _formatUrl(String? url) {
     if (url == null || url.trim().isEmpty) return '';
@@ -52,6 +71,17 @@ class BookItem extends Equatable {
 
     final pdfUrlStr = _formatUrl(rawPdfUrl);
 
+    final rawCoverUrl = json['cover_image']?.toString() ??
+        json['coverUrl']?.toString() ??
+        json['cover_url']?.toString() ??
+        json['image_url']?.toString() ??
+        json['image']?.toString() ??
+        json['cover']?.toString() ??
+        json['poster']?.toString() ??
+        '';
+
+    final coverUrlStr = _formatUrl(rawCoverUrl);
+
     final rawAuthor = json['author']?.toString() ?? json['author_name']?.toString() ?? '';
     final authorStr = rawAuthor.trim().isNotEmpty ? rawAuthor.trim() : 'Bee Beyonnd Vault';
 
@@ -59,6 +89,38 @@ class BookItem extends Equatable {
         json['subCategory']?.toString() ??
         json['category_name']?.toString() ??
         'General';
+
+    // Parse Access Type ('free', 'paid', 'membership')
+    final rawAccessType = json['access_type']?.toString() ??
+        json['accessType']?.toString() ??
+        json['access']?.toString() ??
+        json['type']?.toString() ??
+        '';
+
+    String parsedAccessType = 'free';
+    final lowerAccess = rawAccessType.toLowerCase();
+    if (lowerAccess.contains('paid') || lowerAccess.contains('purchase') || lowerAccess.contains('buy')) {
+      parsedAccessType = 'paid';
+    } else if (lowerAccess.contains('member') || lowerAccess.contains('vip') || lowerAccess.contains('pass')) {
+      parsedAccessType = 'membership';
+    } else if (json['price'] != null && (json['price'] as num) > 0) {
+      parsedAccessType = 'paid';
+    }
+
+    final priceVal = (json['price'] as num?)?.toDouble() ??
+        (json['amount'] as num?)?.toDouble() ??
+        double.tryParse(json['price']?.toString() ?? '0') ??
+        0.0;
+
+    final originalPriceVal = (json['original_price'] as num?)?.toDouble() ??
+        (json['originalPrice'] as num?)?.toDouble() ??
+        (json['mrp'] as num?)?.toDouble() ??
+        double.tryParse(json['original_price']?.toString() ?? '');
+
+    final isPurchasedVal = json['is_purchased'] == true ||
+        json['isPurchased'] == true ||
+        json['purchased'] == true ||
+        json['has_purchased'] == true;
 
     return BookItem(
       id: json['id']?.toString() ?? json['book_id']?.toString() ?? '',
@@ -78,6 +140,11 @@ class BookItem extends Equatable {
       samplePagesContent: (json['samplePagesContent'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
           (json['sample_pages'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
           [],
+      accessType: parsedAccessType,
+      price: priceVal,
+      originalPrice: originalPriceVal,
+      isPurchased: isPurchasedVal,
+      coverImageUrl: coverUrlStr,
     );
   }
 
@@ -93,7 +160,48 @@ class BookItem extends Equatable {
       'description': description,
       'pdfUrl': pdfUrl,
       'samplePagesContent': samplePagesContent,
+      'accessType': accessType,
+      'price': price,
+      'originalPrice': originalPrice,
+      'isPurchased': isPurchased,
+      'coverImageUrl': coverImageUrl,
     };
+  }
+
+  BookItem copyWith({
+    String? id,
+    String? title,
+    String? author,
+    String? category,
+    String? size,
+    int? totalPages,
+    double? rating,
+    String? description,
+    String? pdfUrl,
+    List<String>? samplePagesContent,
+    String? accessType,
+    double? price,
+    double? originalPrice,
+    bool? isPurchased,
+    String? coverImageUrl,
+  }) {
+    return BookItem(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      author: author ?? this.author,
+      category: category ?? this.category,
+      size: size ?? this.size,
+      totalPages: totalPages ?? this.totalPages,
+      rating: rating ?? this.rating,
+      description: description ?? this.description,
+      pdfUrl: pdfUrl ?? this.pdfUrl,
+      samplePagesContent: samplePagesContent ?? this.samplePagesContent,
+      accessType: accessType ?? this.accessType,
+      price: price ?? this.price,
+      originalPrice: originalPrice ?? this.originalPrice,
+      isPurchased: isPurchased ?? this.isPurchased,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+    );
   }
 
   Color get categoryColor {
@@ -116,5 +224,21 @@ class BookItem extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, title, author, category, size, totalPages, rating, description, pdfUrl, samplePagesContent];
+  List<Object?> get props => [
+        id,
+        title,
+        author,
+        category,
+        size,
+        totalPages,
+        rating,
+        description,
+        pdfUrl,
+        samplePagesContent,
+        accessType,
+        price,
+        originalPrice,
+        isPurchased,
+        coverImageUrl,
+      ];
 }
