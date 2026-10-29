@@ -908,17 +908,6 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
       ),
     );
   }
-                  books: books,
-                );
-              }
-            },
-          ),
-        ),
-
-        const SizedBox(height: 18),
-      ],
-    );
-  }
 
   // HORIZONTAL BOOK CARD (WITH ACCESS BADGE & DYNAMIC PRICE)
   Widget _buildHorizontalBookCard(BookItem book, bool isBookmarked) {
