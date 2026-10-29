@@ -10,8 +10,10 @@ import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/app_pdf_book_viewer.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/digital_clock_countdown.dart';
+import '../../../../core/widgets/status_dialog.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
+import '../../../membership/presentation/providers/expiry_provider.dart';
 import '../../domain/entities/course_entity.dart';
 import '../providers/course_provider.dart';
 
@@ -141,6 +143,8 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
       data: (list) => list.any((c) => c.courseId == widget.courseId),
       orElse: () => false,
     );
+    final activePass = ref.watch(activePassProvider);
+    final hasActiveVipPass = activePass != null && !activePass.isExpired;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -488,6 +492,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                             final module = course.modulesList[index];
                             final isPdf = module.type.toLowerCase() == 'pdf';
                             final isText = module.type.toLowerCase() == 'text';
+                            final isUnlocked = module.isFree || isEnrolled || hasActiveVipPass;
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 10),
@@ -510,6 +515,21 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                                   contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 6),
                                   onTap: () {
+                                    if (!isUnlocked) {
+                                      StatusDialog.show(
+                                        context,
+                                        title: 'VIP Membership Required 👑',
+                                        description:
+                                            '${module.title} is an exclusive VIP study lesson.\n\nActivate a Bee Beyonnd VIP Membership Pass to unlock full reading & streaming access!',
+                                        isSuccess: false,
+                                        actionText: 'EXPLORE VIP PLANS',
+                                        onAction: () {
+                                          context.push(RoutePaths.membership);
+                                        },
+                                      );
+                                      return;
+                                    }
+
                                     if (isPdf) {
                                       _openPdfViewerModal(
                                         context,
@@ -612,19 +632,38 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                                       ),
                                     ],
                                   ),
-                                  trailing: Icon(
-                                    isPdf
-                                        ? Icons.open_in_new_rounded
-                                        : (isText
-                                            ? Icons.read_more_rounded
-                                            : Icons.play_circle_fill_rounded),
-                                    color: isPdf
-                                        ? const Color(0xFFEF4444)
-                                        : (isText
-                                            ? const Color(0xFF059669)
-                                            : AppColors.primary),
-                                    size: 26,
-                                  ),
+                                  trailing: !isUnlocked
+                                      ? Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFEF2F2),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: const Color(0xFFFECDD3), width: 1.2),
+                                          ),
+                                          child: const Icon(
+                                            Icons.lock_rounded,
+                                            color: Color(0xFFE11D48),
+                                            size: 16,
+                                          ),
+                                        )
+                                      : Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: isPdf || isText ? const Color(0xFFECFDF5) : const Color(0xFFEEF2FF),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: isPdf || isText ? const Color(0xFFA7F3D0) : const Color(0xFFC7D2FE),
+                                              width: 1.2,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            isPdf
+                                                ? Icons.auto_stories_rounded
+                                                : (isText ? Icons.article_rounded : Icons.play_arrow_rounded),
+                                            color: isPdf || isText ? const Color(0xFF059669) : AppColors.primary,
+                                            size: 16,
+                                          ),
+                                        ),
                                 ),
                               ),
                             );
