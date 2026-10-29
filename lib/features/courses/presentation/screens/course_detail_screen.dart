@@ -10,10 +10,8 @@ import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/app_pdf_book_viewer.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/digital_clock_countdown.dart';
-import '../../../../core/widgets/status_dialog.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
-import '../../../membership/presentation/providers/expiry_provider.dart';
 import '../../domain/entities/course_entity.dart';
 import '../providers/course_provider.dart';
 
@@ -143,8 +141,6 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
       data: (list) => list.any((c) => c.courseId == widget.courseId),
       orElse: () => false,
     );
-    final activePass = ref.watch(activePassProvider);
-    final hasActiveVipPass = activePass != null && !activePass.isExpired;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -492,7 +488,6 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                             final module = course.modulesList[index];
                             final isPdf = module.type.toLowerCase() == 'pdf';
                             final isText = module.type.toLowerCase() == 'text';
-                            final isUnlocked = module.isFree || isEnrolled || hasActiveVipPass;
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 10),
@@ -515,21 +510,6 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                                   contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 6),
                                   onTap: () {
-                                    if (!isUnlocked) {
-                                      StatusDialog.show(
-                                        context,
-                                        title: 'VIP Membership Required 👑',
-                                        description:
-                                            '${module.title} is an exclusive VIP study lesson.\n\nActivate a Bee Beyonnd VIP Membership Pass to unlock full reading & streaming access!',
-                                        isSuccess: false,
-                                        actionText: 'EXPLORE VIP PLANS',
-                                        onAction: () {
-                                          context.push(RoutePaths.membership);
-                                        },
-                                      );
-                                      return;
-                                    }
-
                                     if (isPdf) {
                                       _openPdfViewerModal(
                                         context,
@@ -632,7 +612,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                                       ),
                                     ],
                                   ),
-                                  trailing: !isUnlocked
+                                  trailing: module.isPaid
                                       ? Container(
                                           padding: const EdgeInsets.all(6),
                                           decoration: BoxDecoration(
