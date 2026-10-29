@@ -6,9 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_alert_manager.dart';
-import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/product_card.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../cart/domain/entities/cart_item_entity.dart';
@@ -25,6 +23,7 @@ class ProductsListScreen extends ConsumerStatefulWidget {
 class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
   String _selectedCategory = 'All';
   String _searchQuery = '';
+  String _sortBy = 'Popularity';
 
   bool _isLottieActive = true;
   DateTime? _dataResponseTime;
@@ -37,24 +36,16 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
   }
 
   static const List<Map<String, dynamic>> _categoryData = [
-    {'name': 'All', 'icon': Icons.apps_rounded, 'color': Color(0xFF4338CA)},
-    {'name': 'Ayurvedic Upchar', 'icon': Icons.spa_outlined, 'color': Color(0xFF059669)},
-    {'name': 'Counselling Services', 'icon': Icons.support_agent_outlined, 'color': Color(0xFF4338CA)},
-    {'name': 'Life Coaching', 'icon': Icons.psychology_outlined, 'color': Color(0xFF7C3AED)},
-    {'name': 'Alternative Drugless Medicine', 'icon': Icons.medication_liquid_outlined, 'color': Color(0xFF0288D1)},
-    {'name': 'Nutrition', 'icon': Icons.restaurant_outlined, 'color': Color(0xFFD97706)},
-    {'name': 'Graphology', 'icon': Icons.edit_note_outlined, 'color': Color(0xFF4338CA)},
-    {'name': 'Psychotherapy Modalities', 'icon': Icons.self_improvement_outlined, 'color': Color(0xFF7C3AED)},
-    {'name': 'DMIT', 'icon': Icons.fingerprint_outlined, 'color': Color(0xFF0288D1)},
-    {'name': 'Reiki', 'icon': Icons.auto_awesome_outlined, 'color': Color(0xFFD97706)},
-    {'name': 'Astrology', 'icon': Icons.brightness_7_outlined, 'color': Color(0xFF7C3AED)},
-    {'name': 'Jain Mantra Urja', 'icon': Icons.brightness_high_outlined, 'color': Color(0xFFD97706)},
-    {'name': 'Buddhism', 'icon': Icons.filter_vintage_outlined, 'color': Color(0xFF059669)},
-    {'name': 'Mind & Body Balance Modalities', 'icon': Icons.balance_outlined, 'color': Color(0xFF0288D1)},
-    {'name': 'Spiritual Holistic Healing', 'icon': Icons.nature_people_outlined, 'color': Color(0xFF059669)},
-    {'name': 'Health Wealth and Happiness Remedy', 'icon': Icons.card_giftcard_outlined, 'color': Color(0xFFD97706)},
-    {'name': 'Aromatherapy Courses', 'icon': Icons.local_florist_outlined, 'color': Color(0xFF059669)},
-    {'name': 'Personality & Motivational', 'icon': Icons.emoji_events_outlined, 'color': Color(0xFF4338CA)},
+    {'name': 'All', 'icon': Icons.grid_view_rounded, 'emoji': '✨'},
+    {'name': 'Ayurvedic Upchar', 'icon': Icons.spa_rounded, 'emoji': '🌿'},
+    {'name': 'Bach Flower', 'icon': Icons.local_florist_rounded, 'emoji': '🌸'},
+    {'name': 'Sacred Yantras', 'icon': Icons.auto_awesome_mosaic_rounded, 'emoji': '🕉️'},
+    {'name': 'Aroma & Sound', 'icon': Icons.spatial_audio_off_rounded, 'emoji': '🕯️'},
+    {'name': 'Reiki & Crystals', 'icon': Icons.diamond_rounded, 'emoji': '📿'},
+    {'name': 'Counselling Services', 'icon': Icons.support_agent_rounded, 'emoji': '🩺'},
+    {'name': 'Life Coaching', 'icon': Icons.psychology_rounded, 'emoji': '💡'},
+    {'name': 'Alternative Medicine', 'icon': Icons.medication_liquid_rounded, 'emoji': '🧪'},
+    {'name': 'Nutrition', 'icon': Icons.restaurant_rounded, 'emoji': '🥗'},
   ];
 
   void _openCategoryFilterSheet() {
@@ -63,7 +54,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        height: MediaQuery.of(context).size.height * 0.72,
+        height: MediaQuery.of(context).size.height * 0.70,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -107,7 +98,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Product Categories',
+                          'Holistic Categories',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -116,7 +107,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          'Select holistic category filter',
+                          'Filter sacred remedies & tools',
                           style: TextStyle(
                             fontSize: 11.5,
                             color: Color(0xFFC7D2FE),
@@ -154,8 +145,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                 itemBuilder: (context, index) {
                   final item = _categoryData[index];
                   final catName = item['name'] as String;
-                  final icon = item['icon'] as IconData;
-                  final color = item['color'] as Color;
+                  final emoji = item['emoji'] as String;
                   final isSelected =
                       _selectedCategory.toLowerCase() == catName.toLowerCase();
 
@@ -179,14 +169,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                       ),
                       child: Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.12),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(icon, color: color, size: 20),
-                          ),
+                          Text(emoji, style: const TextStyle(fontSize: 20)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -217,45 +200,219 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildTopAppBar() {
+    final cartAsync = ref.watch(cartManagerProvider);
+    final cartItems = cartAsync.value ?? [];
+    final cartCount = cartItems.fold<int>(0, (sum, item) => sum + item.quantity);
+
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 8,
-            offset: Offset(0, 3),
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A), size: 22),
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                context.go(RoutePaths.home);
+              }
+            },
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'BEE BEYONND',
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF6E4F9A),
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                Text(
+                  'Wellness And Healing Store',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.epilogue(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.favorite_border_rounded, color: Color(0xFF475569), size: 22),
+            onPressed: () {},
+          ),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.shopping_bag_outlined, color: Color(0xFF475569), size: 22),
+                onPressed: () => context.go(RoutePaths.cart),
+              ),
+              if (cartCount > 0)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      '$cartCount',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () => context.push(RoutePaths.profile),
+            child: const CircleAvatar(
+              radius: 15,
+              backgroundColor: Color(0xFFEEF2FF),
+              child: Icon(Icons.person_rounded, size: 18, color: AppColors.primary),
+            ),
           ),
         ],
-      ),
-      child: TextField(
-        onChanged: (val) {
-          setState(() => _searchQuery = val.trim());
-        },
-        style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          hintText: 'Search organic remedies, teas, Bach drops...',
-          hintStyle: const TextStyle(fontSize: 12.5, color: AppColors.textHint),
-          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear_rounded, color: AppColors.textHint, size: 18),
-                  onPressed: () {
-                    setState(() => _searchQuery = '');
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
       ),
     );
   }
 
-  Widget _buildCategoryChipsBar() {
+  Widget _buildIntroHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF3E8FF),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                size: 14,
+                color: Color(0xFF6E4F9A),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'SACRED REMEDIES & HOLISTIC TOOLS',
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF6E4F9A),
+                letterSpacing: 0.8,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Consecrated handcrafted wellness essentials, cleansed with Reiki vibrations and Vedic mantras.',
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: const Color(0xFF64748B),
+            height: 1.35,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 46,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0C000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    onChanged: (val) {
+                      setState(() => _searchQuery = val.trim());
+                    },
+                    style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
+                    decoration: const InputDecoration(
+                      hintText: 'Search sacred remedies, crystals, yantras...',
+                      hintStyle: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+                if (_searchQuery.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => setState(() => _searchQuery = ''),
+                    child: const Icon(Icons.close_rounded, color: Color(0xFF94A3B8), size: 18),
+                  )
+                else
+                  const Icon(Icons.mic_rounded, color: Color(0xFF64748B), size: 18),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: _openCategoryFilterSheet,
+          child: Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2E8F0),
+              shape: BoxShape.circle,
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0A000000),
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A), size: 20),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryChipsBar(int totalCount) {
     return SizedBox(
       height: 38,
       child: ListView.separated(
@@ -266,9 +423,11 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
         itemBuilder: (context, index) {
           final item = _categoryData[index];
           final catName = item['name'] as String;
-          final icon = item['icon'] as IconData;
+          final emoji = item['emoji'] as String;
           final isSelected =
               _selectedCategory.toLowerCase() == catName.toLowerCase();
+
+          final label = catName == 'All' ? 'All Curations ($totalCount)' : catName;
 
           return GestureDetector(
             onTap: () {
@@ -276,15 +435,11 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.primary : Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
-                  width: isSelected ? 1.8 : 1.2,
-                ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
@@ -293,21 +448,23 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                           offset: const Offset(0, 3),
                         )
                       ]
-                    : null,
+                    : const [
+                        BoxShadow(
+                          color: Color(0x08000000),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
               ),
               child: Row(
                 children: [
-                  Icon(
-                    icon,
-                    size: 14,
-                    color: isSelected ? Colors.amberAccent : AppColors.primary,
-                  ),
+                  Text(emoji, style: const TextStyle(fontSize: 13)),
                   const SizedBox(width: 6),
                   Text(
-                    catName,
+                    label,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected ? Colors.white : const Color(0xFF475569),
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                       fontSize: 12,
                     ),
                   ),
@@ -319,6 +476,120 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
       ),
     );
   }
+
+  Widget _buildPromotionalBlessingBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6E4F9A), Color(0xFF0F8548)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x296E4F9A),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.verified_rounded, color: Color(0xFFFFD700), size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      'CONSECRATED HEALING',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFFFD700),
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Energized by Master Healers',
+                  style: GoogleFonts.epilogue(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                RichText(
+                  text: TextSpan(
+                    text: 'Use code ',
+                    style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70),
+                    children: [
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'PRANA20',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' for 20% off divine tools',
+                        style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.spa_rounded, color: Color(0xFFFFD700), size: 24),
+                const SizedBox(height: 2),
+                Text(
+                  '100% PURE',
+                  style: GoogleFonts.poppins(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildProductsLottieLoadingOverlay() {
     return Container(
@@ -473,7 +744,6 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
       });
     }
 
-    // Only show Lottie loading overlay on initial screen launch before data is available
     if (_isLottieActive && !productsAsync.hasValue) {
       return Scaffold(
         backgroundColor: const Color(0xFFFAF9FE),
@@ -483,274 +753,300 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: CustomAppBar(
-        title: 'Wellness & Healing Products',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu_rounded, color: AppColors.primary, size: 26),
-            tooltip: 'All Categories',
-            onPressed: _openCategoryFilterSheet,
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: productsAsync.when(
-        skipLoadingOnRefresh: true,
-        data: (products) {
-          if (products.isEmpty) {
-            return _buildEmptyState(context);
-          }
+      body: SafeArea(
+        child: Column(
+          children: [
+            // TOP HEADER BAR
+            _buildTopAppBar(),
 
-          final cartAsync = ref.watch(cartManagerProvider);
-          final cartItems = cartAsync.value ?? [];
+            // SCROLLABLE BODY
+            Expanded(
+              child: productsAsync.when(
+                skipLoadingOnRefresh: true,
+                data: (products) {
+                  if (products.isEmpty) {
+                    return _buildEmptyState(context);
+                  }
 
-          final filteredProducts = products.where((p) {
-            final matchesCategory = _selectedCategory == 'All' ||
-                p.category.toLowerCase().contains(_selectedCategory.toLowerCase()) ||
-                _selectedCategory.toLowerCase().contains(p.category.toLowerCase()) ||
-                p.title.toLowerCase().contains(_selectedCategory.toLowerCase()) ||
-                p.description.toLowerCase().contains(_selectedCategory.toLowerCase());
+                  final cartAsync = ref.watch(cartManagerProvider);
+                  final cartItems = cartAsync.value ?? [];
 
-            final q = _searchQuery.toLowerCase();
-            final matchesQuery = q.isEmpty ||
-                p.title.toLowerCase().contains(q) ||
-                p.description.toLowerCase().contains(q) ||
-                p.category.toLowerCase().contains(q);
+                  final filteredProducts = products.where((p) {
+                    final matchesCategory = _selectedCategory == 'All' ||
+                        p.category.toLowerCase().contains(_selectedCategory.toLowerCase()) ||
+                        _selectedCategory.toLowerCase().contains(p.category.toLowerCase()) ||
+                        p.title.toLowerCase().contains(_selectedCategory.toLowerCase()) ||
+                        p.description.toLowerCase().contains(_selectedCategory.toLowerCase());
 
-            return matchesCategory && matchesQuery;
-          }).toList();
+                    final q = _searchQuery.toLowerCase();
+                    final matchesQuery = q.isEmpty ||
+                        p.title.toLowerCase().contains(q) ||
+                        p.description.toLowerCase().contains(q) ||
+                        p.category.toLowerCase().contains(q);
 
-          return RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: () async {
-              ref.invalidate(allProductsProvider);
-            },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // SEARCH BAR
-                  _buildSearchBar(),
+                    return matchesCategory && matchesQuery;
+                  }).toList();
 
-                  const SizedBox(height: 14),
-
-                  // HORIZONTAL CATEGORY CHIPS BAR
-                  _buildCategoryChipsBar(),
-
-                  const SizedBox(height: 16),
-
-                  // Header Count Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
+                  return RefreshIndicator(
+                    color: AppColors.primary,
+                    onRefresh: () async {
+                      ref.invalidate(allProductsProvider);
+                    },
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '$_selectedCategory Products',
-                            style: AppTextStyles.titleLarge.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEEF2FF),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFC7D2FE)),
-                            ),
-                            child: Text(
-                              '${filteredProducts.length}',
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_selectedCategory != 'All' || _searchQuery.isNotEmpty)
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedCategory = 'All';
-                              _searchQuery = '';
-                            });
-                          },
-                          child: const Row(
+                          // 1. INTRO HEADER & SUBTITLE
+                          _buildIntroHeader(),
+
+                          const SizedBox(height: 14),
+
+                          // 2. SEARCH & FILTER BAR
+                          _buildSearchBar(),
+
+                          const SizedBox(height: 14),
+
+                          // 3. HORIZONTAL CATEGORY CHIPS BAR
+                          _buildCategoryChipsBar(products.length),
+
+                          const SizedBox(height: 16),
+
+                          // 4. PROMOTIONAL BLESSING BANNER
+                          _buildPromotionalBlessingBanner(),
+
+                          const SizedBox(height: 18),
+
+                          // 5. CURATED OFFERINGS SECTION HEADLINE & SORT
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Icon(Icons.clear_rounded, size: 16, color: AppColors.textHint),
-                              SizedBox(width: 4),
-                              Text('Reset All',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textHint,
-                                      fontWeight: FontWeight.bold)),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Curated Offerings',
+                                    style: GoogleFonts.epilogue(
+                                      color: const Color(0xFF0F172A),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE2E8F0),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      '${filteredProducts.length} of ${products.length}',
+                                      style: const TextStyle(
+                                        color: Color(0xFF475569),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              PopupMenuButton<String>(
+                                initialValue: _sortBy,
+                                onSelected: (val) {
+                                  setState(() => _sortBy = val);
+                                },
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF1F5F9),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        _sortBy,
+                                        style: const TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF334155),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.expand_more_rounded, size: 16, color: Color(0xFF334155)),
+                                    ],
+                                  ),
+                                ),
+                                itemBuilder: (context) => const [
+                                  PopupMenuItem(value: 'Popularity', child: Text('Popularity')),
+                                  PopupMenuItem(value: 'Price: Low to High', child: Text('Price: Low to High')),
+                                  PopupMenuItem(value: 'Price: High to Low', child: Text('Price: High to Low')),
+                                  PopupMenuItem(value: 'Highest Rated', child: Text('Highest Rated')),
+                                ],
+                              ),
                             ],
                           ),
-                        ),
-                    ],
-                  ),
 
-                  const SizedBox(height: 14),
+                          const SizedBox(height: 14),
 
-                  // Products Grid - Fully Responsive for Foldables, Tablets, Web & Phones
-                  filteredProducts.isNotEmpty
-                      ? LayoutBuilder(
-                          builder: (context, constraints) {
-                            final screenWidth = constraints.maxWidth;
-                            int crossAxisCount = 2;
-                            double childAspectRatio = 0.68;
+                          // 6. 2-COLUMN RESPONSIVE PRODUCT GRID
+                          filteredProducts.isNotEmpty
+                              ? LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final screenWidth = constraints.maxWidth;
+                                    int crossAxisCount = 2;
+                                    double childAspectRatio = 0.62;
 
-                            if (screenWidth >= 1200) {
-                              crossAxisCount = 5;
-                              childAspectRatio = 0.76;
-                            } else if (screenWidth >= 900) {
-                              crossAxisCount = 4;
-                              childAspectRatio = 0.74;
-                            } else if (screenWidth >= 600) {
-                              crossAxisCount = 3;
-                              childAspectRatio = 0.70;
-                            } else if (screenWidth <= 360) {
-                              crossAxisCount = 2;
-                              childAspectRatio = 0.60;
-                            } else {
-                              crossAxisCount = 2;
-                              childAspectRatio = 0.68;
-                            }
+                                    if (screenWidth >= 1200) {
+                                      crossAxisCount = 5;
+                                      childAspectRatio = 0.74;
+                                    } else if (screenWidth >= 900) {
+                                      crossAxisCount = 4;
+                                      childAspectRatio = 0.70;
+                                    } else if (screenWidth >= 600) {
+                                      crossAxisCount = 3;
+                                      childAspectRatio = 0.66;
+                                    } else if (screenWidth <= 360) {
+                                      crossAxisCount = 2;
+                                      childAspectRatio = 0.55;
+                                    } else {
+                                      crossAxisCount = 2;
+                                      childAspectRatio = 0.62;
+                                    }
 
-                            return GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                childAspectRatio: childAspectRatio,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                              ),
-                              itemCount: filteredProducts.length,
-                              itemBuilder: (context, index) {
-                            final product = filteredProducts[index];
-                            final cartItemIndex = cartItems.indexWhere((i) =>
-                                i.id == product.id ||
-                                i.id.startsWith(product.id) ||
-                                i.title.startsWith(product.title));
-                            final bool isInCart = cartItemIndex >= 0;
-                            final int cartQuantity =
-                                isInCart ? cartItems[cartItemIndex].quantity : 0;
-
-                            return ProductCard(
-                              title: product.title,
-                              category: product.category,
-                              imageUrl: product.imageUrl,
-                              price: product.price,
-                              originalPrice: product.originalPrice,
-                              unitType: product.unitType,
-                              isInCart: isInCart,
-                              cartQuantity: cartQuantity,
-                              onTap: () {
-                                debugPrint('🛍️ [PRODUCT CLICKED] ID: ${product.id}, Name: "${product.title}", Price: ₹${product.price}');
-                                context.push('${RoutePaths.productDetail}?id=${product.id}');
-                              },
-                              onAddToCart: () {
-                                if (isInCart && cartQuantity >= product.effectiveMaxQuantity) {
-                                  AppAlertManager.showFloatingToast(
-                                    context,
-                                    title: 'Maximum Limit Reached',
-                                    message:
-                                        'Only ${product.effectiveMaxQuantity} unit(s) allowed per order for ${product.title}.',
-                                    icon: Icons.info_outline_rounded,
-                                    backgroundColor: const Color(0xFF0F172A),
-                                    accentColor: const Color(0xFFF59E0B),
-                                  );
-                                  return;
-                                }
-
-                                ref.read(cartManagerProvider.notifier).addToCart(
-                                      CartItemEntity(
-                                        id: product.id,
-                                        title: product.title,
-                                        imageUrl: product.imageUrl,
-                                        price: product.price,
-                                        quantity: 1,
-                                        maxAllowedQuantity: product.effectiveMaxQuantity,
+                                    return GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        childAspectRatio: childAspectRatio,
+                                        crossAxisSpacing: 10,
+                                        mainAxisSpacing: 10,
                                       ),
-                                    );
-                                AppAlertManager.showFloatingToast(
-                                  context,
-                                  title: 'Added to Cart!',
-                                  message: '${product.title} added to cart.',
-                                  icon: Icons.shopping_bag_rounded,
-                                  backgroundColor: const Color(0xFF0F172A),
-                                  accentColor: const Color(0xFF10B981),
-                                  actionLabel: 'VIEW CART',
-                                  onAction: () => context.go(RoutePaths.cart),
-                                );
-                              },
-                              onBuyNow: () {
-                                debugPrint('⚡ [BUY NOW CLICKED] Direct checkout for product: "${product.title}" (ID: ${product.id}), Price: ₹${product.price}');
-                                context.push(
-                                  RoutePaths.checkout,
-                                  extra: CartItemEntity(
-                                    id: product.id,
-                                    title: product.title,
-                                    imageUrl: product.imageUrl,
-                                    price: product.price,
-                                    quantity: 1,
-                                    maxAllowedQuantity: product.effectiveMaxQuantity,
-                                  ),
-                                );
-                              },
-                              onIncrementQuantity: () {
-                                ref.read(cartManagerProvider.notifier).updateQuantity(
-                                    product.id, cartQuantity + 1);
-                              },
-                              onDecrementQuantity: () {
-                                ref.read(cartManagerProvider.notifier).updateQuantity(
-                                    product.id, cartQuantity - 1);
-                              },
-                            );
-                          },
-                        );
-                      },
-                    )
-                  : Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40),
-                          child: Center(
-                            child: Column(
-                              children: [
-                                const Icon(Icons.inventory_2_outlined,
-                                    size: 48, color: AppColors.textHint),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'No healing products found matching your search.',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 13.5),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                                      itemCount: filteredProducts.length,
+                                      itemBuilder: (context, index) {
+                                        final product = filteredProducts[index];
+                                        final cartItemIndex = cartItems.indexWhere((i) =>
+                                            i.id == product.id ||
+                                            i.id.startsWith(product.id) ||
+                                            i.title.startsWith(product.title));
+                                        final bool isInCart = cartItemIndex >= 0;
+                                        final int cartQuantity =
+                                            isInCart ? cartItems[cartItemIndex].quantity : 0;
 
-                  const SizedBox(height: 32),
-                ],
+                                        return ProductCard(
+                                          title: product.title,
+                                          category: product.category,
+                                          imageUrl: product.imageUrl,
+                                          price: product.price,
+                                          originalPrice: product.originalPrice,
+                                          unitType: product.unitType,
+                                          isInCart: isInCart,
+                                          cartQuantity: cartQuantity,
+                                          onTap: () {
+                                            debugPrint('🛍️ [PRODUCT CLICKED] ID: ${product.id}, Name: "${product.title}", Price: ₹${product.price}');
+                                            context.push('${RoutePaths.productDetail}?id=${product.id}');
+                                          },
+                                          onAddToCart: () {
+                                            if (isInCart && cartQuantity >= product.effectiveMaxQuantity) {
+                                              AppAlertManager.showFloatingToast(
+                                                context,
+                                                title: 'Maximum Limit Reached',
+                                                message:
+                                                    'Only ${product.effectiveMaxQuantity} unit(s) allowed per order for ${product.title}.',
+                                                icon: Icons.info_outline_rounded,
+                                                backgroundColor: const Color(0xFF0F172A),
+                                                accentColor: const Color(0xFFF59E0B),
+                                              );
+                                              return;
+                                            }
+
+                                            ref.read(cartManagerProvider.notifier).addToCart(
+                                                  CartItemEntity(
+                                                    id: product.id,
+                                                    title: product.title,
+                                                    imageUrl: product.imageUrl,
+                                                    price: product.price,
+                                                    quantity: 1,
+                                                    maxAllowedQuantity: product.effectiveMaxQuantity,
+                                                  ),
+                                                );
+                                            AppAlertManager.showFloatingToast(
+                                              context,
+                                              title: 'Added to Cart!',
+                                              message: '${product.title} added to cart.',
+                                              icon: Icons.shopping_bag_rounded,
+                                              backgroundColor: const Color(0xFF0F172A),
+                                              accentColor: const Color(0xFF10B981),
+                                              actionLabel: 'VIEW CART',
+                                              onAction: () => context.go(RoutePaths.cart),
+                                            );
+                                          },
+                                          onBuyNow: () {
+                                            debugPrint('⚡ [BUY NOW CLICKED] Direct checkout for product: "${product.title}" (ID: ${product.id}), Price: ₹${product.price}');
+                                            context.push(
+                                              RoutePaths.checkout,
+                                              extra: CartItemEntity(
+                                                id: product.id,
+                                                title: product.title,
+                                                imageUrl: product.imageUrl,
+                                                price: product.price,
+                                                quantity: 1,
+                                                maxAllowedQuantity: product.effectiveMaxQuantity,
+                                              ),
+                                            );
+                                          },
+                                          onIncrementQuantity: () {
+                                            ref.read(cartManagerProvider.notifier).updateQuantity(
+                                                product.id, cartQuantity + 1);
+                                          },
+                                          onDecrementQuantity: () {
+                                            ref.read(cartManagerProvider.notifier).updateQuantity(
+                                                product.id, cartQuantity - 1);
+                                          },
+                                        );
+                                      },
+                                    );
+                                  },
+                                )
+                              : Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 40),
+                                  child: Center(
+                                    child: Column(
+                                      children: [
+                                        const Icon(Icons.inventory_2_outlined,
+                                            size: 48, color: AppColors.textHint),
+                                        const SizedBox(height: 12),
+                                        const Text(
+                                          'No healing products found matching your search.',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              color: AppColors.textSecondary,
+                                              fontSize: 13.5),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                loading: () =>
+                    const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                error: (err, stack) => Center(
+                    child: Text('Error: $err',
+                        style: const TextStyle(color: AppColors.error))),
               ),
             ),
-          );
-        },
-        loading: () =>
-            const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (err, stack) => Center(
-            child: Text('Error: $err',
-                style: const TextStyle(color: AppColors.error))),
+          ],
+        ),
       ),
     );
   }
