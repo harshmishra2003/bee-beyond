@@ -33,13 +33,16 @@ class CourseModel extends CourseEntity {
         trimmed.startsWith('assets/')) {
       return trimmed;
     }
-    if (trimmed.startsWith('/')) {
+    if (trimmed.startsWith('/api/')) {
       return 'https://metricstestingapp.xyz$trimmed';
     }
-    if (trimmed.startsWith('uploads/') || trimmed.startsWith('admin/')) {
+    if (trimmed.startsWith('/')) {
+      return 'https://metricstestingapp.xyz/api$trimmed';
+    }
+    if (trimmed.startsWith('uploads/') || trimmed.startsWith('admin/') || trimmed.startsWith('api/')) {
       return 'https://metricstestingapp.xyz/$trimmed';
     }
-    return 'https://metricstestingapp.xyz/$trimmed';
+    return 'https://metricstestingapp.xyz/api/$trimmed';
   }
 
   static String _determineContentType(String? rawType, String url, String title) {
@@ -200,6 +203,11 @@ class CourseModel extends CourseEntity {
                   }
                 }
 
+                final rawAccessLevel = les['access_level'] ?? mod['access_level'];
+                final parsedAccessLevel = (rawAccessLevel as num?)?.toInt() ??
+                    int.tryParse(rawAccessLevel?.toString() ?? '0') ??
+                    0;
+
                 parsedModules.add(
                   ModuleItemEntity(
                     id: les['id']?.toString() ?? '',
@@ -209,6 +217,7 @@ class CourseModel extends CourseEntity {
                     type: contentType,
                     mediaUrl: media,
                     durationOrSize: durationStr,
+                    accessLevel: parsedAccessLevel,
                   ),
                 );
               }
@@ -243,6 +252,11 @@ class CourseModel extends CourseEntity {
                 ? 'Official Study PDF & Handbook'
                 : (contentType == 'text' ? 'Text Reading Notes' : 'Video Lecture');
 
+            final rawAccessLevel = mod['access_level'];
+            final parsedAccessLevel = (rawAccessLevel as num?)?.toInt() ??
+                int.tryParse(rawAccessLevel?.toString() ?? '0') ??
+                0;
+
             parsedModules.add(
               ModuleItemEntity(
                 id: mod['id']?.toString() ?? '',
@@ -252,6 +266,7 @@ class CourseModel extends CourseEntity {
                 type: contentType,
                 mediaUrl: media,
                 durationOrSize: durationStr,
+                accessLevel: parsedAccessLevel,
               ),
             );
           }
