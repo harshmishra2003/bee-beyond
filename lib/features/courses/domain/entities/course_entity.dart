@@ -8,6 +8,7 @@ class ModuleItemEntity extends Equatable {
   final String type; // 'video', 'pdf', 'text'
   final String mediaUrl;
   final String durationOrSize;
+  final int accessLevel; // 0 = free, 1 = paid
 
   const ModuleItemEntity({
     required this.id,
@@ -17,14 +18,18 @@ class ModuleItemEntity extends Equatable {
     required this.type,
     required this.mediaUrl,
     required this.durationOrSize,
+    this.accessLevel = 0,
   });
+
+  bool get isFree => accessLevel == 0;
+  bool get isPaid => accessLevel == 1;
 
   String get title =>
       lessonTitle.isNotEmpty ? '$moduleTitle • $lessonTitle' : moduleTitle;
 
   @override
   List<Object?> get props =>
-      [id, moduleTitle, lessonTitle, description, type, mediaUrl, durationOrSize];
+      [id, moduleTitle, lessonTitle, description, type, mediaUrl, durationOrSize, accessLevel];
 }
 
 class CourseEntity extends Equatable {
