@@ -15,6 +15,7 @@ class ApiEndpoints {
   // Courses APIs
   static const String courses = '/courses.php';
   static const String courseDetail = '/course_details.php';
+  static const String viewLessonPdf = '/view_lesson_pdf.php';
   static const String joinedCourses = '/courses/joined';
 
   // Library & Media
