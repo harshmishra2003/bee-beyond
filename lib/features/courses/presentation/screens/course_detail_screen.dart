@@ -564,6 +564,22 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                                   ),
                                   subtitle: Row(
                                     children: [
+                                      Container(
+                                        margin: const EdgeInsets.only(right: 6),
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                        decoration: BoxDecoration(
+                                          color: module.isPaid ? const Color(0xFF6E4F9A) : const Color(0xFF059669),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          module.isPaid ? 'VIP' : 'FREE',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 8.5,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ),
+                                      ),
                                       Icon(
                                         isPdf
                                             ? Icons.menu_book_rounded
