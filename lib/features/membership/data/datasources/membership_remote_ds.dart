@@ -243,39 +243,42 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
     required String razorpaySignature,
   }) async {
     final dio = _dioClient;
-    if (dio != null) {
-      final candidateEndpoints = [
-        ApiEndpoints.membershipVerifyPayment,
-        '/checkout/membership_verify_payment.php',
-        '/membership_verify_payment.php',
-      ];
 
-      for (final endpoint in candidateEndpoints) {
-        try {
-          final response = await dio.post(
-            endpoint,
-            data: {
-              'membership_order_id': membershipOrderId,
-              'razorpay_payment_id': razorpayPaymentId,
-              'razorpay_order_id': razorpayOrderId,
-              'razorpay_signature': razorpaySignature,
-            },
-          );
-
-          if (response.statusCode == 200 && response.data != null) {
-            dynamic rawData = response.data;
-            if (rawData is String) {
-              rawData = jsonDecode(rawData);
-            }
-            if (rawData is Map<String, dynamic>) {
-              return rawData['success'] == true;
-            }
-          }
-        } catch (_) {
-          // Fall through candidate endpoints
-        }
-      }
+    if (dio == null) {
+      return false;
     }
-    return false;
+
+    try {
+      final response = await dio.post(
+        ApiEndpoints.membershipVerifyPayment,
+        data: {
+          'membership_order_id': membershipOrderId,
+          'razorpay_payment_id': razorpayPaymentId,
+          'razorpay_order_id': razorpayOrderId,
+          'razorpay_signature': razorpaySignature,
+        },
+      );
+
+      if (response.statusCode != 200 || response.data == null) {
+        return false;
+      }
+
+      dynamic rawData = response.data;
+
+      if (rawData is String) {
+        rawData = jsonDecode(rawData);
+      }
+
+      if (rawData is! Map) {
+        return false;
+      }
+
+      final Map<String, dynamic> data =
+          Map<String, dynamic>.from(rawData);
+
+      return data['success'] == true;
+    } catch (_) {
+      return false;
+    }
   }
 }

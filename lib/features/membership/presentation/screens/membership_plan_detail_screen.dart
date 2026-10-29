@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'membership_screen.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/services/razorpay_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_alert_manager.dart';
@@ -15,7 +14,6 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/status_dialog.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../checkout/presentation/providers/payment_provider.dart';
 import '../../domain/entities/membership_plan_entity.dart';
 import 'package:intl/intl.dart';
 import '../providers/expiry_provider.dart';
@@ -155,18 +153,42 @@ class _MembershipPlanDetailScreenState
 
         if (!mounted) return;
 
-        StatusDialog.show(
-          context,
-          title: isVerified ? 'Membership Activated! 👑' : 'Payment Received! 💳',
-          description: isVerified
-              ? 'Payment ID: $paymentId\nOrder ID: $orderId\n\nYour membership pass has been successfully activated!'
-              : 'Payment ID: $paymentId\nOrder ID: $orderId\n\nPayment received. Membership verification in progress.',
-          isSuccess: true,
-          onAction: () {
-            context.go(RoutePaths.membership);
-          },
-          actionText: 'View Memberships',
-        );
+        if (isVerified) {
+          // Immediately activate the pass in local state & SharedPreferences
+          await ref.read(activePassProvider.notifier).activatePass(
+            passId: plan.id,
+            passName: '${plan.name} Membership Pass',
+            slug: plan.slug,
+            durationYears: plan.accessDuration > 0 ? plan.accessDuration : 1,
+            amountPaid: plan.price,
+            transactionId: paymentId,
+          );
+
+          StatusDialog.show(
+            context,
+            title: 'Membership Activated! 👑',
+            description:
+                'Payment ID: $paymentId\nOrder ID: $orderId\n\nYour ${plan.name} Membership Pass has been successfully activated!',
+            isSuccess: true,
+            onAction: () {
+              context.go(RoutePaths.membership);
+            },
+            actionText: 'View My Pass',
+          );
+        } else {
+          // Verification failed or pending — NEVER display success message
+          StatusDialog.show(
+            context,
+            title: 'Verification Pending ⏳',
+            description:
+                'Payment ID: $paymentId\nOrder ID: $orderId\n\nYour payment was received by Razorpay, but automatic verification is pending.\n\nPlease do NOT pay again. Check your membership status in a few moments or contact support with your Payment ID.',
+            isSuccess: false,
+            onAction: () {
+              context.go(RoutePaths.membership);
+            },
+            actionText: 'Check Membership Status',
+          );
+        }
       };
 
       _razorpayService?.onError = (response) {

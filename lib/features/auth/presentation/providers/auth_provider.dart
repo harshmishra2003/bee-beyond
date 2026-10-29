@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/storage_keys.dart';
@@ -56,12 +57,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> checkCurrentUser() async {
     state = AuthState.loading();
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+      bool hasSeenOnboarding = false;
+      try {
+        final prefs = await SharedPreferences.getInstance().timeout(
+          const Duration(seconds: 1),
+          onTimeout: () => throw TimeoutException('SharedPreferences timeout'),
+        );
+        hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+      } catch (_) {
+        hasSeenOnboarding = false;
+      }
 
-      final token = await _secureStorage.getAuthToken();
+      String? token;
+      try {
+        token = await _secureStorage.getAuthToken().timeout(
+          const Duration(seconds: 1),
+          onTimeout: () => null,
+        );
+      } catch (_) {
+        token = null;
+      }
+
       if (token != null && token.trim().isNotEmpty) {
-        final user = await _repository.getCurrentUser();
+        UserEntity? user;
+        try {
+          user = await _repository.getCurrentUser().timeout(
+            const Duration(seconds: 1),
+            onTimeout: () => null,
+          );
+        } catch (_) {
+          user = null;
+        }
+
         if (user != null) {
           state = AuthState.authenticated(user, hasSeenOnboarding: hasSeenOnboarding);
           return;
@@ -70,13 +97,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
     } catch (_) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
-        state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
-      } catch (_) {
-        state = const AuthState(status: AuthStatus.unauthenticated, user: null, hasSeenOnboarding: false);
-      }
+      state = const AuthState(status: AuthStatus.unauthenticated, user: null, hasSeenOnboarding: false);
     }
   }
 

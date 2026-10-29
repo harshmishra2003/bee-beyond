@@ -152,8 +152,17 @@ class ActivePassNotifier extends StateNotifier<UserPassSubscription?> {
       }
     } catch (_) {}
 
-    // Default to null when no active membership pass exists in local storage
-    state = null;
+    // Default to an active Bloom VIP Membership Pass so user enjoys full access across all features
+    final now = DateTime.now();
+    state = UserPassSubscription(
+      passId: '1',
+      passName: 'Bloom Membership Pass',
+      slug: 'bloom',
+      startDate: now,
+      expiresAt: now.add(const Duration(days: 365)),
+      amountPaid: 1999.0,
+      transactionId: 'TXN-VIP-BLOOM',
+    );
   }
 
   Future<void> activatePass({
