@@ -265,8 +265,6 @@ class _AboutScreenState extends State<AboutScreen> {
               title: 'Ancient Healing & Drugless Therapy',
               subtitle: 'Masterclasses on Prakriti analysis, Marma therapy & Ayurvedic lifestyle.',
               imagePath: AssetPaths.ancientHealing,
-              badgeText: 'Featured Course',
-              badgeColor: const Color(0xFF6366F1),
             ),
 
             const SizedBox(height: 12),
@@ -275,8 +273,6 @@ class _AboutScreenState extends State<AboutScreen> {
               title: 'Bach Flower Remedies & Emotional Healing',
               subtitle: '38 Flower essences for anxiety, stress relief, and emotional balance.',
               imagePath: AssetPaths.bachFlower,
-              badgeText: 'Popular Therapy',
-              badgeColor: const Color(0xFF10B981),
             ),
 
             const SizedBox(height: 12),
@@ -285,8 +281,6 @@ class _AboutScreenState extends State<AboutScreen> {
               title: 'Vastu Shastra & Directional Harmony',
               subtitle: 'Scientific Vastu analysis for homes, offices & positive energy flow.',
               imagePath: AssetPaths.vastu,
-              badgeText: 'Expert Consultation',
-              badgeColor: const Color(0xFFF59E0B),
             ),
 
             const SizedBox(height: 24),
@@ -547,8 +541,6 @@ class _AboutScreenState extends State<AboutScreen> {
     required String title,
     required String subtitle,
     required String imagePath,
-    required String badgeText,
-    required Color badgeColor,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -566,47 +558,21 @@ class _AboutScreenState extends State<AboutScreen> {
           // Banner Image (Fit to Card - Edge to Edge)
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: 2.05,
-                  child: Image.asset(
-                    imagePath,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.fill, // Full-bleed edge-to-edge fit to card with zero side gaps or margins
-                    alignment: Alignment.center,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: const Color(0xFFEEF2FF),
-                      child: const Center(
-                        child: Icon(Icons.spa_rounded, color: AppColors.primary, size: 48),
-                      ),
-                    ),
+            child: AspectRatio(
+              aspectRatio: 2.05,
+              child: Image.asset(
+                imagePath,
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.fill, // Full-bleed edge-to-edge fit to card with zero side gaps or margins
+                alignment: Alignment.center,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: const Color(0xFFEEF2FF),
+                  child: const Center(
+                    child: Icon(Icons.spa_rounded, color: AppColors.primary, size: 48),
                   ),
                 ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: badgeColor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: const [
-                        BoxShadow(color: Color(0x33000000), blurRadius: 4),
-                      ],
-                    ),
-                    child: Text(
-                      badgeText,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           Padding(
