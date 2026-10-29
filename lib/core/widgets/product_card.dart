@@ -459,13 +459,10 @@ class _ProductCardState extends State<ProductCard> {
                               label: 'Buy Now',
                               backgroundColor: const Color(0xFF6E4F9A),
                               onPressed: () {
-                                setState(() {
-                                  _optimisticAdded = true;
-                                });
                                 if (widget.onBuyNow != null) {
                                   widget.onBuyNow!();
                                 } else {
-                                  widget.onAddToCart();
+                                  widget.onTap();
                                 }
                               },
                             ),
