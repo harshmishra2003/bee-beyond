@@ -838,6 +838,9 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                                               ),
                                             );
                                           },
+                                          onViewCart: () {
+                                            context.go(RoutePaths.cart);
+                                          },
                                           onIncrementQuantity: () {
                                             ref.read(cartManagerProvider.notifier).updateQuantity(
                                                 product.id, cartQuantity + 1);
