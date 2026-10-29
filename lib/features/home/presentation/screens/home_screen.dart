@@ -43,7 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     'Search "Ayurvedic Lifestyle"...',
     'Search "Mind & Life Coaching"...',
     'Search "Healing Oils & Products"...',
-    'Search "Library & Study Materials"...',
+    'Search "Workshops & Masterclasses"...',
     'Search "Personalized Services"...',
   ];
 

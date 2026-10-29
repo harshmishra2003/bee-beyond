@@ -26,9 +26,8 @@ class KPIActionGrid extends StatelessWidget {
 
   static const List<KPIActionItem> items = [
     KPIActionItem(
-      title: 'LIBRARY',
-      assetPath: 'assets/icons/books.png',
-      fallbackIcon: Icons.menu_book_rounded,
+      title: 'WORKSHOPS',
+      fallbackIcon: Icons.workspace_premium_rounded,
       route: RoutePaths.library,
     ),
     KPIActionItem(

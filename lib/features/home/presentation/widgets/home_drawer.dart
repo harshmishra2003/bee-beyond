@@ -178,9 +178,9 @@ class HomeDrawer extends ConsumerWidget {
                   },
                 ),
                 _DrawerTile(
-                  icon: Icons.menu_book_rounded,
+                  icon: Icons.video_camera_front_rounded,
                   iconColor: const Color(0xFF8B5CF6),
-                  title: 'Library & Study Material',
+                  title: 'Workshops & Masterclasses',
                   onTap: () {
                     Navigator.pop(context);
                     context.push(RoutePaths.library);
