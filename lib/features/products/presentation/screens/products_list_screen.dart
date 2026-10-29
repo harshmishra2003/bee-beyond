@@ -297,48 +297,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
     );
   }
 
-  Widget _buildIntroHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF3E8FF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.auto_awesome_rounded,
-                size: 14,
-                color: Color(0xFF6E4F9A),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'SACRED REMEDIES & HOLISTIC TOOLS',
-              style: GoogleFonts.poppins(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF6E4F9A),
-                letterSpacing: 0.8,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Consecrated handcrafted wellness essentials, cleansed with Reiki vibrations and Vedic mantras.',
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: const Color(0xFF64748B),
-            height: 1.35,
-          ),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildSearchBar() {
     return Row(
@@ -477,117 +436,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
     );
   }
 
-  Widget _buildPromotionalBlessingBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6E4F9A), Color(0xFF0F8548)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x296E4F9A),
-            blurRadius: 16,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.verified_rounded, color: Color(0xFFFFD700), size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      'CONSECRATED HEALING',
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFFFD700),
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Energized by Master Healers',
-                  style: GoogleFonts.epilogue(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                RichText(
-                  text: TextSpan(
-                    text: 'Use code ',
-                    style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70),
-                    children: [
-                      WidgetSpan(
-                        alignment: PlaceholderAlignment.middle,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'PRANA20',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      TextSpan(
-                        text: ' for 20% off divine tools',
-                        style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.spa_rounded, color: Color(0xFFFFD700), size: 24),
-                const SizedBox(height: 2),
-                Text(
-                  '100% PURE',
-                  style: GoogleFonts.poppins(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
 
 
@@ -798,27 +647,17 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 1. INTRO HEADER & SUBTITLE
-                          _buildIntroHeader(),
-
-                          const SizedBox(height: 14),
-
-                          // 2. SEARCH & FILTER BAR
+                          // SEARCH & FILTER BAR
                           _buildSearchBar(),
 
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 12),
 
-                          // 3. HORIZONTAL CATEGORY CHIPS BAR
+                          // HORIZONTAL CATEGORY CHIPS BAR
                           _buildCategoryChipsBar(products.length),
 
                           const SizedBox(height: 16),
 
-                          // 4. PROMOTIONAL BLESSING BANNER
-                          _buildPromotionalBlessingBanner(),
-
-                          const SizedBox(height: 18),
-
-                          // 5. CURATED OFFERINGS SECTION HEADLINE & SORT
+                          // CURATED OFFERINGS SECTION HEADLINE & SORT
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
