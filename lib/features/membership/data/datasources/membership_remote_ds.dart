@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:dio/dio.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../domain/entities/membership_order_response_entity.dart';
@@ -184,68 +183,54 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
     required String billingPeriod,
   }) async {
     final dio = _dioClient;
-    if (dio != null) {
-      final candidateEndpoints = [
-        ApiEndpoints.membershipCreateOrder,
-        '/checkout/membership_create_order.php',
-        '/membership_create_order.php',
-      ];
 
-      for (final endpoint in candidateEndpoints) {
-        try {
-          final response = await dio.post(
-            endpoint,
-            data: {
-              'plan_id': planId,
-              'billing_period': billingPeriod,
-            },
-          );
-
-          if (response.statusCode == 200 && response.data != null) {
-            dynamic rawData = response.data;
-            if (rawData is String) {
-              rawData = jsonDecode(rawData);
-            }
-            if (rawData is Map<String, dynamic>) {
-              final mapped = MembershipOrderResponseEntity.fromJson(rawData);
-              if (mapped.razorpayOrderId.isNotEmpty) {
-                return mapped;
-              }
-            }
-          }
-        } catch (_) {
-          // Try next candidate endpoint or fall through to fallback
-        }
-      }
+    if (dio == null) {
+      return null;
     }
 
-    // Fallback: If all remote endpoints fail (e.g. HTTP 500 server error), generate a valid test/fallback order
     try {
-      final plans = await getMembershipPlans();
-      final plan = plans.firstWhere(
-        (p) => int.tryParse(p.id) == planId,
-        orElse: () => plans.first,
+      final response = await dio.post(
+        ApiEndpoints.membershipCreateOrder,
+        data: {
+          'plan_id': planId,
+          'billing_period': billingPeriod,
+        },
       );
 
-      final double price = plan.price;
-      final int amountPaise = (price * 100).toInt();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      if (response.statusCode != 200 || response.data == null) {
+        return null;
+      }
 
-      return MembershipOrderResponseEntity(
-        success: true,
-        message: 'Order created successfully (Fallback Mode)',
-        membershipOrderId: timestamp ~/ 1000,
-        orderNumber: 'BEE-MEM-$timestamp',
-        planId: planId,
-        planName: plan.name,
-        planPriceId: planId,
-        billingPeriod: billingPeriod,
-        amountPaise: amountPaise,
-        currency: 'INR',
-        razorpayOrderId: 'order_$timestamp',
-        razorpayKeyId: 'rzp_test_beebeeyond',
-      );
-    } catch (_) {
+      dynamic rawData = response.data;
+
+      if (rawData is String) {
+        rawData = jsonDecode(rawData);
+      }
+
+      if (rawData is! Map) {
+        return null;
+      }
+
+      final Map<String, dynamic> data =
+          Map<String, dynamic>.from(rawData);
+
+      if (data['success'] != true) {
+        return null;
+      }
+
+      final order = MembershipOrderResponseEntity.fromJson(data);
+
+      // Only accept a real order ID returned by the backend.
+      if (order.razorpayOrderId.isEmpty ||
+          !RegExp(r'^order_[A-Za-z0-9]+$')
+              .hasMatch(order.razorpayOrderId)) {
+        return null;
+      }
+
+      return order;
+    } catch (e) {
+      // Do not invent a local order or retry another endpoint.
+      // The caller should display an order-creation error.
       return null;
     }
   }
