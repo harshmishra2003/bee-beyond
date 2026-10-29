@@ -12,6 +12,8 @@ class ProductCard extends StatefulWidget {
   final double price;
   final double? originalPrice;
   final String unitType;
+  final double rating;
+  final String? tagLabel;
   final bool isInCart;
   final int cartQuantity;
   final VoidCallback onTap;
@@ -19,6 +21,8 @@ class ProductCard extends StatefulWidget {
   final VoidCallback? onBuyNow;
   final VoidCallback? onIncrementQuantity;
   final VoidCallback? onDecrementQuantity;
+  final VoidCallback? onFavoriteToggle;
+  final bool isFavorite;
 
   const ProductCard({
     super.key,
@@ -27,7 +31,9 @@ class ProductCard extends StatefulWidget {
     required this.imageUrl,
     required this.price,
     this.originalPrice,
-    this.unitType = '500 g',
+    this.unitType = '500g',
+    this.rating = 4.9,
+    this.tagLabel,
     this.isInCart = false,
     this.cartQuantity = 0,
     required this.onTap,
@@ -35,6 +41,8 @@ class ProductCard extends StatefulWidget {
     this.onBuyNow,
     this.onIncrementQuantity,
     this.onDecrementQuantity,
+    this.onFavoriteToggle,
+    this.isFavorite = false,
   });
 
   @override
@@ -43,6 +51,13 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard> {
   bool _optimisticAdded = false;
+  late bool _favoriteState;
+
+  @override
+  void initState() {
+    super.initState();
+    _favoriteState = widget.isFavorite;
+  }
 
   int get discountPercent {
     if (widget.originalPrice != null &&
@@ -55,43 +70,63 @@ class _ProductCardState extends State<ProductCard> {
     return 0;
   }
 
-  Color _getAccentFrameColor(String text) {
-    const frameColors = [
-      Color(0xFF6366F1), // Royal Indigo
-      Color(0xFF10B981), // Emerald Green
-      Color(0xFFF59E0B), // Amber Gold
-      Color(0xFFF43F5E), // Rose Pink
-      Color(0xFF06B6D4), // Cyan Sapphire
-      Color(0xFF8B5CF6), // Violet Amethyst
-    ];
-    final hash = text.hashCode.abs();
-    return frameColors[hash % frameColors.length];
+  String get defaultTag {
+    if (widget.tagLabel != null && widget.tagLabel!.isNotEmpty) {
+      return widget.tagLabel!;
+    }
+    final cat = widget.category.toLowerCase();
+    if (cat.contains('bach')) return 'DRUGLESS THERAPY';
+    if (cat.contains('reiki') || cat.contains('crystal')) return 'REIKI CLEANSED';
+    if (cat.contains('aroma') || cat.contains('candle')) return 'SOY WAX • REIKI';
+    if (cat.contains('yantra') || cat.contains('brass')) return 'CONSECRATED BRASS';
+    if (cat.contains('sound') || cat.contains('singing')) return '7 METALS • SOUND';
+    return 'ORGANIC • CHAKRA';
+  }
+
+  Color _getBadgeBgColor(String tag) {
+    final t = tag.toUpperCase();
+    if (t.contains('REIKI')) return const Color(0xFFECFDF5);
+    if (t.contains('SOY') || t.contains('AROMA')) return const Color(0xFFF3E8FF);
+    if (t.contains('BRASS') || t.contains('CONSECRATED')) return const Color(0xFFFEF3C7);
+    if (t.contains('DRUGLESS')) return const Color(0xFFE0F2FE);
+    return const Color(0xFFEEF2FF);
+  }
+
+  Color _getBadgeTextColor(String tag) {
+    final t = tag.toUpperCase();
+    if (t.contains('REIKI')) return const Color(0xFF047857);
+    if (t.contains('SOY') || t.contains('AROMA')) return const Color(0xFF6E4F9A);
+    if (t.contains('BRASS') || t.contains('CONSECRATED')) return const Color(0xFFB45309);
+    if (t.contains('DRUGLESS')) return const Color(0xFF0369A1);
+    return AppColors.primary;
   }
 
   @override
   Widget build(BuildContext context) {
-    final frameColor = _getAccentFrameColor(widget.title);
     final isCartActive = widget.isInCart || _optimisticAdded;
     final displayQty = widget.cartQuantity > 0 ? widget.cartQuantity : 1;
+    final tagText = defaultTag;
+    final badgeBg = _getBadgeBgColor(tagText);
+    final badgeText = _getBadgeTextColor(tagText);
 
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isCartActive
                 ? const Color(0xFF059669)
-                : frameColor.withValues(alpha: 0.5),
-            width: isCartActive ? 2.0 : 1.5,
+                : const Color(0xFFE2E8F0),
+            width: isCartActive ? 1.8 : 1.0,
           ),
           boxShadow: [
             BoxShadow(
               color: isCartActive
-                  ? const Color(0x20059669)
-                  : frameColor.withValues(alpha: 0.12),
-              blurRadius: 10,
+                  ? const Color(0x1F059669)
+                  : const Color(0x0C000000),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
@@ -99,177 +134,189 @@ class _ProductCardState extends State<ProductCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // COMPACT PRODUCT THUMBNAIL (NO CROP) WITH EMBLEM & BADGES
-            Container(
-              height: 85,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: isCartActive
-                    ? const Color(0xFFECFDF5)
-                    : frameColor.withValues(alpha: 0.05),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: widget.imageUrl.startsWith('http')
-                          ? CachedNetworkImage(
-                              imageUrl: widget.imageUrl,
-                              height: 85,
-                              width: double.infinity,
-                              fit: BoxFit.contain, // FULL IMAGE VISIBLE
-                              placeholder: (context, url) => const SizedBox(
-                                height: 85,
-                                child: Center(
+            // IMAGE CONTAINER WITH ASPECT RATIO, WISHLIST HEART & RATING PILL
+            AspectRatio(
+              aspectRatio: 1.12,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                ),
+                child: ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(15)),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: widget.imageUrl.startsWith('http')
+                            ? CachedNetworkImage(
+                                imageUrl: widget.imageUrl,
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
                                     child: CircularProgressIndicator(
-                                        strokeWidth: 2)),
-                              ),
-                              errorWidget: (context, url, error) => const Icon(
+                                        strokeWidth: 2, color: AppColors.primary),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => const Icon(
+                                  Icons.shopping_bag_outlined,
+                                  size: 44,
+                                  color: AppColors.textHint,
+                                ),
+                              )
+                            : const Icon(
                                 Icons.shopping_bag_outlined,
-                                size: 40,
+                                size: 44,
                                 color: AppColors.textHint,
                               ),
-                            )
-                          : const Icon(
-                              Icons.shopping_bag_outlined,
-                              size: 40,
-                              color: AppColors.textHint,
-                            ),
-                    ),
-
-                    // Top Right Brand Emblem Logo Watermark
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: Image.asset(
-                        AssetPaths.beeBeyondEmblem,
-                        width: 22,
-                        height: 22,
-                        fit: BoxFit.contain,
                       ),
-                    ),
 
-                    // Rating Pill
-                    Positioned(
-                      bottom: 6,
-                      left: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                              color: frameColor.withValues(alpha: 0.3)),
-                        ),
-                        child: const Row(
-                          children: [
-                            Text(
-                              '4.5',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            SizedBox(width: 2),
-                            Icon(Icons.star_rounded,
-                                size: 10, color: Color(0xFF059669)),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // In Cart Active Status Badge
-                    if (isCartActive)
+                      // Brand Emblem Watermark
                       Positioned(
                         top: 6,
+                        left: 6,
+                        child: Image.asset(
+                          AssetPaths.beeBeyondEmblem,
+                          width: 20,
+                          height: 20,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+
+                      // Wishlist Heart Button (Top Right)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _favoriteState = !_favoriteState;
+                            });
+                            if (widget.onFavoriteToggle != null) {
+                              widget.onFavoriteToggle!();
+                            }
+                          },
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.88),
+                              shape: BoxShape.circle,
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1A000000),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              _favoriteState
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              color: _favoriteState
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFF64748B),
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Rating Pill Badge (Bottom Left)
+                      Positioned(
+                        bottom: 6,
                         left: 6,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF059669),
-                            borderRadius: BorderRadius.circular(6),
+                            color: Colors.white.withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: const [
                               BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 4,
-                                  offset: Offset(0, 2)),
+                                color: Color(0x14000000),
+                                blurRadius: 4,
+                                offset: Offset(0, 1),
+                              ),
                             ],
                           ),
-                          child: const Text(
-                            'IN CART ✓',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w900,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                size: 12,
+                                color: Color(0xFFD97706),
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${widget.rating}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
+
+            // CONTENT SECTION
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+                padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Category Tag & Unit Weight Badge Row
+                    // Category Tag & Unit Weight Row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Flexible(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 1.5),
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: frameColor.withValues(alpha: 0.12),
+                              color: badgeBg,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              widget.category.toUpperCase(),
+                              tagText,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 8.0,
-                                fontWeight: FontWeight.w900,
-                                color: frameColor,
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w800,
+                                color: badgeText,
                                 letterSpacing: 0.3,
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 5, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            widget.unitType,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF64748B),
-                            ),
+                        Text(
+                          widget.unitType,
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF94A3B8),
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 5),
 
                     // Title
                     Text(
@@ -278,57 +325,44 @@ class _ProductCardState extends State<ProductCard> {
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.labelLarge.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 11.5,
-                        height: 1.18,
+                        fontSize: 12.5,
+                        color: const Color(0xFF0F172A),
+                        height: 1.22,
                       ),
                     ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 5),
 
-                    // Discount Percentage Badge & Price Row
+                    // Price & Discount Row
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Flexible(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  CurrencyUtils.formatINR(widget.price),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.titleMedium.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 14.0,
-                                  ),
-                                ),
-                              ),
-                              if (widget.originalPrice != null &&
-                                  widget.originalPrice! > widget.price) ...[
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    CurrencyUtils.formatINR(widget.originalPrice!),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                      decoration: TextDecoration.lineThrough,
-                                      color: AppColors.textHint,
-                                      fontSize: 9.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
+                        Text(
+                          CurrencyUtils.formatINR(widget.price),
+                          style: AppTextStyles.titleMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15.0,
                           ),
                         ),
-                        if (discountPercent > 0)
+                        if (widget.originalPrice != null &&
+                            widget.originalPrice! > widget.price) ...[
+                          const SizedBox(width: 5),
+                          Text(
+                            CurrencyUtils.formatINR(widget.originalPrice!),
+                            style: AppTextStyles.labelSmall.copyWith(
+                              decoration: TextDecoration.lineThrough,
+                              color: const Color(0xFF94A3B8),
+                              fontSize: 10.5,
+                            ),
+                          ),
+                        ],
+                        if (discountPercent > 0) ...[
+                          const Spacer(),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 1.5),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFECFDF5),
+                              color: const Color(0xFFDCFCE7),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -336,22 +370,23 @@ class _ProductCardState extends State<ProductCard> {
                               style: const TextStyle(
                                 fontSize: 9.0,
                                 fontWeight: FontWeight.w900,
-                                color: Color(0xFF059669),
+                                color: Color(0xFF15803D),
                               ),
                             ),
                           ),
+                        ],
                       ],
                     ),
 
                     const Spacer(),
 
-                    // SMART ANIMATED COMPACT ICON ACTIONS ROW
+                    // ACTION BUTTONS ROW (CART ICON + BUY NOW BUTTON)
                     Row(
                       children: [
                         if (isCartActive) ...[
                           // Quantity Counter Pill in Emerald Green
                           Container(
-                            height: 30,
+                            height: 32,
                             padding: const EdgeInsets.symmetric(horizontal: 2),
                             decoration: BoxDecoration(
                               color: const Color(0xFFECFDF5),
@@ -377,7 +412,7 @@ class _ProductCardState extends State<ProductCard> {
                                     '$displayQty',
                                     style: const TextStyle(
                                       color: Color(0xFF065F46),
-                                      fontSize: 11.0,
+                                      fontSize: 11.5,
                                       fontWeight: FontWeight.w900,
                                     ),
                                   ),
@@ -394,7 +429,7 @@ class _ProductCardState extends State<ProductCard> {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 5),
                           // View Cart Shining Button in Emerald Green
                           Expanded(
                             child: ShiningBuyNowButton(
@@ -406,9 +441,9 @@ class _ProductCardState extends State<ProductCard> {
                         ] else ...[
                           // Add To Cart Animated Icon Button
                           _AnimatedIconButton(
-                            icon: Icons.add_shopping_cart_rounded,
-                            backgroundColor: const Color(0xFFEEF2FF),
-                            iconColor: AppColors.primary,
+                            icon: Icons.shopping_cart_outlined,
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            iconColor: const Color(0xFF334155),
                             onTap: () {
                               setState(() {
                                 _optimisticAdded = true;
@@ -417,12 +452,12 @@ class _ProductCardState extends State<ProductCard> {
                             },
                             tooltip: 'Add to Cart',
                           ),
-                          const SizedBox(width: 4),
-                          // Quick Buy Shining Button with Light Beam Glint
+                          const SizedBox(width: 5),
+                          // Quick Buy Shining Button in Purple
                           Expanded(
                             child: ShiningBuyNowButton(
-                              label: 'BUY NOW',
-                              backgroundColor: AppColors.primary,
+                              label: 'Buy Now',
+                              backgroundColor: const Color(0xFF6E4F9A),
                               onPressed: () {
                                 setState(() {
                                   _optimisticAdded = true;
@@ -485,38 +520,14 @@ class _AnimatedIconButtonState extends State<_AnimatedIconButton> {
         scale: _isPressed ? 0.92 : 1.0,
         duration: const Duration(milliseconds: 100),
         child: Container(
+          width: 34,
           height: 32,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: widget.backgroundColor,
             borderRadius: BorderRadius.circular(8),
-            boxShadow: _isPressed
-                ? []
-                : [
-                    BoxShadow(
-                      color: widget.backgroundColor.withValues(alpha: 0.3),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(widget.icon, color: widget.iconColor, size: 15),
-              if (widget.label != null) ...[
-                const SizedBox(width: 4),
-                Text(
-                  widget.label!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            ],
+          child: Center(
+            child: Icon(widget.icon, color: widget.iconColor, size: 17),
           ),
         ),
       ),
@@ -533,8 +544,8 @@ class ShiningBuyNowButton extends StatefulWidget {
   const ShiningBuyNowButton({
     super.key,
     required this.onPressed,
-    this.label = 'BUY NOW',
-    this.backgroundColor = AppColors.primary,
+    this.label = 'Buy Now',
+    this.backgroundColor = const Color(0xFF6E4F9A),
   });
 
   @override
@@ -564,7 +575,7 @@ class _ShiningBuyNowButtonState extends State<ShiningBuyNowButton>
 
   void _startShineLoop() async {
     while (mounted) {
-      await Future.delayed(const Duration(milliseconds: 2000));
+      await Future.delayed(const Duration(milliseconds: 2500));
       if (mounted) {
         await _controller.forward(from: 0.0);
       }
@@ -606,20 +617,20 @@ class _ShiningBuyNowButtonState extends State<ShiningBuyNowButton>
               alignment: Alignment.center,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.flash_on_rounded,
-                          size: 13, color: Colors.amberAccent),
-                      const SizedBox(width: 3),
+                      const Icon(Icons.bolt_rounded,
+                          size: 14, color: Colors.amberAccent),
+                      const SizedBox(width: 2),
                       Text(
                         widget.label,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.3,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ],
