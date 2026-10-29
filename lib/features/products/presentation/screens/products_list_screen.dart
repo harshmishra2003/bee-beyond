@@ -29,8 +29,40 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
   DateTime? _dataResponseTime;
   Timer? _postResponseTimer;
 
+  int _recommendationIndex = 0;
+  Timer? _recommendationTimer;
+
+  static const List<String> _rotatingRecommendations = [
+    "Search 'Sacred White Feather'...",
+    "Search 'Artisanal Aroma Soap'...",
+    "Search 'Botanical Soy Candle'...",
+    "Search 'Shree Laxmi Yantra'...",
+    "Search 'Tibetan Singing Bowl'...",
+    "Search 'Bach Flower Drops'...",
+    "Search 'Ayurvedic Remedies'...",
+    "Search 'Reiki Cleansed Crystals'...",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startRecommendationTimer();
+  }
+
+  void _startRecommendationTimer() {
+    _recommendationTimer?.cancel();
+    _recommendationTimer = Timer.periodic(const Duration(milliseconds: 2500), (_) {
+      if (mounted) {
+        setState(() {
+          _recommendationIndex = (_recommendationIndex + 1) % _rotatingRecommendations.length;
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _recommendationTimer?.cancel();
     _postResponseTimer?.cancel();
     super.dispose();
   }
@@ -304,45 +336,89 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
       children: [
         Expanded(
           child: Container(
-            height: 46,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x0C000000),
-                  blurRadius: 10,
-                  offset: Offset(0, 3),
+                  color: Color(0x0F000000),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
             child: Row(
               children: [
-                const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 20),
-                const SizedBox(width: 10),
+                const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: TextField(
-                    onChanged: (val) {
-                      setState(() => _searchQuery = val.trim());
-                    },
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
-                    decoration: const InputDecoration(
-                      hintText: 'Search sacred remedies, crystals, yantras...',
-                      hintStyle: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      // Rotating Recommendation Animated Hint Text
+                      if (_searchQuery.isEmpty)
+                        IgnorePointer(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            transitionBuilder: (child, anim) => FadeTransition(
+                              opacity: anim,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0.0, 0.2),
+                                  end: Offset.zero,
+                                ).animate(anim),
+                                child: child,
+                              ),
+                            ),
+                            child: Text(
+                              _rotatingRecommendations[_recommendationIndex],
+                              key: ValueKey(_recommendationIndex),
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                color: const Color(0xFF94A3B8),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      TextField(
+                        onChanged: (val) {
+                          setState(() => _searchQuery = val.trim());
+                        },
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.5,
+                          color: const Color(0xFF0F172A),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (_searchQuery.isNotEmpty)
                   GestureDetector(
                     onTap: () => setState(() => _searchQuery = ''),
-                    child: const Icon(Icons.close_rounded, color: Color(0xFF94A3B8), size: 18),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF1F5F9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 16),
+                    ),
                   )
                 else
-                  const Icon(Icons.mic_rounded, color: Color(0xFF64748B), size: 18),
+                  const Icon(Icons.mic_rounded, color: Color(0xFF64748B), size: 20),
               ],
             ),
           ),
@@ -351,20 +427,21 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
         GestureDetector(
           onTap: _openCategoryFilterSheet,
           child: Container(
-            width: 46,
-            height: 46,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: const Color(0xFFEEF2FF),
               shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFC7D2FE), width: 1.2),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x0A000000),
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
+                  color: Color(0x0F000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
                 ),
               ],
             ),
-            child: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A), size: 20),
+            child: const Icon(Icons.tune_rounded, color: AppColors.primary, size: 22),
           ),
         ),
       ],
