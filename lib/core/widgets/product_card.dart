@@ -218,9 +218,8 @@ class _ProductCardState extends State<ProductCard> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
+                padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Category Tag & Unit Weight Badge Row
@@ -270,67 +269,81 @@ class _ProductCardState extends State<ProductCard> {
                       ],
                     ),
 
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 4),
 
-                    SizedBox(
-                      height: 28,
-                      child: Text(
-                        widget.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.labelLarge.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11.5,
-                          height: 1.18,
-                        ),
+                    // Title
+                    Text(
+                      widget.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.labelLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11.5,
+                        height: 1.18,
                       ),
                     ),
 
                     const SizedBox(height: 4),
 
-                    // Discount Percentage Badge
-                    if (discountPercent > 0)
-                      Text(
-                        '$discountPercent% OFF',
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF059669), // Green discount tag
-                        ),
-                      ),
-
-                    const SizedBox(height: 2),
-
+                    // Discount Percentage Badge & Price Row
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Flexible(
-                          child: Text(
-                            CurrencyUtils.formatINR(widget.price),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.titleMedium.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 14.5,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  CurrencyUtils.formatINR(widget.price),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.titleMedium.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14.0,
+                                  ),
+                                ),
+                              ),
+                              if (widget.originalPrice != null &&
+                                  widget.originalPrice! > widget.price) ...[
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    CurrencyUtils.formatINR(widget.originalPrice!),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      decoration: TextDecoration.lineThrough,
+                                      color: AppColors.textHint,
+                                      fontSize: 9.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        if (widget.originalPrice != null &&
-                            widget.originalPrice! > widget.price) ...[
-                          const SizedBox(width: 5),
-                          Text(
-                            CurrencyUtils.formatINR(widget.originalPrice!),
-                            style: AppTextStyles.labelSmall.copyWith(
-                              decoration: TextDecoration.lineThrough,
-                              color: AppColors.textHint,
-                              fontSize: 10,
+                        if (discountPercent > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFECFDF5),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '$discountPercent% OFF',
+                              style: const TextStyle(
+                                fontSize: 9.0,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF059669),
+                              ),
                             ),
                           ),
-                        ],
                       ],
                     ),
 
-                    const SizedBox(height: 8),
+                    const Spacer(),
 
                     // SMART ANIMATED COMPACT ICON ACTIONS ROW
                     Row(
@@ -338,7 +351,7 @@ class _ProductCardState extends State<ProductCard> {
                         if (isCartActive) ...[
                           // Quantity Counter Pill in Emerald Green
                           Container(
-                            height: 32,
+                            height: 30,
                             padding: const EdgeInsets.symmetric(horizontal: 2),
                             decoration: BoxDecoration(
                               color: const Color(0xFFECFDF5),
@@ -354,17 +367,17 @@ class _ProductCardState extends State<ProductCard> {
                                   child: const Padding(
                                     padding: EdgeInsets.all(2.0),
                                     child: Icon(Icons.remove_rounded,
-                                        color: Color(0xFF059669), size: 15),
+                                        color: Color(0xFF059669), size: 14),
                                   ),
                                 ),
                                 Padding(
                                   padding:
-                                      const EdgeInsets.symmetric(horizontal: 5),
+                                      const EdgeInsets.symmetric(horizontal: 4),
                                   child: Text(
                                     '$displayQty',
                                     style: const TextStyle(
                                       color: Color(0xFF065F46),
-                                      fontSize: 11.5,
+                                      fontSize: 11.0,
                                       fontWeight: FontWeight.w900,
                                     ),
                                   ),
@@ -375,13 +388,13 @@ class _ProductCardState extends State<ProductCard> {
                                   child: const Padding(
                                     padding: EdgeInsets.all(2.0),
                                     child: Icon(Icons.add_rounded,
-                                        color: Color(0xFF059669), size: 15),
+                                        color: Color(0xFF059669), size: 14),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
                           // View Cart Shining Button in Emerald Green
                           Expanded(
                             child: ShiningBuyNowButton(
@@ -404,7 +417,7 @@ class _ProductCardState extends State<ProductCard> {
                             },
                             tooltip: 'Add to Cart',
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
                           // Quick Buy Shining Button with Light Beam Glint
                           Expanded(
                             child: ShiningBuyNowButton(
