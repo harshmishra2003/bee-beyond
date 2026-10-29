@@ -33,14 +33,14 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
   Timer? _recommendationTimer;
 
   static const List<String> _rotatingRecommendations = [
-    "Search 'Sacred White Feather'...",
-    "Search 'Artisanal Aroma Soap'...",
-    "Search 'Botanical Soy Candle'...",
-    "Search 'Shree Laxmi Yantra'...",
-    "Search 'Tibetan Singing Bowl'...",
-    "Search 'Bach Flower Drops'...",
-    "Search 'Ayurvedic Remedies'...",
-    "Search 'Reiki Cleansed Crystals'...",
+    "Try 'Sacred White Feather'...",
+    "Try 'Artisanal Aroma Soap'...",
+    "Try 'Botanical Soy Candle'...",
+    "Try 'Shree Laxmi Yantra'...",
+    "Try 'Tibetan Singing Bowl'...",
+    "Try 'Bach Flower Drops'...",
+    "Try 'Ayurvedic Remedies'...",
+    "Try 'Reiki Cleansed Crystals'...",
   ];
 
   @override
@@ -332,119 +332,87 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
 
 
   Widget _buildSearchBar() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0F000000),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Stack(
-                    alignment: Alignment.centerLeft,
-                    children: [
-                      // Rotating Recommendation Animated Hint Text
-                      if (_searchQuery.isEmpty)
-                        IgnorePointer(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 400),
-                            transitionBuilder: (child, anim) => FadeTransition(
-                              opacity: anim,
-                              child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0.0, 0.2),
-                                  end: Offset.zero,
-                                ).animate(anim),
-                                child: child,
-                              ),
-                            ),
-                            child: Text(
-                              _rotatingRecommendations[_recommendationIndex],
-                              key: ValueKey(_recommendationIndex),
-                              style: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                color: const Color(0xFF94A3B8),
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      TextField(
-                        onChanged: (val) {
-                          setState(() => _searchQuery = val.trim());
-                        },
-                        style: GoogleFonts.poppins(
-                          fontSize: 13.5,
-                          color: const Color(0xFF0F172A),
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_searchQuery.isNotEmpty)
-                  GestureDetector(
-                    onTap: () => setState(() => _searchQuery = ''),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1F5F9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 16),
-                    ),
-                  )
-                else
-                  const Icon(Icons.mic_rounded, color: Color(0xFF64748B), size: 20),
-              ],
-            ),
-          ),
+    final currentHint = _rotatingRecommendations[_recommendationIndex];
+
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _searchQuery.isNotEmpty
+              ? AppColors.primary
+              : const Color(0xFFE2E8F0),
+          width: 1.5,
         ),
-        const SizedBox(width: 10),
-        GestureDetector(
-          onTap: _openCategoryFilterSheet,
-          child: Container(
-            width: 52,
-            height: 52,
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0C000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFC7D2FE), width: 1.2),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0F000000),
-                  blurRadius: 10,
-                  offset: Offset(0, 3),
-                ),
-              ],
             ),
-            child: const Icon(Icons.tune_rounded, color: AppColors.primary, size: 22),
+            child: const Icon(
+              Icons.search_rounded,
+              color: AppColors.primary,
+              size: 18,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              onChanged: (val) {
+                setState(() => _searchQuery = val.trim());
+              },
+              style: GoogleFonts.poppins(
+                fontSize: 13.0,
+                color: const Color(0xFF0F172A),
+                fontWeight: FontWeight.w600,
+              ),
+              decoration: InputDecoration(
+                hintText: currentHint,
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: 12.5,
+                  color: const Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w500,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          if (_searchQuery.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.cancel_rounded, color: Color(0xFF94A3B8), size: 18),
+              onPressed: () {
+                setState(() => _searchQuery = '');
+              },
+            ),
+          const SizedBox(width: 4),
+          Container(
+            height: 24,
+            width: 1,
+            color: const Color(0xFFE2E8F0),
+          ),
+          IconButton(
+            icon: const Icon(Icons.tune_rounded, color: AppColors.primary, size: 20),
+            tooltip: 'Filter Categories',
+            onPressed: _openCategoryFilterSheet,
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
     );
   }
 
