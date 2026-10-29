@@ -32,9 +32,9 @@ class RouterNotifier extends ChangeNotifier {
       return null;
     }
 
-    // 1) Loading State -> Splash Screen
+    // 1) Loading State -> Allow explicit navigation without forcing back to splash
     if (status == AuthStatus.loading) {
-      return RoutePaths.splash;
+      return null;
     }
 
     // 2) Unauthenticated State -> Auth Stack
