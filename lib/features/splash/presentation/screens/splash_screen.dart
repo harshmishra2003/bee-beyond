@@ -87,7 +87,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     final authState = ref.read(authStateProvider);
     if (authState.status == AuthStatus.loading) {
-      // Still loading auth state; ref.listen or failsafe timer will trigger transition
       return;
     }
 
@@ -97,28 +96,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void _forceNavigate() {
     if (_hasNavigated || !mounted) return;
     final authState = ref.read(authStateProvider);
-    if (authState.status == AuthStatus.loading) {
+    _performNavigation(authState);
+  }
+
+  void _performNavigation(AuthState authState) {
+    if (_hasNavigated || !mounted) return;
+
+    if (authState.status == AuthStatus.authenticated) {
+      _hasNavigated = true;
+      context.go(RoutePaths.home);
+    } else if (authState.status == AuthStatus.unauthenticated) {
       _hasNavigated = true;
       if (!authState.hasSeenOnboarding) {
         context.go(RoutePaths.onboarding);
       } else {
         context.go(RoutePaths.login);
       }
-      return;
-    }
-    _performNavigation(authState);
-  }
-
-  void _performNavigation(AuthState authState) {
-    if (_hasNavigated || !mounted) return;
-    _hasNavigated = true;
-
-    if (authState.status == AuthStatus.authenticated) {
-      context.go(RoutePaths.home);
-    } else if (!authState.hasSeenOnboarding) {
-      context.go(RoutePaths.onboarding);
     } else {
-      context.go(RoutePaths.login);
+      _hasNavigated = true;
+      if (!authState.hasSeenOnboarding) {
+        context.go(RoutePaths.onboarding);
+      } else {
+        context.go(RoutePaths.login);
+      }
     }
   }
 
