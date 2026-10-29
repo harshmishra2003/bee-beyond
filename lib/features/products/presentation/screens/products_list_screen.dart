@@ -451,7 +451,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
       if (_dataResponseTime == null) {
         _dataResponseTime = DateTime.now();
         _postResponseTimer?.cancel();
-        _postResponseTimer = Timer(const Duration(milliseconds: 2500), () {
+        _postResponseTimer = Timer(const Duration(milliseconds: 1200), () {
           if (mounted) {
             setState(() {
               _isLottieActive = false;
@@ -464,7 +464,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
     if (productsAsync.hasError && _dataResponseTime == null) {
       _dataResponseTime = DateTime.now();
       _postResponseTimer?.cancel();
-      _postResponseTimer = Timer(const Duration(milliseconds: 2500), () {
+      _postResponseTimer = Timer(const Duration(milliseconds: 1200), () {
         if (mounted) {
           setState(() {
             _isLottieActive = false;
@@ -473,7 +473,8 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
       });
     }
 
-    if (_isLottieActive || productsAsync.isLoading) {
+    // Only show Lottie loading overlay on initial screen launch before data is available
+    if (_isLottieActive && !productsAsync.hasValue) {
       return Scaffold(
         backgroundColor: const Color(0xFFFAF9FE),
         body: _buildProductsLottieLoadingOverlay(),
@@ -598,24 +599,29 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
 
                   const SizedBox(height: 14),
 
-                  // Products Grid - Responsive for Foldable Devices, Tablets & Phones
+                  // Products Grid - Fully Responsive for Foldables, Tablets, Web & Phones
                   filteredProducts.isNotEmpty
                       ? LayoutBuilder(
                           builder: (context, constraints) {
                             final screenWidth = constraints.maxWidth;
                             int crossAxisCount = 2;
-                            double childAspectRatio = 0.65;
+                            double childAspectRatio = 0.68;
 
-                            if (screenWidth >= 900) {
+                            if (screenWidth >= 1200) {
+                              crossAxisCount = 5;
+                              childAspectRatio = 0.76;
+                            } else if (screenWidth >= 900) {
                               crossAxisCount = 4;
-                              childAspectRatio = 0.72;
+                              childAspectRatio = 0.74;
                             } else if (screenWidth >= 600) {
                               crossAxisCount = 3;
-                              childAspectRatio = 0.68;
+                              childAspectRatio = 0.70;
                             } else if (screenWidth <= 360) {
-                              childAspectRatio = 0.58;
+                              crossAxisCount = 2;
+                              childAspectRatio = 0.60;
                             } else {
-                              childAspectRatio = 0.64;
+                              crossAxisCount = 2;
+                              childAspectRatio = 0.68;
                             }
 
                             return GridView.builder(
@@ -625,8 +631,8 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: crossAxisCount,
                                 childAspectRatio: childAspectRatio,
-                                crossAxisSpacing: 14,
-                                mainAxisSpacing: 14,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
                               ),
                               itemCount: filteredProducts.length,
                               itemBuilder: (context, index) {
