@@ -218,7 +218,7 @@ class _ProductCardState extends State<ProductCard> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(6, 2, 6, 4),
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,

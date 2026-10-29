@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "143455232985",
+    "project_id": "bee-beeyond",
+    "storage_bucket": "bee-beeyond.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:143455232985:android:86541d0c0595694ba8afc8",
+        "android_client_info": {
+          "package_name": "com.metrics.bee_beeyond"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCI0OhYTrChUvINEkMcixO6c9tkpSvDh4M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

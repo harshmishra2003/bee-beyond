@@ -1,0 +1,13 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "bee-beeyond",
+          "appId": "1:143455232985:android:86541d0c0595694ba8afc8",
+          "fileOutput": "android/app/google-services.json"
+        }
+      }
+    }
+  }
+}

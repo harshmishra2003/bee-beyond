@@ -241,44 +241,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
                 ),
               ),
 
-              // Top Promotional Badge
-              Positioned(
-                top: 10,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF524FA1), Color(0xFF383577)],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white38, width: 0.8),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.campaign, color: Colors.white, size: 12),
-                      const SizedBox(width: 4),
-                      Text(
-                        'OFFICIAL POSTER',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                          fontSize: 9.0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+
 
               // Bottom Title & Arrow CTA overlay
               Positioned(

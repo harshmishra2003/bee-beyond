@@ -604,18 +604,18 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                           builder: (context, constraints) {
                             final screenWidth = constraints.maxWidth;
                             int crossAxisCount = 2;
-                            double childAspectRatio = 0.68;
+                            double childAspectRatio = 0.65;
 
                             if (screenWidth >= 900) {
                               crossAxisCount = 4;
-                              childAspectRatio = 0.60;
+                              childAspectRatio = 0.72;
                             } else if (screenWidth >= 600) {
                               crossAxisCount = 3;
-                              childAspectRatio = 0.56;
+                              childAspectRatio = 0.68;
                             } else if (screenWidth <= 360) {
-                              childAspectRatio = 0.48;
+                              childAspectRatio = 0.58;
                             } else {
-                              childAspectRatio = 0.51;
+                              childAspectRatio = 0.64;
                             }
 
                             return GridView.builder(
