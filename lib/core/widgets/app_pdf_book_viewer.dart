@@ -2,9 +2,12 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-import '../constants/api_endpoints.dart';
+
+import '../../routing/route_paths.dart';
+import '../services/secure_storage_service.dart';
 import '../theme/app_colors.dart';
 
 class PdfUrlResolver {
@@ -15,7 +18,7 @@ class PdfUrlResolver {
     if (rawUrl == null || rawUrl.trim().isEmpty) return fallbackPdfUrl;
     String url = rawUrl.trim();
 
-    // 1. Convert Google Drive file URLs to direct download export links
+    // 1. Convert Google Drive file URLs
     if (url.contains('drive.google.com')) {
       final regExp = RegExp(r'/(?:file/d/|id=)([\w-]+)');
       final match = regExp.firstMatch(url);
@@ -45,19 +48,17 @@ class PdfUrlResolver {
       return url;
     }
 
-    // 5. Relative paths uploaded from Admin panel
-    String baseUrl = ApiEndpoints.baseUrl;
-    if (baseUrl.endsWith('/api')) {
-      baseUrl = baseUrl.substring(0, baseUrl.length - 4);
+    // 5. Relative paths
+    if (url.startsWith('/api/')) {
+      return 'https://metricstestingapp.xyz$url';
     }
-    if (baseUrl.endsWith('/')) {
-      baseUrl = baseUrl.substring(0, baseUrl.length - 1);
-    }
-
     if (url.startsWith('/')) {
-      return '$baseUrl$url';
+      return 'https://metricstestingapp.xyz/api$url';
     }
-    return '$baseUrl/$url';
+    if (url.startsWith('api/')) {
+      return 'https://metricstestingapp.xyz/$url';
+    }
+    return 'https://metricstestingapp.xyz/api/$url';
   }
 
   static bool isValidPdfBytes(Uint8List bytes) {
@@ -118,7 +119,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
   String? _localFilePath;
   bool _isLoading = true;
   String? _errorMessage;
-  bool _isUsingFallback = false;
+  int? _accessErrorCode; // 401 or 403
   int _totalPages = 0;
   int _currentPage = 1;
   bool _showTextTab = false;
@@ -141,32 +142,39 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
+        _accessErrorCode = null;
       });
     }
 
-    final targetUrl = _isUsingFallback
-        ? PdfUrlResolver.fallbackPdfUrl
-        : PdfUrlResolver.resolveUrl(rawUrl);
+    final targetUrl = PdfUrlResolver.resolveUrl(rawUrl);
 
     try {
+      final token = await SecureStorageService().getAuthToken();
+      final headers = <String, String>{
+        'User-Agent': 'BeeBeeyond/1.0.0 (Android)',
+        'Accept': 'application/pdf,application/octet-stream,*/*',
+      };
+
+      if (token != null && token.trim().isNotEmpty) {
+        headers['Authorization'] = 'Bearer ${token.trim()}';
+      }
+
       final dio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 20),
-        receiveTimeout: const Duration(seconds: 25),
+        connectTimeout: const Duration(seconds: 25),
+        receiveTimeout: const Duration(seconds: 30),
         responseType: ResponseType.bytes,
-        headers: {
-          'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/pdf,application/octet-stream,*/*',
-        },
+        validateStatus: (status) => true,
+        headers: headers,
       ));
 
       final response = await dio.get<List<int>>(targetUrl);
+
       if (response.statusCode == 200 && response.data != null) {
         final bytes = Uint8List.fromList(response.data!);
 
         if (PdfUrlResolver.isValidPdfBytes(bytes)) {
           final tempDir = await getTemporaryDirectory();
-          final fileName = 'book_${DateTime.now().millisecondsSinceEpoch}.pdf';
+          final fileName = 'lesson_pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
           final file = File('${tempDir.path}/$fileName');
           await file.writeAsBytes(bytes);
 
@@ -177,32 +185,52 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
             });
           }
           return;
+        } else {
+          // Status 200 but bytes are not %PDF- (e.g. JSON error object)
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = 'The server response could not be verified as a valid PDF document.';
+            });
+          }
+          return;
         }
       }
 
-      // If bytes are not a valid PDF or status != 200, try fallback once
-      if (!_isUsingFallback) {
-        _isUsingFallback = true;
-        await _loadPdfDocument(PdfUrlResolver.fallbackPdfUrl);
-      } else {
+      if (response.statusCode == 401) {
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = 'The file at this link could not be parsed as a PDF document.';
+            _accessErrorCode = 401;
+            _errorMessage = 'Authentication required. Please log in again to access this study PDF.';
           });
         }
+        return;
+      }
+
+      if (response.statusCode == 403) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _accessErrorCode = 403;
+            _errorMessage = 'VIP Membership Required 👑\nThis lesson PDF is exclusive to paid members. Upgrade your plan to unlock instant reading access.';
+          });
+        }
+        return;
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Could not load PDF document (HTTP ${response.statusCode}). Please check your connection.';
+        });
       }
     } catch (e) {
-      if (!_isUsingFallback) {
-        _isUsingFallback = true;
-        await _loadPdfDocument(PdfUrlResolver.fallbackPdfUrl);
-      } else {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Could not download PDF. Please check your internet connection.';
-          });
-        }
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Could not connect to the PDF server. Please check your internet connection.';
+        });
       }
     }
   }
@@ -280,7 +308,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
             ),
           ),
 
-          // TOGGLE TABS (If text/description is available)
+          // TOGGLE TABS
           if (hasTextContent)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -381,7 +409,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                             CircularProgressIndicator(color: Color(0xFFEF4444)),
                             SizedBox(height: 16),
                             Text(
-                              'Downloading & Rendering PDF Book...',
+                              'Fetching Protected Study PDF...',
                               style: TextStyle(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.bold,
@@ -390,7 +418,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              'Optimizing page contents for clear reading',
+                              'Verifying authorization & streaming document',
                               style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 11.5,
@@ -482,7 +510,6 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: () {
-                  _isUsingFallback = false;
                   _loadPdfDocument(widget.pdfUrl);
                 },
                 icon: const Icon(Icons.refresh_rounded, size: 18, color: AppColors.primary),
@@ -576,11 +603,21 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFEF2F2),
+              decoration: BoxDecoration(
+                color: _accessErrorCode == 403
+                    ? const Color(0xFFFDF4FF)
+                    : const Color(0xFFFEF2F2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFEF4444), size: 48),
+              child: Icon(
+                _accessErrorCode == 403
+                    ? Icons.stars_rounded
+                    : (_accessErrorCode == 401 ? Icons.lock_outline_rounded : Icons.picture_as_pdf_rounded),
+                color: _accessErrorCode == 403
+                    ? const Color(0xFF6E4F9A)
+                    : const Color(0xFFEF4444),
+                size: 48,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -599,22 +636,57 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
             ),
             const SizedBox(height: 20),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+
+            if (_accessErrorCode == 403)
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6E4F9A),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  context.push(RoutePaths.membership);
+                },
+                icon: const Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 18),
+                label: const Text(
+                  'EXPLORE VIP MEMBERSHIP',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              )
+            else if (_accessErrorCode == 401)
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  context.push(RoutePaths.login);
+                },
+                icon: const Icon(Icons.login_rounded, color: Colors.white, size: 18),
+                label: const Text(
+                  'LOG IN AGAIN',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              )
+            else
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                ),
+                onPressed: () {
+                  _loadPdfDocument(widget.pdfUrl);
+                },
+                icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
+                label: const Text(
+                  'Retry Loading PDF',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
               ),
-              onPressed: () {
-                _isUsingFallback = false;
-                _loadPdfDocument(widget.pdfUrl);
-              },
-              icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
-              label: const Text(
-                'Retry Loading PDF',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ),
           ],
         ),
       ),
