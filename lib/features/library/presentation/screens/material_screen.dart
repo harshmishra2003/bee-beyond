@@ -889,95 +889,25 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
     );
   }
 
-  // CATEGORY SECTION WITH HORIZONTAL SCROLLABLE LIST
+  // CATEGORY SECTION WITH AUTO-SLIDING HORIZONTAL SCROLLABLE LIST
   Widget _buildCategorySection({
     required String categoryName,
     required List<BookItem> books,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        categoryName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.titleMedium.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => _navigateToCategoryGrid(categoryName, books),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Row(
-                    children: [
-                      Text(
-                        'View All (${books.length})',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 3),
-                      const Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 11,
-                        color: AppColors.primary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        SizedBox(
-          height: 220,
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: books.length + 1,
-            itemBuilder: (context, index) {
-              if (index < books.length) {
-                final book = books[index];
-                final isBookmarked = _bookmarkedIds.contains(book.id);
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: _buildHorizontalBookCard(book, isBookmarked),
-                );
-              } else {
-                return _buildShiningViewMoreCard(
-                  categoryName: categoryName,
+    return _AutoSlidingCategorySection(
+      categoryName: categoryName,
+      books: books,
+      bookmarkedIds: _bookmarkedIds,
+      onToggleBookmark: _toggleBookmark,
+      onOpenBook: _handleBookTap,
+      onViewMore: () => _navigateToCategoryGrid(categoryName, books),
+      buildBookCard: (book, isBookmarked) => _buildHorizontalBookCard(book, isBookmarked),
+      buildViewMoreCard: (catName, catBooks) => _buildShiningViewMoreCard(
+        categoryName: catName,
+        books: catBooks,
+      ),
+    );
+  }
                   books: books,
                 );
               }
@@ -1812,6 +1742,206 @@ class BookCategoryGridScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// AUTO-SLIDING HORIZONTAL CATEGORY SECTION WIDGET
+class _AutoSlidingCategorySection extends StatefulWidget {
+  final String categoryName;
+  final List<BookItem> books;
+  final Set<String> bookmarkedIds;
+  final ValueChanged<String> onToggleBookmark;
+  final ValueChanged<BookItem> onOpenBook;
+  final VoidCallback onViewMore;
+  final Widget Function(BookItem book, bool isBookmarked) buildBookCard;
+  final Widget Function(String categoryName, List<BookItem> books) buildViewMoreCard;
+
+  const _AutoSlidingCategorySection({
+    required this.categoryName,
+    required this.books,
+    required this.bookmarkedIds,
+    required this.onToggleBookmark,
+    required this.onOpenBook,
+    required this.onViewMore,
+    required this.buildBookCard,
+    required this.buildViewMoreCard,
+  });
+
+  @override
+  State<_AutoSlidingCategorySection> createState() => _AutoSlidingCategorySectionState();
+}
+
+class _AutoSlidingCategorySectionState extends State<_AutoSlidingCategorySection> {
+  late ScrollController _scrollController;
+  Timer? _autoSlideTimer;
+  bool _isForward = true;
+  bool _isUserInteracting = false;
+  Timer? _resumeTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _startAutoSlideTimer();
+      }
+    });
+  }
+
+  void _startAutoSlideTimer() {
+    _autoSlideTimer?.cancel();
+    _autoSlideTimer = Timer.periodic(const Duration(milliseconds: 2800), (_) {
+      if (!mounted || _isUserInteracting || !_scrollController.hasClients) return;
+
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.offset;
+
+      if (maxScroll <= 0) return;
+
+      double targetScroll;
+      if (_isForward) {
+        targetScroll = currentScroll + 144.0;
+        if (targetScroll >= maxScroll - 20) {
+          targetScroll = maxScroll;
+          _isForward = false;
+        }
+      } else {
+        targetScroll = currentScroll - 144.0;
+        if (targetScroll <= 20) {
+          targetScroll = 0;
+          _isForward = true;
+        }
+      }
+
+      _scrollController.animateTo(
+        targetScroll,
+        duration: const Duration(milliseconds: 1400),
+        curve: Curves.easeInOutCubic,
+      );
+    });
+  }
+
+  void _onPointerDown() {
+    _isUserInteracting = true;
+    _resumeTimer?.cancel();
+  }
+
+  void _onPointerUp() {
+    _resumeTimer?.cancel();
+    _resumeTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) {
+        _isUserInteracting = false;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoSlideTimer?.cancel();
+    _resumeTimer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        widget.categoryName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: widget.onViewMore,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Row(
+                    children: [
+                      Text(
+                        'View All (${widget.books.length})',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 11,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Listener(
+          onPointerDown: (_) => _onPointerDown(),
+          onPointerUp: (_) => _onPointerUp(),
+          onPointerCancel: (_) => _onPointerUp(),
+          child: SizedBox(
+            height: 220,
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: widget.books.length + 1,
+              itemBuilder: (context, index) {
+                if (index < widget.books.length) {
+                  final book = widget.books[index];
+                  final isBookmarked = widget.bookmarkedIds.contains(book.id);
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: widget.buildBookCard(book, isBookmarked),
+                  );
+                } else {
+                  return widget.buildViewMoreCard(widget.categoryName, widget.books);
+                }
+              },
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 18),
+      ],
     );
   }
 }
