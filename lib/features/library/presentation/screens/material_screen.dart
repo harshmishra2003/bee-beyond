@@ -354,7 +354,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
             // BUY NOW BUTTON
             ThreeDButton(
               text: 'BUY E-BOOK NOW • ${CurrencyUtils.formatINR(book.price)}',
-              icon: Icons.bolt_rounded,
+              icon: const Icon(Icons.bolt_rounded, size: 20, color: Colors.amberAccent),
               color: AppColors.primary,
               shadowColor: const Color(0xFF312E81),
               onPressed: () {
