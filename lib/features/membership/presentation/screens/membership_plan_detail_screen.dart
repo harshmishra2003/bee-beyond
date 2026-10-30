@@ -15,6 +15,7 @@ import '../../../../core/widgets/status_dialog.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/membership_plan_entity.dart';
+import '../../domain/entities/membership_verify_result_entity.dart';
 import 'package:intl/intl.dart';
 import '../providers/expiry_provider.dart';
 import '../providers/membership_provider.dart';
@@ -140,7 +141,8 @@ class _MembershipPlanDetailScreenState
         );
 
         final repo = ref.read(membershipRepositoryProvider);
-        final isVerified = await repo.verifyMembershipPayment(
+        final MembershipVerifyResultEntity? verifyResult =
+            await repo.verifyMembershipPayment(
           membershipOrderId: orderResponse.membershipOrderId,
           razorpayPaymentId: paymentId,
           razorpayOrderId: orderId,
@@ -153,28 +155,65 @@ class _MembershipPlanDetailScreenState
 
         if (!mounted) return;
 
-        if (isVerified) {
-          // Immediately activate the pass in local state & SharedPreferences
-          await ref.read(activePassProvider.notifier).activatePass(
-            passId: plan.id,
-            passName: '${plan.name} Membership Pass',
-            slug: plan.slug,
-            durationYears: plan.accessDuration > 0 ? plan.accessDuration : 1,
-            amountPaid: plan.price,
-            transactionId: paymentId,
-          );
+        if (verifyResult != null && verifyResult.success) {
+          if (verifyResult.isScheduled) {
+            // SCHEDULED YEARLY MEMBERSHIP
+            // Do NOT activate pass locally or overwrite active monthly pass.
+            // Show payment success message explaining scheduled start date.
+            final formattedStart = verifyResult.startDate != null
+                ? DateFormat('dd MMM yyyy, hh:mm a').format(verifyResult.startDate!)
+                : 'your current monthly plan expires';
 
-          StatusDialog.show(
-            context,
-            title: 'Membership Activated! 👑',
-            description:
-                'Payment ID: $paymentId\nOrder ID: $orderId\n\nYour ${plan.name} Membership Pass has been successfully activated!',
-            isSuccess: true,
-            onAction: () {
-              context.go(RoutePaths.membership);
-            },
-            actionText: 'View My Pass',
-          );
+            StatusDialog.show(
+              context,
+              title: 'Yearly Membership Scheduled! 🗓️',
+              description:
+                  'Payment ID: $paymentId\nOrder ID: $orderId\n\nYour payment for ${plan.name} Yearly Membership was successful!\n\nYour yearly membership is scheduled to start on $formattedStart after your current monthly plan finishes.\n\nYour active monthly membership remains in effect until then.',
+              isSuccess: true,
+              onAction: () {
+                context.go(RoutePaths.membership);
+              },
+              actionText: 'View My Memberships',
+            );
+          } else if (verifyResult.isActive) {
+            // ACTIVE MEMBERSHIP (Monthly or Immediate Yearly)
+            // Use exact backend start_date and end_date
+            await ref.read(activePassProvider.notifier).activatePass(
+              passId: plan.id,
+              passName: '${plan.name} Membership Pass',
+              slug: plan.slug,
+              startDate: verifyResult.startDate,
+              expiresAt: verifyResult.endDate,
+              amountPaid: price,
+              transactionId: paymentId,
+            );
+
+            StatusDialog.show(
+              context,
+              title: 'Membership Activated! 👑',
+              description:
+                  'Payment ID: $paymentId\nOrder ID: $orderId\n\nYour ${plan.name} Membership Pass has been successfully activated!',
+              isSuccess: true,
+              onAction: () {
+                context.go(RoutePaths.membership);
+              },
+              actionText: 'View My Pass',
+            );
+          } else {
+            // Other status (e.g. pending/expired)
+            StatusDialog.show(
+              context,
+              title: 'Payment Status: ${verifyResult.membershipStatus.toUpperCase()}',
+              description: verifyResult.message.isNotEmpty
+                  ? verifyResult.message
+                  : 'Payment ID: $paymentId\nOrder ID: $orderId\n\nYour payment status is currently "${verifyResult.membershipStatus}".',
+              isSuccess: verifyResult.success,
+              onAction: () {
+                context.go(RoutePaths.membership);
+              },
+              actionText: 'Check Status',
+            );
+          }
         } else {
           // Verification failed or pending — NEVER display success message
           StatusDialog.show(
