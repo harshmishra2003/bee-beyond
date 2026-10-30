@@ -77,6 +77,7 @@ class AppPdfBookViewer extends StatefulWidget {
   final String? subtitle;
   final String? description;
   final List<String>? samplePagesContent;
+  final bool isPreviewMode;
 
   const AppPdfBookViewer({
     super.key,
@@ -85,6 +86,7 @@ class AppPdfBookViewer extends StatefulWidget {
     this.subtitle,
     this.description,
     this.samplePagesContent,
+    this.isPreviewMode = false,
   });
 
   /// Static helper method to show the viewer in a modal bottom sheet
@@ -95,6 +97,7 @@ class AppPdfBookViewer extends StatefulWidget {
     String? subtitle,
     String? description,
     List<String>? samplePagesContent,
+    bool isPreviewMode = false,
   }) {
     showModalBottomSheet(
       context: context,
@@ -106,6 +109,7 @@ class AppPdfBookViewer extends StatefulWidget {
         subtitle: subtitle,
         description: description,
         samplePagesContent: samplePagesContent,
+        isPreviewMode: isPreviewMode,
       ),
     );
   }
@@ -438,18 +442,30 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                                 enableDoubleTapZooming: true,
                                 enableTextSelection: true,
                                 pageSpacing: 8,
+                                onPageChanged: (PdfPageChangedDetails details) {
+                                  if (widget.isPreviewMode && details.newPageNumber > 2) {
+                                    _pdfViewerController.jumpToPage(2);
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Preview limit reached (Max 2 pages). Please purchase the book to unlock full reading access.'),
+                                          backgroundColor: Colors.redAccent,
+                                          duration: Duration(seconds: 3),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (mounted) {
+                                    setState(() {
+                                      _currentPage = details.newPageNumber;
+                                    });
+                                  }
+                                },
                                 onDocumentLoaded: (PdfDocumentLoadedDetails details) {
                                   if (mounted) {
                                     setState(() {
                                       _totalPages = details.document.pages.count;
                                       _isLoading = false;
-                                    });
-                                  }
-                                },
-                                onPageChanged: (PdfPageChangedDetails details) {
-                                  if (mounted) {
-                                    setState(() {
-                                      _currentPage = details.newPageNumber;
                                     });
                                   }
                                 },
@@ -551,7 +567,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary),
           ),
           const SizedBox(height: 12),
-          ...pages.asMap().entries.map((entry) {
+          ...pages.take(widget.isPreviewMode ? 1 : pages.length).toList().asMap().entries.map((entry) {
             final idx = entry.key;
             final pageText = entry.value;
             return Container(
@@ -578,6 +594,28 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
               ),
             );
           }),
+          if (widget.isPreviewMode && pages.length > 1)
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFFECDD3)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.lock_rounded, color: Color(0xFFE11D48)),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Unlock the full book to read remaining sections and chapters.',
+                      style: TextStyle(color: Color(0xFF9F1239), fontSize: 12.5, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
 
         if (description.isEmpty && pages.isEmpty)
