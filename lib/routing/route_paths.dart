@@ -27,6 +27,7 @@ class RoutePaths {
 
   // Library
   static const String library = '/library';
+  static const String workshopBooking = '/library/workshop-booking';
   static const String music = '/library/music';
   static const String video = '/library/video';
   static const String material = '/library/material';
