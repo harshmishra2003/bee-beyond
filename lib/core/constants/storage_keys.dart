@@ -5,4 +5,5 @@ class StorageKeys {
   static const String themeMode = 'theme_mode';
   static const String isOnboardingCompleted = 'is_onboarding_completed';
   static const String cartCache = 'cart_cache';
+  static const String purchasedBooks = 'purchased_books';
 }
