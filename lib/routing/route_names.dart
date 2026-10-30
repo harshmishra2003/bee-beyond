@@ -22,6 +22,7 @@ class RouteNames {
   static const String productDetail = 'productDetail';
 
   static const String library = 'library';
+  static const String workshopBooking = 'workshopBooking';
   static const String music = 'music';
   static const String video = 'video';
 
