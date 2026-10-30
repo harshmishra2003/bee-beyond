@@ -29,7 +29,7 @@ class SecureStorageService {
     String? token;
     try {
       token = await _storage.read(key: StorageKeys.authToken).timeout(
-        const Duration(milliseconds: 400),
+        const Duration(seconds: 3),
         onTimeout: () => null,
       );
     } catch (_) {}
@@ -70,7 +70,7 @@ class SecureStorageService {
     String? data;
     try {
       data = await _storage.read(key: StorageKeys.userData).timeout(
-        const Duration(milliseconds: 400),
+        const Duration(seconds: 3),
         onTimeout: () => null,
       );
     } catch (_) {}
