@@ -414,6 +414,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: RoutePaths.workshopBooking,
+        name: RouteNames.workshopBooking,
+        pageBuilder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: WorkshopBookingScreen(workshopData: extra),
+            type: AppTransitionType.slideRight,
+          );
+        },
+      ),
+      GoRoute(
         path: RoutePaths.music,
         name: RouteNames.music,
         pageBuilder: (context, state) => buildCustomTransitionPage(
