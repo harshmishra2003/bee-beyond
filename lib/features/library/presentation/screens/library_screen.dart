@@ -277,9 +277,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
               // 4. HORIZONTAL CATEGORY FILTER PILLS
               SizedBox(
+                width: double.infinity,
                 height: 38,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
                   physics: const BouncingScrollPhysics(),
                   itemCount: _categoryFilters.length,
                   separatorBuilder: (context, index) => const SizedBox(width: 8),
