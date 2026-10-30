@@ -57,40 +57,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> checkCurrentUser() async {
     state = AuthState.loading();
     try {
-      bool hasSeenOnboarding = false;
-      try {
-        final prefs = await SharedPreferences.getInstance().timeout(
-          const Duration(seconds: 1),
-          onTimeout: () => throw TimeoutException('SharedPreferences timeout'),
-        );
-        hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
-      } catch (_) {
-        hasSeenOnboarding = false;
-      }
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
 
-      String? token;
-      try {
-        token = await _secureStorage.getAuthToken().timeout(
-          const Duration(seconds: 1),
-          onTimeout: () => null,
-        );
-      } catch (_) {
-        token = null;
-      }
+      final token = await _secureStorage.getAuthToken();
 
       if (token != null && token.trim().isNotEmpty) {
         UserEntity? user;
         try {
-          user = await _repository.getCurrentUser().timeout(
-            const Duration(seconds: 1),
-            onTimeout: () => null,
-          );
+          user = await _repository.getCurrentUser();
         } catch (_) {
           user = null;
         }
 
         if (user != null) {
-          state = AuthState.authenticated(user, hasSeenOnboarding: hasSeenOnboarding);
+          // If logged in, automatically mark onboarding as completed so onboarding is never shown again
+          if (!hasSeenOnboarding) {
+            await prefs.setBool(StorageKeys.isOnboardingCompleted, true);
+          }
+          state = AuthState.authenticated(user, hasSeenOnboarding: true);
           return;
         }
       }
@@ -105,9 +90,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repository.login(email, password);
       final prefs = await SharedPreferences.getInstance();
-      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+      // ALWAYS mark onboarding as completed when logging in successfully
+      await prefs.setBool(StorageKeys.isOnboardingCompleted, true);
 
-      state = AuthState.authenticated(user, hasSeenOnboarding: hasSeenOnboarding);
+      state = AuthState.authenticated(user, hasSeenOnboarding: true);
     } catch (e) {
       rethrow;
     }
@@ -131,9 +117,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         gender: gender,
       );
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(StorageKeys.isOnboardingCompleted, false);
+      // ALWAYS mark onboarding as completed on registration
+      await prefs.setBool(StorageKeys.isOnboardingCompleted, true);
 
-      state = AuthState.authenticated(user, hasSeenOnboarding: false);
+      state = AuthState.authenticated(user, hasSeenOnboarding: true);
     } catch (e) {
       rethrow;
     }
@@ -160,7 +147,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (_) {}
 
     final prefs = await SharedPreferences.getInstance();
-    final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
+    // Maintain hasSeenOnboarding = true after logout so user goes to /login instead of /onboarding
+    final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? true;
 
     state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
   }
