@@ -19,6 +19,7 @@ import '../features/library/presentation/screens/library_screen.dart';
 import '../features/library/presentation/screens/material_screen.dart';
 import '../features/library/presentation/screens/music_screen.dart';
 import '../features/library/presentation/screens/video_screen.dart';
+import '../features/library/presentation/screens/workshop_booking_screen.dart';
 import '../features/main_layout/presentation/screens/main_screen.dart';
 import '../features/membership/domain/entities/membership_plan_entity.dart';
 import '../features/membership/presentation/screens/membership_plan_detail_screen.dart';
