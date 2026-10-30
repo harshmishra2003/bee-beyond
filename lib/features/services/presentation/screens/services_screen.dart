@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -400,43 +401,82 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
           physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
           child: Column(
             children: [
-              // Top Hero Banner
+              // Top Hero Banner with Radiant Wellness Gradients
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF4A154B),
+                      Color(0xFF7E22CE),
+                      Color(0xFF4338CA),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x307E22CE),
+                      blurRadius: 16,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Stack(
                   children: [
-                    const Row(
+                    Positioned(
+                      right: -20,
+                      bottom: -20,
+                      child: Icon(
+                        Icons.spa_rounded,
+                        size: 110,
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.support_agent_rounded, color: Colors.amberAccent, size: 28),
-                        SizedBox(width: 8),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.support_agent_rounded, color: Colors.amberAccent, size: 24),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Expert Practitioner Sessions',
+                              style: GoogleFonts.poppins(
+                                color: Colors.amberAccent,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 15,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
                         Text(
-                          'Expert Practitioner Consultations',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                          'Book 1-on-1 private consultations with certified Ayurvedic doctors, Vastu masters, Bach therapists, and mind-body experts.',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 12,
+                            height: 1.45,
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Book 1-on-1 private sessions with certified Ayurvedic doctors, Vastu masters, Bach therapists, and counselors.',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white70,
-                        height: 1.35,
-                      ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
 
               // Services List & Category Filter
               servicesAsync.when(
