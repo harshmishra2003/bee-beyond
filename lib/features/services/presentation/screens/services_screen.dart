@@ -51,7 +51,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
     super.dispose();
   }
 
-  void _bookServiceSession(ServiceItem srv) async {
+  void _bookServiceSession(ServiceItem srv, String slotId) async {
     final currentUser = ref.read(authStateProvider).user;
     final customerName = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Bee Beyonnd Patient';
     final customerPhone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : '9876543210';
@@ -72,7 +72,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
               CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
               SizedBox(height: 20),
               Text(
-                'Creating Service Booking Order...',
+                'Securing Selected Slot...',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary),
               ),
             ],
@@ -91,6 +91,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
         items: [
           {
             'product_id': srv.id,
+            'slot_id': slotId, // Pass the selected slot ID to backend
             'quantity': 1,
           }
         ],
@@ -122,8 +123,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 
         StatusDialog.show(
           context,
-          title: 'Verifying Service Payment...',
-          description: 'Checking payment signature & database status with server...',
+          title: 'Confirming Slot Booking...',
+          description: 'Locking slot and verifying payment with server...',
           isLoading: true,
         );
 
@@ -144,11 +145,11 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 receiptId: receiptId,
                 orderId: serverOrder.orderId,
                 title: srv.serviceName,
-                type: 'SERVICE',
+                type: 'SERVICE_APPOINTMENT',
                 customerName: customerName,
                 customerPhone: customerPhone,
                 customerEmail: customerEmail,
-                deliveryAddress: 'Virtual Consultation Portal (Bee Beyonnd Tele-Health)',
+                deliveryAddress: 'Virtual Consultation / Selected Slot: $slotId',
                 items: [
                   ReceiptItem(name: srv.serviceName, quantity: 1, unitPrice: srv.serviceCharge),
                 ],
@@ -163,10 +164,13 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
               ref.read(receiptsProvider.notifier).addReceipt(newReceipt);
 
               ref.read(notificationsProvider.notifier).postNotification(
-                title: '🩺 Practitioner Session Reserved!',
-                message: '1-on-1 slot reserved for "${srv.serviceName}". View tax invoice & appointment details.',
+                title: '🩺 Appointment Confirmed!',
+                message: 'Your slot for "${srv.serviceName}" has been successfully booked.',
                 category: 'services',
               );
+
+              // 💥 Refresh the services data so the UI reflects the newly booked slot (Greys it out)
+              ref.invalidate(servicesProvider);
 
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -657,6 +661,59 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Real-time Availability Counter Dashboard
+          Container(
+             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+             decoration: const BoxDecoration(
+               color: Colors.white,
+               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+               border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+             ),
+             child: Column(
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Today\'s Slot Availability',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      Text(
+                        '${srv.remainingSlotsCount} Remaining | ${srv.totalSlotsToday} Total',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Progress Bar UI
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Row(
+                      children: [
+                         Expanded(
+                           flex: srv.bookedSlotsCount,
+                           child: Container(height: 6, color: const Color(0xFF94A3B8)), // Booked: Grey
+                         ),
+                         Expanded(
+                           flex: srv.remainingSlotsCount,
+                           child: Container(height: 6, color: const Color(0xFF10B981)), // Remaining: Green
+                         ),
+                      ],
+                    ),
+                  ),
+               ],
+             ),
+          ),
+
           // Offer Image Banner - FULL IMAGE VISIBLE WITHOUT CUT OFF
           if (srv.offerImageUrl.isNotEmpty)
             Stack(
@@ -786,7 +843,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       children: [
                         const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primary),
                         const SizedBox(width: 4),
-                        Text(
+                        const Text(
                           'View Session Details & Infographic →',
                           style: TextStyle(
                             fontSize: 12,
@@ -798,6 +855,83 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       ],
                     ),
                   ),
+                ],
+
+                // Post-Booking Media Access
+                if (srv.slots.any((s) => s.isBookedByMe)) ...[
+                   const SizedBox(height: 16),
+                   Container(
+                     padding: const EdgeInsets.all(12),
+                     decoration: BoxDecoration(
+                       color: const Color(0xFFF0FDF4), // Light Green bg
+                       borderRadius: BorderRadius.circular(12),
+                       border: Border.all(color: const Color(0xFF86EFAC)),
+                     ),
+                     child: Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 18),
+                              SizedBox(width: 6),
+                              Text(
+                                'You have a booked appointment',
+                                style: TextStyle(
+                                  color: Color(0xFF16A34A),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (srv.meetingLink.isNotEmpty) ...[
+                             const SizedBox(height: 10),
+                             SizedBox(
+                               width: double.infinity,
+                               child: ElevatedButton.icon(
+                                 style: ElevatedButton.styleFrom(
+                                   backgroundColor: const Color(0xFF10B981),
+                                   foregroundColor: Colors.white,
+                                   elevation: 0,
+                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                 ),
+                                 icon: const Icon(Icons.video_call_rounded, size: 20),
+                                 label: const Text('JOIN MEETING NOW', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                 onPressed: () {
+                                    // Normally you would launch the URL here
+                                    AppAlertManager.showFloatingToast(context, title: 'Opening Meeting...', message: 'Connecting to virtual room', icon: Icons.videocam);
+                                 },
+                               ),
+                             ),
+                          ],
+                          if (srv.mediaPdfs.isNotEmpty || srv.mediaVideos.isNotEmpty) ...[
+                             const SizedBox(height: 10),
+                             const Text('Provided Materials:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF16A34A))),
+                             const SizedBox(height: 4),
+                             ...srv.mediaPdfs.map((pdf) => Padding(
+                               padding: const EdgeInsets.only(bottom: 4.0),
+                               child: Row(
+                                 children: [
+                                   const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFEF4444), size: 14),
+                                   const SizedBox(width: 4),
+                                   Expanded(child: Text(pdf.title, style: const TextStyle(fontSize: 11, color: Color(0xFF16A34A), decoration: TextDecoration.underline))),
+                                 ],
+                               ),
+                             )),
+                             ...srv.mediaVideos.map((vid) => Padding(
+                               padding: const EdgeInsets.only(bottom: 4.0),
+                               child: Row(
+                                 children: [
+                                   const Icon(Icons.play_circle_rounded, color: AppColors.primary, size: 14),
+                                   const SizedBox(width: 4),
+                                   Expanded(child: Text(vid.title, style: const TextStyle(fontSize: 11, color: AppColors.primary, decoration: TextDecoration.underline))),
+                                 ],
+                               ),
+                             )),
+                          ],
+                       ],
+                     ),
+                   ),
                 ],
 
                 const SizedBox(height: 16),
@@ -830,10 +964,10 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       ],
                     ),
                     ThreeDButton(
-                      text: 'Book Session',
+                      text: 'Book Appointment',
                       fontSize: 12,
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                      onPressed: () => _bookServiceSession(srv),
+                      onPressed: () => _showServiceBookingSheet(context, srv),
                     ),
                   ],
                 ),
@@ -841,6 +975,281 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Beautiful Bottom Sheet for booking slots
+  void _showServiceBookingSheet(BuildContext context, ServiceItem srv) {
+    ServiceSlot? selectedSlot;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.70,
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // SERVICE HEADER
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(srv.icon, color: AppColors.primary, size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Book Appointment',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            srv.serviceName,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+                const Divider(color: Color(0xFFE2E8F0)),
+                const SizedBox(height: 16),
+
+                // AVAILABLE SLOTS SECTION (GREEN)
+                const Text(
+                  'Available Time Slots',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 42,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: srv.slots.where((s) => !s.isBooked).length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final slot = srv.slots.where((s) => !s.isBooked).toList()[index];
+                      final isSelected = selectedSlot?.slotId == slot.slotId;
+                      return GestureDetector(
+                        onTap: () {
+                          setSheetState(() {
+                            selectedSlot = slot;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFF059669) : const Color(0xFFD1FAE5),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFF047857) : const Color(0xFFA7F3D0),
+                              width: 1.5,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF059669).withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    )
+                                  ]
+                                : null,
+                          ),
+                          child: Text(
+                            slot.timeLabel,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : const Color(0xFF065F46),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (srv.slots.where((s) => !s.isBooked).isEmpty)
+                   Padding(
+                     padding: const EdgeInsets.only(top: 8.0),
+                     child: Text("No available slots for today.", style: TextStyle(color: Colors.red.shade400, fontSize: 13, fontStyle: FontStyle.italic)),
+                   ),
+
+                const SizedBox(height: 24),
+
+                // BOOKED SLOTS SECTION (GREY)
+                const Text(
+                  'Booked Time Slots',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 42,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: srv.slots.where((s) => s.isBooked && !s.isBookedByMe).length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final slot = srv.slots.where((s) => s.isBooked && !s.isBookedByMe).toList()[index];
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFFE2E8F0),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.lock_rounded, size: 12, color: Color(0xFF94A3B8)),
+                            const SizedBox(width: 6),
+                            Text(
+                              slot.timeLabel,
+                              style: const TextStyle(
+                                color: Color(0xFF94A3B8),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12.5,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (srv.slots.where((s) => s.isBooked && !s.isBookedByMe).isEmpty)
+                   const Padding(
+                     padding: EdgeInsets.only(top: 8.0),
+                     child: Text("No booked slots yet.", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, fontStyle: FontStyle.italic)),
+                   ),
+
+                const Spacer(),
+
+                // PRICING SUMMARY ROW
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Consultation Fee',
+                            style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Text(
+                                CurrencyUtils.formatINR(srv.serviceCharge),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              if (srv.offerPrice > srv.serviceCharge) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  CurrencyUtils.formatINR(srv.offerPrice),
+                                  style: const TextStyle(
+                                    decoration: TextDecoration.lineThrough,
+                                    color: Color(0xFF94A3B8),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // BUY NOW BUTTON
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: selectedSlot != null ? AppColors.primary : Colors.grey.shade400,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    onPressed: selectedSlot != null ? () {
+                      Navigator.pop(ctx);
+                      _bookServiceSession(srv, selectedSlot!.slotId);
+                    } : null,
+                    icon: const Icon(Icons.bolt_rounded, color: Colors.amberAccent, size: 20),
+                    label: Text(
+                      selectedSlot != null ? 'PAY & CONFIRM BOOKING' : 'SELECT A GREEN SLOT',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
       ),
     );
   }
