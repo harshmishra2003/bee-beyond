@@ -861,41 +861,54 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   // MICRO-PERKS RIBBON (2x2 GRID)
   Widget _buildMicroPerksGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 2.8,
+    return Column(
       children: [
-        _buildPerkTile(
-          icon: Icons.workspace_premium_rounded,
-          iconBg: const Color(0xFFDCFCE7),
-          iconColor: const Color(0xFF166534),
-          title: 'Dual Certification',
-          subtitle: 'ISO & Vedic Board...',
+        Row(
+          children: [
+            Expanded(
+              child: _buildPerkTile(
+                icon: Icons.workspace_premium_rounded,
+                iconBg: const Color(0xFFDCFCE7),
+                iconColor: const Color(0xFF166534),
+                title: 'Dual Certification',
+                subtitle: 'ISO & Vedic Board...',
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildPerkTile(
+                icon: Icons.unarchive_rounded,
+                iconBg: const Color(0xFFF3E8FF),
+                iconColor: const Color(0xFF6B21A8),
+                title: 'Lab Material Box',
+                subtitle: 'Shipped to door...',
+              ),
+            ),
+          ],
         ),
-        _buildPerkTile(
-          icon: Icons.unarchive_rounded,
-          iconBg: const Color(0xFFF3E8FF),
-          iconColor: const Color(0xFF6B21A8),
-          title: 'Lab Material Box',
-          subtitle: 'Shipped to door...',
-        ),
-        _buildPerkTile(
-          icon: Icons.ondemand_video_rounded,
-          iconBg: const Color(0xFFFFEDD5),
-          iconColor: const Color(0xFF9A3412),
-          title: 'Lifetime Recording',
-          subtitle: '4K Studio + PDF ...',
-        ),
-        _buildPerkTile(
-          icon: Icons.forum_rounded,
-          iconBg: const Color(0xFFE0F2FE),
-          iconColor: const Color(0xFF0369A1),
-          title: 'Private Cohort Group',
-          subtitle: 'Direct Guru Q&A...',
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildPerkTile(
+                icon: Icons.ondemand_video_rounded,
+                iconBg: const Color(0xFFFFEDD5),
+                iconColor: const Color(0xFF9A3412),
+                title: 'Lifetime Recording',
+                subtitle: '4K Studio + PDF ...',
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildPerkTile(
+                icon: Icons.forum_rounded,
+                iconBg: const Color(0xFFE0F2FE),
+                iconColor: const Color(0xFF0369A1),
+                title: 'Private Cohort Group',
+                subtitle: 'Direct Guru Q&A...',
+              ),
+            ),
+          ],
         ),
       ],
     );
