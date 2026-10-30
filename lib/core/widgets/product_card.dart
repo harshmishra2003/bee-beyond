@@ -492,7 +492,6 @@ class _ProductCardState extends State<ProductCard> {
 /// ANIMATED TACTILE ICON BUTTON WITH BOUNCE RIPPLE FEEDBACK
 class _AnimatedIconButton extends StatefulWidget {
   final IconData icon;
-  final String? label;
   final Color backgroundColor;
   final Color iconColor;
   final VoidCallback onTap;
@@ -500,7 +499,6 @@ class _AnimatedIconButton extends StatefulWidget {
 
   const _AnimatedIconButton({
     required this.icon,
-    this.label,
     required this.backgroundColor,
     required this.iconColor,
     required this.onTap,

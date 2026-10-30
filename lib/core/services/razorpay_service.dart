@@ -59,9 +59,7 @@ class RazorpayService {
 
     try {
       _razorpay.open(options);
-    } catch (e) {
-      print('Error opening Razorpay checkout: $e');
-    }
+    } catch (_) {}
   }
 
   void dispose() {

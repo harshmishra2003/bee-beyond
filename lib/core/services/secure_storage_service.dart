@@ -17,94 +17,96 @@ class SecureStorageService {
 
   Future<void> saveAuthToken(String token) async {
     try {
-      await _storage.write(key: StorageKeys.authToken, value: token);
-    } catch (_) {}
-    try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(StorageKeys.authToken, token);
+    } catch (_) {}
+    try {
+      await _storage.write(key: StorageKeys.authToken, value: token);
     } catch (_) {}
   }
 
   Future<String?> getAuthToken() async {
-    String? token;
-    try {
-      token = await _storage.read(key: StorageKeys.authToken).timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => null,
-      );
-    } catch (_) {}
-
-    if (token != null && token.isNotEmpty) {
-      return token;
-    }
-
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(StorageKeys.authToken);
-    } catch (_) {
-      return null;
-    }
+      final token = prefs.getString(StorageKeys.authToken);
+      if (token != null && token.trim().isNotEmpty) {
+        return token.trim();
+      }
+    } catch (_) {}
+
+    try {
+      final token = await _storage.read(key: StorageKeys.authToken).timeout(
+        const Duration(milliseconds: 500),
+        onTimeout: () => null,
+      );
+      if (token != null && token.trim().isNotEmpty) {
+        return token.trim();
+      }
+    } catch (_) {}
+
+    return null;
   }
 
   Future<void> deleteAuthToken() async {
     try {
-      await _storage.delete(key: StorageKeys.authToken);
-    } catch (_) {}
-    try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(StorageKeys.authToken);
+    } catch (_) {}
+    try {
+      await _storage.delete(key: StorageKeys.authToken);
     } catch (_) {}
   }
 
   Future<void> saveUserData(String userDataJson) async {
     try {
-      await _storage.write(key: StorageKeys.userData, value: userDataJson);
-    } catch (_) {}
-    try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(StorageKeys.userData, userDataJson);
+    } catch (_) {}
+    try {
+      await _storage.write(key: StorageKeys.userData, value: userDataJson);
     } catch (_) {}
   }
 
   Future<String?> getUserData() async {
-    String? data;
-    try {
-      data = await _storage.read(key: StorageKeys.userData).timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => null,
-      );
-    } catch (_) {}
-
-    if (data != null && data.isNotEmpty) {
-      return data;
-    }
-
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(StorageKeys.userData);
-    } catch (_) {
-      return null;
-    }
+      final data = prefs.getString(StorageKeys.userData);
+      if (data != null && data.trim().isNotEmpty) {
+        return data.trim();
+      }
+    } catch (_) {}
+
+    try {
+      final data = await _storage.read(key: StorageKeys.userData).timeout(
+        const Duration(milliseconds: 500),
+        onTimeout: () => null,
+      );
+      if (data != null && data.trim().isNotEmpty) {
+        return data.trim();
+      }
+    } catch (_) {}
+
+    return null;
   }
 
   Future<void> deleteUserData() async {
     try {
-      await _storage.delete(key: StorageKeys.userData);
-    } catch (_) {}
-    try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(StorageKeys.userData);
+    } catch (_) {}
+    try {
+      await _storage.delete(key: StorageKeys.userData);
     } catch (_) {}
   }
 
   Future<void> clearAll() async {
     try {
-      await _storage.deleteAll();
-    } catch (_) {}
-    try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(StorageKeys.authToken);
       await prefs.remove(StorageKeys.userData);
+    } catch (_) {}
+    try {
+      await _storage.deleteAll();
     } catch (_) {}
   }
 }

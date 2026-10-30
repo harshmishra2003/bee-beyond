@@ -60,18 +60,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final prefs = await SharedPreferences.getInstance();
       final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
 
-      final token = await _secureStorage.getAuthToken();
+      final token = await _secureStorage.getAuthToken().timeout(
+        const Duration(seconds: 1),
+        onTimeout: () => null,
+      );
 
       if (token != null && token.trim().isNotEmpty) {
         UserEntity? user;
         try {
-          user = await _repository.getCurrentUser();
+          user = await _repository.getCurrentUser().timeout(
+            const Duration(seconds: 1),
+            onTimeout: () => null,
+          );
         } catch (_) {
           user = null;
         }
 
         if (user != null) {
-          // If logged in, automatically mark onboarding as completed so onboarding is never shown again
           if (!hasSeenOnboarding) {
             await prefs.setBool(StorageKeys.isOnboardingCompleted, true);
           }
@@ -90,7 +95,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repository.login(email, password);
       final prefs = await SharedPreferences.getInstance();
-      // ALWAYS mark onboarding as completed when logging in successfully
       await prefs.setBool(StorageKeys.isOnboardingCompleted, true);
 
       state = AuthState.authenticated(user, hasSeenOnboarding: true);
@@ -117,7 +121,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         gender: gender,
       );
       final prefs = await SharedPreferences.getInstance();
-      // ALWAYS mark onboarding as completed on registration
       await prefs.setBool(StorageKeys.isOnboardingCompleted, true);
 
       state = AuthState.authenticated(user, hasSeenOnboarding: true);
@@ -147,7 +150,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (_) {}
 
     final prefs = await SharedPreferences.getInstance();
-    // Maintain hasSeenOnboarding = true after logout so user goes to /login instead of /onboarding
     final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? true;
 
     state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);

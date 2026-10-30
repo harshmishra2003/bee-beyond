@@ -95,7 +95,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   void _forceNavigate() {
     if (_hasNavigated || !mounted) return;
-    final authState = ref.read(authStateProvider);
+    var authState = ref.read(authStateProvider);
+    if (authState.status == AuthStatus.loading) {
+      // Guarantee instant navigation even if auth status is loading
+      authState = const AuthState(
+        status: AuthStatus.unauthenticated,
+        user: null,
+        hasSeenOnboarding: true,
+      );
+    }
     _performNavigation(authState);
   }
 

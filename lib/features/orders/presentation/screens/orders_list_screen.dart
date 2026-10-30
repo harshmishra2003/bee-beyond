@@ -9,11 +9,9 @@ import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
-import '../../../../core/utils/date_utils.dart';
 import '../../../../routing/route_paths.dart';
 import '../../domain/entities/order_entity.dart';
 import '../providers/order_provider.dart';
-import 'receipt_preview_screen.dart';
 
 class OrdersListScreen extends ConsumerStatefulWidget {
   const OrdersListScreen({super.key});

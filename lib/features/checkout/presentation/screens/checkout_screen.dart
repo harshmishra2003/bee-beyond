@@ -41,7 +41,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _pincodeController = TextEditingController();
 
   String _paymentCategory = 'upi'; // 'upi', 'card', 'netbanking', 'cod'
-  String _selectedUpiApp = 'gpay';
   final _vpaController = TextEditingController();
 
   final _cardHolderNameController = TextEditingController();
@@ -49,25 +48,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _cardExpiryController = TextEditingController();
   final _cardCvvController = TextEditingController();
 
-  String _selectedBank = 'HDFC Bank';
   bool _isProcessingPayment = false;
-
-  final List<Map<String, String>> _upiApps = [
-    {'id': 'gpay', 'name': 'Google Pay', 'icon': '🌀', 'vpa': 'beebeeyond@okaxis', 'package': 'com.google.android.apps.nbu.paisa.user'},
-    {'id': 'phonepe', 'name': 'PhonePe', 'icon': '🟣', 'vpa': 'beebeeyond@ybl', 'package': 'com.phonepe.app'},
-    {'id': 'paytm', 'name': 'Paytm UPI', 'icon': '🔵', 'vpa': 'beebeeyond@paytm', 'package': 'net.one97.paytm'},
-    {'id': 'bhim', 'name': 'BHIM UPI', 'icon': '🇮🇳', 'vpa': 'beebeeyond@upi', 'package': 'in.org.npci.upiapp'},
-    {'id': 'cred', 'name': 'CRED UPI', 'icon': '⚡', 'vpa': 'beebeeyond@cred', 'package': 'com.dreamplug.androidapp'},
-    {'id': 'custom', 'name': 'Enter UPI ID / VPA', 'icon': '⚡', 'vpa': '', 'package': ''},
-  ];
-
-  final List<String> _popularBanks = [
-    'HDFC Bank',
-    'State Bank of India (SBI)',
-    'ICICI Bank',
-    'Axis Bank',
-    'Kotak Mahindra Bank',
-  ];
 
   RazorpayService? _razorpayService;
 
@@ -164,7 +145,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         currency: 'INR',
         receiptId: 'rcpt_${DateTime.now().millisecondsSinceEpoch}',
         items: items.map((i) => {
-          'product_id': i.id is int ? i.id : (int.tryParse('${i.id}') ?? 1),
+          'product_id': i.id is int ? i.id : (int.tryParse(i.id.toString()) ?? 1),
           'quantity': i.quantity,
         }).toList(),
       );

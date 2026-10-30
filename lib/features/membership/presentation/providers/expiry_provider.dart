@@ -160,23 +160,19 @@ class ActivePassNotifier extends StateNotifier<UserPassSubscription?> {
     required String passId,
     required String passName,
     required String slug,
-    int? durationYears,
-    DateTime? startDate,
-    DateTime? expiresAt,
+    required DateTime startDate,
+    required DateTime expiresAt,
     double amountPaid = 2999.0,
     String? transactionId,
   }) async {
-    final now = DateTime.now();
-    final start = startDate ?? now;
-    final end = expiresAt ?? start.add(Duration(days: 365 * (durationYears ?? 1)));
     final txn = transactionId ?? 'TXN-VIP-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
 
     final newPass = UserPassSubscription(
       passId: passId,
       passName: passName,
       slug: slug,
-      startDate: start,
-      expiresAt: end,
+      startDate: startDate,
+      expiresAt: expiresAt,
       amountPaid: amountPaid,
       transactionId: txn,
     );

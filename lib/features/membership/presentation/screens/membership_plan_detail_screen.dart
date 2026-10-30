@@ -68,7 +68,11 @@ class _MembershipPlanDetailScreenState
     String billingLabel,
   ) async {
     final activePass = ref.read(activePassProvider);
-    if (activePass != null && activePass.isMatchingPlanActive(plan.id, plan.slug)) {
+    final isYearlyUpgrade = _selectedBillingPeriod == BillingPeriod.yearly;
+
+    // Allow purchasing a yearly plan when a monthly plan is active (so it gets scheduled).
+    // Only block if trying to purchase a duplicate monthly plan while the same plan is active.
+    if (!isYearlyUpgrade && activePass != null && activePass.isMatchingPlanActive(plan.id, plan.slug)) {
       StatusDialog.show(
         context,
         title: 'Plan Already Active! 👑',
@@ -179,12 +183,15 @@ class _MembershipPlanDetailScreenState
           } else if (res.isActive) {
             // ACTIVE MEMBERSHIP (Monthly or Immediate Yearly)
             // Use exact backend start_date and end_date
+            final start = res.startDate ?? DateTime.now();
+            final end = res.endDate ?? start.add(Duration(days: _selectedBillingPeriod == BillingPeriod.monthly ? 30 : 365));
+
             await ref.read(activePassProvider.notifier).activatePass(
               passId: plan.id,
               passName: '${plan.name} Membership Pass',
               slug: plan.slug,
-              startDate: res.startDate,
-              expiresAt: res.endDate,
+              startDate: start,
+              expiresAt: end,
               amountPaid: price,
               transactionId: paymentId,
             );
