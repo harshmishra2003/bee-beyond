@@ -2,6 +2,60 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/api_endpoints.dart';
 
+class ServiceSlot extends Equatable {
+  final String slotId;
+  final String timeLabel;
+  final bool isBooked;
+  final bool isBookedByMe;
+
+  const ServiceSlot({
+    required this.slotId,
+    required this.timeLabel,
+    this.isBooked = false,
+    this.isBookedByMe = false,
+  });
+
+  factory ServiceSlot.fromJson(Map<String, dynamic> json) {
+    return ServiceSlot(
+      slotId: json['slot_id']?.toString() ?? '',
+      timeLabel: json['time_label']?.toString() ?? '',
+      isBooked: json['is_booked'] == true || json['is_booked'] == 'true' || json['is_booked'] == 1,
+      isBookedByMe: json['is_booked_by_me'] == true || json['is_booked_by_me'] == 'true' || json['is_booked_by_me'] == 1,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'slot_id': slotId,
+      'time_label': timeLabel,
+      'is_booked': isBooked,
+      'is_booked_by_me': isBookedByMe,
+    };
+  }
+
+  @override
+  List<Object?> get props => [slotId, timeLabel, isBooked, isBookedByMe];
+}
+
+class ServiceMedia extends Equatable {
+  final String title;
+  final String url;
+
+  const ServiceMedia({required this.title, required this.url});
+
+  factory ServiceMedia.fromJson(Map<String, dynamic> json) {
+    return ServiceMedia(
+      title: json['title']?.toString() ?? 'Document',
+      url: json['url']?.toString() ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {'title': title, 'url': url};
+
+  @override
+  List<Object?> get props => [title, url];
+}
+
 class ServiceItem extends Equatable {
   final String id;
   final String categoryId;
@@ -15,6 +69,15 @@ class ServiceItem extends Equatable {
   final String duration;
   final IconData icon;
 
+  // New Fields for Real-Time Slot Booking
+  final String meetingLink;
+  final List<ServiceMedia> mediaPdfs;
+  final List<ServiceMedia> mediaVideos;
+  final int totalSlotsToday;
+  final int bookedSlotsCount;
+  final int remainingSlotsCount;
+  final List<ServiceSlot> slots;
+
   const ServiceItem({
     required this.id,
     this.categoryId = '',
@@ -27,6 +90,13 @@ class ServiceItem extends Equatable {
     this.status = 1,
     this.duration = '45 Mins Session',
     required this.icon,
+    this.meetingLink = '',
+    this.mediaPdfs = const [],
+    this.mediaVideos = const [],
+    this.totalSlotsToday = 0,
+    this.bookedSlotsCount = 0,
+    this.remainingSlotsCount = 0,
+    this.slots = const [],
   });
 
   static String _formatUrl(String? url) {
