@@ -20,6 +20,9 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../membership/presentation/providers/expiry_provider.dart';
 import '../../domain/entities/book_item.dart';
 import '../providers/library_provider.dart';
+import '../providers/purchased_books_provider.dart';
+import '../../../orders/domain/entities/receipt_entity.dart';
+import '../../../../core/widgets/three_d_button.dart';
 
 class MaterialScreen extends ConsumerStatefulWidget {
   const MaterialScreen({super.key});
@@ -54,7 +57,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
   bool _hasAccess(BookItem book) {
     if (book.accessType == 'free') return true;
-    if (_purchasedBookIds.contains(book.id) || book.isPurchased) return true;
+    if (ref.read(purchasedBooksProvider).contains(book.id) || book.isPurchased) return true;
     if (book.accessType == 'membership') {
       final activePass = ref.read(activePassProvider);
       return activePass != null && !activePass.isExpired;
@@ -64,17 +67,18 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
   void _handleBookTap(BookItem book) {
     if (_hasAccess(book)) {
-      _openBookViewer(book);
+      _openBookViewer(book, isPreviewMode: false);
     } else if (book.accessType == 'membership') {
       _showMembershipRequiredDialog(book);
     } else if (book.accessType == 'paid') {
-      _showBookPurchaseSheet(book);
+      // Show preview trailer first, then purchase dialog if they want
+      _openBookViewer(book, isPreviewMode: true);
     } else {
-      _openBookViewer(book);
+      _openBookViewer(book, isPreviewMode: false);
     }
   }
 
-  void _openBookViewer(BookItem book) async {
+  void _openBookViewer(BookItem book, {bool isPreviewMode = false}) async {
     if (book.pdfUrl.isEmpty) {
       showDialog(
         context: context,
@@ -94,19 +98,17 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
         if (mounted) {
           AppPdfBookViewer.show(
             context,
-            title:
-                detailedBook.title.isNotEmpty ? detailedBook.title : book.title,
-            pdfUrl: detailedBook.pdfUrl.isNotEmpty
-                ? detailedBook.pdfUrl
-                : book.pdfUrl,
+            title: detailedBook.title.isNotEmpty ? detailedBook.title : book.title,
+            pdfUrl: detailedBook.pdfUrl.isNotEmpty ? detailedBook.pdfUrl : book.pdfUrl,
             subtitle: '${detailedBook.author} • ${detailedBook.category}',
-            description: detailedBook.description.isNotEmpty
-                ? detailedBook.description
-                : book.description,
-            samplePagesContent: detailedBook.samplePagesContent.isNotEmpty
-                ? detailedBook.samplePagesContent
-                : book.samplePagesContent,
+            description: detailedBook.description.isNotEmpty ? detailedBook.description : book.description,
+            samplePagesContent: detailedBook.samplePagesContent.isNotEmpty ? detailedBook.samplePagesContent : book.samplePagesContent,
+            isPreviewMode: isPreviewMode,
           );
+          
+          if (isPreviewMode) {
+             _showDelayedPurchaseSheet(book);
+          }
         }
         return;
       } catch (_) {
@@ -124,8 +126,20 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
         subtitle: '${book.author} • ${book.category}',
         description: book.description,
         samplePagesContent: book.samplePagesContent,
+        isPreviewMode: isPreviewMode,
       );
+      if (isPreviewMode) {
+         _showDelayedPurchaseSheet(book);
+      }
     }
+  }
+
+  void _showDelayedPurchaseSheet(BookItem book) {
+      Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) {
+             _showBookPurchaseSheet(book);
+          }
+      });
   }
 
   void _showMembershipRequiredDialog(BookItem book) {
@@ -338,30 +352,18 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
             const SizedBox(height: 14),
 
             // BUY NOW BUTTON
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _processBookPurchase(book, customerName, customerEmail, customerPhone);
-                },
-                icon: const Icon(Icons.bolt_rounded, color: Colors.amberAccent, size: 20),
-                label: Text(
-                  'BUY E-BOOK NOW • ${CurrencyUtils.formatINR(book.price)}',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
+            ThreeDButton(
+              text: 'BUY E-BOOK NOW • ${CurrencyUtils.formatINR(book.price)}',
+              icon: Icons.bolt_rounded,
+              color: AppColors.primary,
+              shadowColor: const Color(0xFF312E81),
+              onPressed: () {
+                Navigator.pop(ctx); // Close purchase sheet
+                if (Navigator.of(context, rootNavigator: true).canPop()) {
+                    Navigator.of(context, rootNavigator: true).pop(); // Also close PDF viewer if it's open underneath
+                }
+                _processBookPurchase(book, customerName, customerEmail, customerPhone);
+              },
             ),
           ],
         ),
@@ -377,18 +379,37 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   ) {
     _razorpayService?.onSuccess = (response) {
       if (!mounted) return;
-      setState(() {
-        _purchasedBookIds.add(book.id);
-      });
+      ref.read(purchasedBooksProvider.notifier).unlockBook(book.id);
+
+      final receipt = ReceiptEntity(
+        receiptId: 'REC-${DateTime.now().millisecondsSinceEpoch}',
+        orderId: response.paymentId ?? 'PAY-${DateTime.now().millisecondsSinceEpoch}',
+        title: 'Digital E-Book Purchase',
+        type: 'DIGITAL_BOOK',
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerEmail: customerEmail,
+        deliveryAddress: 'Instant Digital Access',
+        items: [
+          ReceiptItem(name: book.title, quantity: 1, unitPrice: book.price)
+        ],
+        subtotal: book.price,
+        paymentMethod: 'Razorpay',
+        date: DateTime.now(),
+      );
 
       StatusDialog.show(
         context,
         title: 'Book Unlocked! 📖',
         description: 'Payment successful for "${book.title}". You now have lifetime reading access to this study handbook!',
         isSuccess: true,
-        actionText: 'READ NOW',
+        actionText: 'VIEW RECEIPT & READ',
         onAction: () {
-          _openBookViewer(book);
+          context.push(RoutePaths.receiptPreview, extra: receipt).then((_) {
+              if (mounted) {
+                  _openBookViewer(book, isPreviewMode: false);
+              }
+          });
         },
       );
     };
@@ -526,6 +547,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(purchasedBooksProvider); // trigger rebuilds when purchases change
     final booksAsync = ref.watch(booksAndMaterialsProvider);
 
     booksAsync.whenData((_) {
