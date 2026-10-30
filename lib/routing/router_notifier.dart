@@ -27,24 +27,24 @@ class RouterNotifier extends ChangeNotifier {
     final status = authState.status;
     final hasSeenOnboarding = authState.hasSeenOnboarding;
 
-    // While on splash screen, allow SplashScreen to manage initial navigation timers & transition
+    // While on splash screen, allow SplashScreen to manage initial navigation
     if (location == RoutePaths.splash) {
       return null;
     }
 
-    // 1) Loading State -> Allow explicit navigation without forcing back to splash
+    // 1) Loading State -> Allow explicit navigation without forcing redirects
     if (status == AuthStatus.loading) {
       return null;
     }
 
-    // 2) Unauthenticated State -> Auth Stack
+    // 2) Unauthenticated State -> Auth Stack or Onboarding
     if (status == AuthStatus.unauthenticated) {
-      // If user hasn't seen onboarding, force onboarding
+      // If user hasn't seen onboarding, force onboarding screen
       if (!hasSeenOnboarding) {
         return location == RoutePaths.onboarding ? null : RoutePaths.onboarding;
       }
 
-      // If already on an AuthStack route (login, register, forgot-password, otp), stay there
+      // If user has seen onboarding, allow access to Auth routes (login, register, forgot-password, otp)
       final isAuthRoute = location == RoutePaths.login ||
                           location == RoutePaths.register ||
                           location == RoutePaths.forgotPassword ||
@@ -58,14 +58,9 @@ class RouterNotifier extends ChangeNotifier {
       return RoutePaths.login;
     }
 
-    // 3) Authenticated State -> App Stack / Onboarding
+    // 3) Authenticated State -> App Stack
     if (status == AuthStatus.authenticated) {
-      // If newly registered user needs onboarding before home
-      if (!hasSeenOnboarding) {
-        return location == RoutePaths.onboarding ? null : RoutePaths.onboarding;
-      }
-
-      // If trying to access any AuthStack route, splash, or onboarding -> redirect to Home
+      // An authenticated user should NEVER be redirected to splash, onboarding, or auth screens
       final isAuthOrSplashRoute = location == RoutePaths.splash ||
                                   location == RoutePaths.onboarding ||
                                   location == RoutePaths.login ||
