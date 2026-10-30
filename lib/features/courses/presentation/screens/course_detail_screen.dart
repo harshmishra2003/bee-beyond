@@ -510,6 +510,20 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                                   contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 6),
                                   onTap: () {
+                                    if (module.isPaid && !isEnrolled) {
+                                      AppAlertManager.showFloatingToast(
+                                        context,
+                                        title: 'Module Locked',
+                                        message: 'Please enroll in the course to unlock this module.',
+                                        icon: Icons.lock_rounded,
+                                        backgroundColor: const Color(0xFF9F1239), // dark red
+                                        accentColor: const Color(0xFFF43F5E),
+                                      );
+                                      // Scroll to the enroll button or switch to overview tab
+                                      _tabController.animateTo(0);
+                                      return;
+                                    }
+
                                     if (isPdf) {
                                       _openPdfViewerModal(
                                         context,
@@ -612,7 +626,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                                       ),
                                     ],
                                   ),
-                                  trailing: module.isPaid
+                                  trailing: (module.isPaid && !isEnrolled)
                                       ? Container(
                                           padding: const EdgeInsets.all(6),
                                           decoration: BoxDecoration(
