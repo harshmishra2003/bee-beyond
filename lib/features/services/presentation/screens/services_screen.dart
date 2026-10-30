@@ -651,7 +651,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
   }
 
   Widget _buildServiceCard(BuildContext context, ServiceItem srv, int index) {
-    // Beautiful Light-Colored Frame Gradients & Borders
     final frameGradients = [
       const LinearGradient(
         colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
@@ -685,6 +684,11 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
     final gradient = frameGradients[index % frameGradients.length];
     final borderColor = frameBorders[index % frameBorders.length];
 
+    final totalSlots = srv.totalSlotsToday;
+    final bookedSlots = srv.bookedSlotsCount;
+    final remainingSlots = srv.remainingSlotsCount;
+    final hasSlotsData = totalSlots > 0;
+
     return Container(
       decoration: BoxDecoration(
         gradient: gradient,
@@ -693,7 +697,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
         boxShadow: [
           BoxShadow(
             color: borderColor.withValues(alpha: 0.35),
-            blurRadius: 12,
+            blurRadius: 14,
             offset: const Offset(0, 4),
           ),
         ],
@@ -715,40 +719,68 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Today\'s Slot Availability',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF64748B),
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: hasSlotsData && remainingSlots > 0
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFF3B82F6),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Today\'s Slot Availability',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
                       ),
                       Text(
-                        '${srv.remainingSlotsCount} Remaining | ${srv.totalSlotsToday} Total',
-                        style: const TextStyle(
+                        hasSlotsData
+                            ? '$remainingSlots Available | $totalSlots Total'
+                            : 'Open for Booking Today',
+                        style: GoogleFonts.poppins(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                          color: hasSlotsData && remainingSlots > 0
+                              ? const Color(0xFF059669)
+                              : AppColors.primary,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Progress Bar UI
+                  // Dynamic Segmented Progress Bar
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: Row(
-                      children: [
-                         Expanded(
-                           flex: srv.bookedSlotsCount,
-                           child: Container(height: 6, color: const Color(0xFF94A3B8)), // Booked: Grey
-                         ),
-                         Expanded(
-                           flex: srv.remainingSlotsCount,
-                           child: Container(height: 6, color: const Color(0xFF10B981)), // Remaining: Green
-                         ),
-                      ],
-                    ),
+                    child: hasSlotsData
+                        ? Row(
+                            children: [
+                               Expanded(
+                                 flex: bookedSlots > 0 ? bookedSlots : 0,
+                                 child: Container(height: 6, color: const Color(0xFF94A3B8)), // Booked: Grey
+                               ),
+                               Expanded(
+                                 flex: remainingSlots > 0 ? remainingSlots : 1,
+                                 child: Container(height: 6, color: const Color(0xFF10B981)), // Remaining: Emerald
+                               ),
+                            ],
+                          )
+                        : Container(
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF3B82F6), Color(0xFF10B981)],
+                              ),
+                            ),
+                          ),
                   ),
                ],
              ),
@@ -763,23 +795,19 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     color: Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: Center(
-                      child: CachedNetworkImage(
-                        imageUrl: srv.offerImageUrl,
+                  child: Center(
+                    child: CachedNetworkImage(
+                      imageUrl: srv.offerImageUrl,
+                      height: 165,
+                      width: double.infinity,
+                      fit: BoxFit.contain, // FULL IMAGE VISIBLE WITHOUT CUT OFF
+                      placeholder: (context, url) => Container(
                         height: 165,
-                        width: double.infinity,
-                        fit: BoxFit.contain, // FULL IMAGE VISIBLE WITHOUT CUT OFF
-                        placeholder: (context, url) => Container(
-                          height: 165,
-                          color: const Color(0xFFF1F5F9),
-                          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                        ),
-                        errorWidget: (context, url, error) => const SizedBox.shrink(),
+                        color: const Color(0xFFF1F5F9),
+                        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                       ),
+                      errorWidget: (context, url, error) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
@@ -787,21 +815,25 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   top: 10,
                   left: 10,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(8),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF7E22CE), Color(0xFF4338CA)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: const [
-                        BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                        BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
                       ],
                     ),
                     child: Text(
                       srv.category.toUpperCase(),
-                      style: const TextStyle(
+                      style: GoogleFonts.poppins(
                         color: Colors.white,
-                        fontSize: 9,
+                        fontSize: 9.5,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
+                        letterSpacing: 0.6,
                       ),
                     ),
                   ),
@@ -818,10 +850,21 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(11),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.15),
+                            AppColors.primary.withValues(alpha: 0.05),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.25),
+                          width: 1.2,
+                        ),
                       ),
                       child: Icon(srv.icon, color: AppColors.primary, size: 24),
                     ),
@@ -837,10 +880,11 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                               Expanded(
                                 child: Text(
                                   srv.serviceName,
-                                  style: AppTextStyles.titleMedium.copyWith(
+                                  style: GoogleFonts.epilogue(
                                     color: AppColors.primary,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 15,
+                                    fontSize: 15.5,
+                                    height: 1.2,
                                   ),
                                 ),
                               ),
@@ -853,11 +897,27 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 3),
-                          Text(
-                            srv.duration,
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.textSecondary,
+                          const SizedBox(height: 5),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEEF2FF),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.timer_outlined, size: 12, color: AppColors.primary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  srv.duration,
+                                  style: GoogleFonts.poppins(
+                                    color: AppColors.primary,
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -865,12 +925,13 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
                   srv.description,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                    height: 1.35,
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF475569),
+                    fontSize: 12.5,
+                    height: 1.4,
                   ),
                 ),
 
