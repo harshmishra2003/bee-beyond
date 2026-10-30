@@ -167,6 +167,25 @@ class ServiceItem extends Equatable {
         json['category_name']?.toString() ??
         'Ayurvedic Upchar';
 
+    List<ServiceSlot> parsedSlots = [];
+    if (json['slots'] != null && json['slots'] is List) {
+      parsedSlots = (json['slots'] as List).map((e) => ServiceSlot.fromJson(e)).toList();
+    }
+
+    List<ServiceMedia> parsedPdfs = [];
+    if (json['media_pdfs'] != null && json['media_pdfs'] is List) {
+      parsedPdfs = (json['media_pdfs'] as List).map((e) => ServiceMedia.fromJson(e)).toList();
+    }
+
+    List<ServiceMedia> parsedVideos = [];
+    if (json['media_videos'] != null && json['media_videos'] is List) {
+      parsedVideos = (json['media_videos'] as List).map((e) => ServiceMedia.fromJson(e)).toList();
+    }
+
+    final int total = (json['total_slots_today'] as num?)?.toInt() ?? parsedSlots.length;
+    final int booked = (json['booked_slots_count'] as num?)?.toInt() ?? parsedSlots.where((s) => s.isBooked).length;
+    final int remaining = (json['remaining_slots_count'] as num?)?.toInt() ?? (total - booked);
+
     return ServiceItem(
       id: json['id']?.toString() ?? json['service_id']?.toString() ?? '',
       categoryId: json['category_id']?.toString() ?? '',
@@ -179,6 +198,13 @@ class ServiceItem extends Equatable {
       status: (json['status'] as num?)?.toInt() ?? 1,
       duration: json['duration']?.toString() ?? '45 Mins Private Session',
       icon: _parseIcon(category),
+      meetingLink: json['meeting_link']?.toString() ?? '',
+      mediaPdfs: parsedPdfs,
+      mediaVideos: parsedVideos,
+      totalSlotsToday: total,
+      bookedSlotsCount: booked,
+      remainingSlotsCount: remaining < 0 ? 0 : remaining,
+      slots: parsedSlots,
     );
   }
 
@@ -223,6 +249,14 @@ class ServiceItem extends Equatable {
       'service_charge': serviceCharge,
       'offer_price': offerPrice,
       'status': status,
+      'duration': duration,
+      'meeting_link': meetingLink,
+      'media_pdfs': mediaPdfs.map((e) => e.toJson()).toList(),
+      'media_videos': mediaVideos.map((e) => e.toJson()).toList(),
+      'total_slots_today': totalSlotsToday,
+      'booked_slots_count': bookedSlotsCount,
+      'remaining_slots_count': remainingSlotsCount,
+      'slots': slots.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -239,5 +273,12 @@ class ServiceItem extends Equatable {
         status,
         duration,
         icon,
+        meetingLink,
+        mediaPdfs,
+        mediaVideos,
+        totalSlotsToday,
+        bookedSlotsCount,
+        remainingSlotsCount,
+        slots,
       ];
 }
