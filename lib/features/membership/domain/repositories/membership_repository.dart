@@ -1,5 +1,6 @@
 import '../entities/membership_order_response_entity.dart';
 import '../entities/membership_plan_entity.dart';
+import '../entities/membership_verify_result_entity.dart';
 
 abstract class MembershipRepository {
   Future<List<MembershipPlanEntity>> getMembershipPlans();
@@ -8,7 +9,7 @@ abstract class MembershipRepository {
     required int planId,
     required String billingPeriod,
   });
-  Future<bool> verifyMembershipPayment({
+  Future<MembershipVerifyResultEntity?> verifyMembershipPayment({
     required int membershipOrderId,
     required String razorpayPaymentId,
     required String razorpayOrderId,
