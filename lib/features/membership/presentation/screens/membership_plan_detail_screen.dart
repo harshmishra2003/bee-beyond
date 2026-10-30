@@ -156,12 +156,13 @@ class _MembershipPlanDetailScreenState
         if (!mounted) return;
 
         if (verifyResult != null && verifyResult.success) {
-          if (verifyResult.isScheduled) {
+          final res = verifyResult;
+          if (res.isScheduled) {
             // SCHEDULED YEARLY MEMBERSHIP
             // Do NOT activate pass locally or overwrite active monthly pass.
             // Show payment success message explaining scheduled start date.
-            final formattedStart = verifyResult.startDate != null
-                ? DateFormat('dd MMM yyyy, hh:mm a').format(verifyResult.startDate!)
+            final formattedStart = res.startDate != null
+                ? DateFormat('dd MMM yyyy, hh:mm a').format(res.startDate!)
                 : 'your current monthly plan expires';
 
             StatusDialog.show(
@@ -175,18 +176,20 @@ class _MembershipPlanDetailScreenState
               },
               actionText: 'View My Memberships',
             );
-          } else if (verifyResult.isActive) {
+          } else if (res.isActive) {
             // ACTIVE MEMBERSHIP (Monthly or Immediate Yearly)
             // Use exact backend start_date and end_date
             await ref.read(activePassProvider.notifier).activatePass(
               passId: plan.id,
               passName: '${plan.name} Membership Pass',
               slug: plan.slug,
-              startDate: verifyResult.startDate,
-              expiresAt: verifyResult.endDate,
+              startDate: res.startDate,
+              expiresAt: res.endDate,
               amountPaid: price,
               transactionId: paymentId,
             );
+
+            if (!mounted) return;
 
             StatusDialog.show(
               context,
@@ -200,14 +203,15 @@ class _MembershipPlanDetailScreenState
               actionText: 'View My Pass',
             );
           } else {
+            if (!mounted) return;
             // Other status (e.g. pending/expired)
             StatusDialog.show(
               context,
-              title: 'Payment Status: ${verifyResult.membershipStatus.toUpperCase()}',
-              description: verifyResult.message.isNotEmpty
-                  ? verifyResult.message
-                  : 'Payment ID: $paymentId\nOrder ID: $orderId\n\nYour payment status is currently "${verifyResult.membershipStatus}".',
-              isSuccess: verifyResult.success,
+              title: 'Payment Status: ${res.membershipStatus.toUpperCase()}',
+              description: res.message.isNotEmpty
+                  ? res.message
+                  : 'Payment ID: $paymentId\nOrder ID: $orderId\n\nYour payment status is currently "${res.membershipStatus}".',
+              isSuccess: res.success,
               onAction: () {
                 context.go(RoutePaths.membership);
               },
