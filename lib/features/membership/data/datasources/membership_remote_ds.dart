@@ -2,6 +2,7 @@ import 'dart:convert';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../domain/entities/membership_order_response_entity.dart';
+import '../../domain/entities/membership_verify_result_entity.dart';
 import '../models/membership_plan_model.dart';
 
 abstract class MembershipRemoteDataSource {
@@ -11,7 +12,7 @@ abstract class MembershipRemoteDataSource {
     required int planId,
     required String billingPeriod,
   });
-  Future<bool> verifyMembershipPayment({
+  Future<MembershipVerifyResultEntity?> verifyMembershipPayment({
     required int membershipOrderId,
     required String razorpayPaymentId,
     required String razorpayOrderId,
@@ -236,7 +237,7 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
   }
 
   @override
-  Future<bool> verifyMembershipPayment({
+  Future<MembershipVerifyResultEntity?> verifyMembershipPayment({
     required int membershipOrderId,
     required String razorpayPaymentId,
     required String razorpayOrderId,
@@ -245,7 +246,7 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
     final dio = _dioClient;
 
     if (dio == null) {
-      return false;
+      return null;
     }
 
     try {
@@ -260,7 +261,7 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
       );
 
       if (response.statusCode != 200 || response.data == null) {
-        return false;
+        return null;
       }
 
       dynamic rawData = response.data;
@@ -270,15 +271,15 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
       }
 
       if (rawData is! Map) {
-        return false;
+        return null;
       }
 
       final Map<String, dynamic> data =
           Map<String, dynamic>.from(rawData);
 
-      return data['success'] == true;
+      return MembershipVerifyResultEntity.fromJson(data);
     } catch (_) {
-      return false;
+      return null;
     }
   }
 }
