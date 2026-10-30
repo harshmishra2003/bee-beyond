@@ -528,13 +528,18 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '$_selectedCategory Sessions (${filteredServices.length})',
-                              style: AppTextStyles.titleLarge.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Text(
+                                '$_selectedCategory Sessions (${filteredServices.length})',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.titleLarge.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             const Icon(Icons.support_agent_rounded, color: AppColors.primary, size: 22),
                           ],
                         ),
@@ -693,29 +698,36 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              color: hasSlotsData && remainingSlots > 0
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFF3B82F6),
-                              shape: BoxShape.circle,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                color: hasSlotsData && remainingSlots > 0
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFF3B82F6),
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Today\'s Slot Availability',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF64748B),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'Today\'s Slot Availability',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 6),
                       Text(
                         hasSlotsData
                             ? '$remainingSlots Available | $totalSlots Total'
@@ -841,7 +853,10 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Row(
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -859,7 +874,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
