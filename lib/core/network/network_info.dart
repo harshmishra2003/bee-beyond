@@ -20,9 +20,9 @@ class NetworkInfoImpl implements NetworkInfo {
       if (_hasNoNetworkInterface(results)) {
         return false;
       }
-      return await _checkInternetAccess();
+      return true;
     } catch (_) {
-      return false;
+      return true;
     }
   }
 
@@ -31,33 +31,10 @@ class NetworkInfoImpl implements NetworkInfo {
     return results.every((result) => result == ConnectivityResult.none);
   }
 
-  Future<bool> _checkInternetAccess() async {
-    try {
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 4));
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        return true;
-      }
-    } catch (_) {}
-
-    try {
-      final result = await InternetAddress.lookup('1.1.1.1')
-          .timeout(const Duration(seconds: 3));
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        return true;
-      }
-    } catch (_) {}
-
-    return false;
-  }
-
   @override
   Stream<bool> get onConnectivityChanged {
-    return _connectivity.onConnectivityChanged.asyncMap((results) async {
-      if (_hasNoNetworkInterface(results)) {
-        return false;
-      }
-      return await _checkInternetAccess();
+    return _connectivity.onConnectivityChanged.map((results) {
+      return !_hasNoNetworkInterface(results);
     });
   }
 }
