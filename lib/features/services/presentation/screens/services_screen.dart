@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1063,201 +1064,676 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
   // Beautiful Bottom Sheet for booking slots
   void _showServiceBookingSheet(BuildContext context, ServiceItem srv) {
     ServiceSlot? selectedSlot;
-    
+    DateTime selectedDate = DateTime.now();
+    int weekOffset = 0; // 0 = current week, 1 = next week, etc.
+
+    bool isSameDay(DateTime a, DateTime b) {
+      return a.year == b.year && a.month == b.month && a.day == b.day;
+    }
+
+    // Helper to calculate start of the week (Monday)
+    DateTime getStartOfWeek(DateTime now, int offset) {
+      final target = now.add(Duration(days: offset * 7));
+      return target.subtract(Duration(days: target.weekday - 1));
+    }
+
+    // Helper to generate slots for selected date
+    List<ServiceSlot> getSlotsForDate(DateTime date) {
+      if (isSameDay(date, DateTime.now()) && srv.slots.isNotEmpty) {
+        return srv.slots;
+      }
+      final dateTag = DateFormat('yyyyMMdd').format(date);
+      return [
+        ServiceSlot(slotId: 'slot_${dateTag}_0900', timeLabel: '09:00 AM - 09:45 AM', isBooked: false),
+        ServiceSlot(slotId: 'slot_${dateTag}_1030', timeLabel: '10:30 AM - 11:15 AM', isBooked: false),
+        ServiceSlot(slotId: 'slot_${dateTag}_1200', timeLabel: '12:00 PM - 12:45 PM', isBooked: true),
+        ServiceSlot(slotId: 'slot_${dateTag}_1430', timeLabel: '02:30 PM - 03:15 PM', isBooked: false),
+        ServiceSlot(slotId: 'slot_${dateTag}_1600', timeLabel: '04:00 PM - 04:45 PM', isBooked: false),
+        ServiceSlot(slotId: 'slot_${dateTag}_1730', timeLabel: '05:30 PM - 06:15 PM', isBooked: true),
+        ServiceSlot(slotId: 'slot_${dateTag}_1900', timeLabel: '07:00 PM - 07:45 PM', isBooked: false),
+      ];
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => StatefulBuilder(
-        builder: (ctx, setSheetState) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.70,
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (sheetContext, scrollController) => StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final mediaQuery = MediaQuery.maybeOf(ctx);
+
+            final startOfWeek = getStartOfWeek(DateTime.now(), weekOffset);
+            final weekDays = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
+            final activeSlots = getSlotsForDate(selectedDate);
+            final availableSlots = activeSlots.where((s) => !s.isBooked).toList();
+            final bookedSlots = activeSlots.where((s) => s.isBooked && !s.isBookedByMe).toList();
+
+            final weekRangeStr = "${DateFormat('dd MMM').format(startOfWeek)} - ${DateFormat('dd MMM yyyy').format(startOfWeek.add(const Duration(days: 6)))}";
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: mediaQuery?.viewInsets.bottom ?? 0),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFAFAFC),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black26, blurRadius: 20, offset: Offset(0, -5)),
+                  ],
+                ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Top Handle Bar
                 Center(
                   child: Container(
-                    width: 42,
-                    height: 4,
+                    width: 44,
+                    height: 5,
                     decoration: BoxDecoration(
                       color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(3),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                
-                // SERVICE HEADER
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(srv.icon, color: AppColors.primary, size: 24),
+                const SizedBox(height: 14),
+
+                // SERVICE HEADER CARD WITH GRADIENT BORDER & ACCENT
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0F0C20), Color(0xFF1E1B4B), Color(0xFF312E81)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Book Appointment',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.textSecondary,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x251E1B4B), blurRadius: 10, offset: Offset(0, 4)),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.6), width: 1.5),
+                        ),
+                        child: Icon(srv.icon, color: Colors.amber, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    srv.category.toUpperCase(),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.timer_outlined, size: 10, color: Colors.white),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        srv.duration,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          Text(
-                            srv.serviceName,
-                            style: AppTextStyles.titleMedium.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                            const SizedBox(height: 4),
+                            Text(
+                              srv.serviceName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 22),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // WEEK TO WEEK & DATE FILTER SECTION WITH FEATURED CALENDAR ICON
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Select Day & Date',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF0F172A),
                           ),
-                        ],
+                        ),
+                        Text(
+                          weekOffset == 0 ? 'This Week • $weekRangeStr' : 'Week Range • $weekRangeStr',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // FEATURED CALENDAR FILTER BUTTON ICON
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: ctx,
+                          initialDate: selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 90)),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.light(
+                                  primary: AppColors.primary,
+                                  onPrimary: Colors.white,
+                                  surface: Colors.white,
+                                  onSurface: AppColors.textPrimary,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+
+                        if (picked != null) {
+                          setSheetState(() {
+                            selectedDate = picked;
+                            selectedSlot = null; // reset slot selection on date change
+                            // Calculate week offset relative to today
+                            final now = DateTime.now();
+                            final diffDays = picked.difference(now).inDays;
+                            weekOffset = (diffDays / 7).floor();
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 16),
+                            const SizedBox(width: 5),
+                            Text(
+                              'Pick Date',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 16),
-                const Divider(color: Color(0xFFE2E8F0)),
-                const SizedBox(height: 16),
-
-                // AVAILABLE SLOTS SECTION (GREEN)
-                const Text(
-                  'Available Time Slots',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-                ),
                 const SizedBox(height: 10),
-                SizedBox(
-                  height: 42,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: srv.slots.where((s) => !s.isBooked).length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 10),
-                    itemBuilder: (context, index) {
-                      final slot = srv.slots.where((s) => !s.isBooked).toList()[index];
-                      final isSelected = selectedSlot?.slotId == slot.slotId;
-                      return GestureDetector(
-                        onTap: () {
-                          setSheetState(() {
-                            selectedSlot = slot;
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF059669) : const Color(0xFFD1FAE5),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected ? const Color(0xFF047857) : const Color(0xFFA7F3D0),
-                              width: 1.5,
-                            ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: const Color(0xFF059669).withValues(alpha: 0.3),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    )
-                                  ]
-                                : null,
-                          ),
-                          child: Text(
-                            slot.timeLabel,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : const Color(0xFF065F46),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12.5,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                if (srv.slots.where((s) => !s.isBooked).isEmpty)
-                   Padding(
-                     padding: const EdgeInsets.only(top: 8.0),
-                     child: Text("No available slots for today.", style: TextStyle(color: Colors.red.shade400, fontSize: 13, fontStyle: FontStyle.italic)),
-                   ),
 
-                const SizedBox(height: 24),
-
-                // BOOKED SLOTS SECTION (GREY)
-                const Text(
-                  'Booked Time Slots',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 42,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: srv.slots.where((s) => s.isBooked && !s.isBookedByMe).length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 10),
-                    itemBuilder: (context, index) {
-                      final slot = srv.slots.where((s) => s.isBooked && !s.isBookedByMe).toList()[index];
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFE2E8F0),
-                            width: 1.5,
-                          ),
-                        ),
+                // WEEK TO WEEK NAVIGATION CONTROL (< THIS WEEK >)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                      onTap: weekOffset > 0
+                          ? () {
+                              setSheetState(() {
+                                weekOffset--;
+                                selectedDate = getStartOfWeek(DateTime.now(), weekOffset);
+                                selectedSlot = null;
+                              });
+                            }
+                          : null,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.lock_rounded, size: 12, color: Color(0xFF94A3B8)),
-                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.chevron_left_rounded,
+                              size: 18,
+                              color: weekOffset > 0 ? AppColors.primary : Colors.grey.shade400,
+                            ),
                             Text(
-                              slot.timeLabel,
-                              style: const TextStyle(
-                                color: Color(0xFF94A3B8),
+                              'Prev Week',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 12.5,
-                                decoration: TextDecoration.lineThrough,
+                                color: weekOffset > 0 ? AppColors.primary : Colors.grey.shade400,
                               ),
                             ),
                           ],
                         ),
+                      ),
+                    ),
+
+                    Text(
+                      weekOffset == 0 ? 'CURRENT WEEK' : 'WEEK +$weekOffset',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.6,
+                        color: AppColors.primary,
+                      ),
+                    ),
+
+                    InkWell(
+                      onTap: () {
+                        setSheetState(() {
+                          weekOffset++;
+                          selectedDate = getStartOfWeek(DateTime.now(), weekOffset);
+                          selectedSlot = null;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Next Week',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: AppColors.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // DAY & DATE PILLS CAROUSEL (7 DAYS OF SELECTED WEEK)
+                SizedBox(
+                  height: 68,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: weekDays.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final dayDate = weekDays[index];
+                      final isSelected = isSameDay(dayDate, selectedDate);
+                      final isToday = isSameDay(dayDate, DateTime.now());
+                      final isPast = dayDate.isBefore(DateTime.now().subtract(const Duration(days: 1))) && !isToday;
+
+                      return GestureDetector(
+                        onTap: isPast
+                            ? null
+                            : () {
+                                setSheetState(() {
+                                  selectedDate = dayDate;
+                                  selectedSlot = null;
+                                });
+                              },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 58,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            gradient: isSelected
+                                ? const LinearGradient(
+                                    colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  )
+                                : null,
+                            color: isSelected
+                                ? null
+                                : (isPast ? Colors.grey.shade100 : Colors.white),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : (isToday ? AppColors.primary.withValues(alpha: 0.6) : const Color(0xFFE2E8F0)),
+                              width: isSelected || isToday ? 1.6 : 1.0,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF312E81).withValues(alpha: 0.35),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                isToday ? 'TODAY' : DateFormat('EEE').format(dayDate).toUpperCase(),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelected
+                                      ? Colors.amberAccent
+                                      : (isPast ? Colors.grey.shade400 : AppColors.textSecondary),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                DateFormat('d').format(dayDate),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w900,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : (isPast ? Colors.grey.shade400 : AppColors.textPrimary),
+                                ),
+                              ),
+                              Text(
+                                DateFormat('MMM').format(dayDate),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 9,
+                                  color: isSelected
+                                      ? Colors.white70
+                                      : (isPast ? Colors.grey.shade400 : AppColors.textHint),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     },
                   ),
                 ),
-                if (srv.slots.where((s) => s.isBooked && !s.isBookedByMe).isEmpty)
-                   const Padding(
-                     padding: EdgeInsets.only(top: 8.0),
-                     child: Text("No booked slots yet.", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, fontStyle: FontStyle.italic)),
-                   ),
 
-                const Spacer(),
+                const SizedBox(height: 16),
+                const Divider(color: Color(0xFFE2E8F0), height: 1),
+                const SizedBox(height: 16),
 
-                // PRICING SUMMARY ROW
+                // SCROLLABLE SLOTS CONTENT AREA
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // AVAILABLE SLOTS SECTION (GREEN)
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF10B981),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Available Time Slots',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD1FAE5),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${availableSlots.length} Available',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF065F46),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        if (availableSlots.isNotEmpty)
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 10,
+                            children: availableSlots.map((slot) {
+                              final isSelected = selectedSlot?.slotId == slot.slotId;
+                              return GestureDetector(
+                                onTap: () {
+                                  setSheetState(() {
+                                    selectedSlot = slot;
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? const Color(0xFF059669) : const Color(0xFFECFDF5),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: isSelected ? const Color(0xFF047857) : const Color(0xFFA7F3D0),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: const Color(0xFF059669).withValues(alpha: 0.35),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        isSelected ? Icons.check_circle_rounded : Icons.access_time_rounded,
+                                        size: 14,
+                                        color: isSelected ? Colors.white : const Color(0xFF059669),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        slot.timeLabel,
+                                        style: GoogleFonts.poppins(
+                                          color: isSelected ? Colors.white : const Color(0xFF065F46),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          )
+                        else
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              "No available slots for this selected date.",
+                              style: GoogleFonts.poppins(
+                                color: Colors.red.shade400,
+                                fontSize: 12.5,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+
+                        const SizedBox(height: 20),
+
+                        // BOOKED SLOTS SECTION (GREY)
+                        if (bookedSlots.isNotEmpty) ...[
+                          Row(
+                            children: [
+                              const Icon(Icons.lock_rounded, size: 14, color: Color(0xFF64748B)),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Booked Time Slots',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: bookedSlots.map((slot) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0xFFE2E8F0),
+                                    width: 1.0,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.lock_clock, size: 12, color: Color(0xFF94A3B8)),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      slot.timeLabel,
+                                      style: GoogleFonts.poppins(
+                                        color: const Color(0xFF94A3B8),
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 11.5,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // SELECTED SLOT SUMMARY BANNER (IF SLOT SELECTED)
+                if (selectedSlot != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFC7D2FE)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.verified_rounded, color: AppColors.primary, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Selected: ${DateFormat('EEE, dd MMM').format(selectedDate)} • ${selectedSlot!.timeLabel}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // PRICING SUMMARY & BUY NOW BUTTON
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: const Color(0xFFE2E8F0)),
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, -2)),
+                    ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1265,9 +1741,9 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Consultation Fee',
-                            style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                          Text(
+                            'Total Consultation Fee',
+                            style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF64748B)),
                           ),
                           const SizedBox(height: 2),
                           Row(
@@ -1284,9 +1760,9 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                 const SizedBox(width: 6),
                                 Text(
                                   CurrencyUtils.formatINR(srv.offerPrice),
-                                  style: const TextStyle(
+                                  style: GoogleFonts.poppins(
                                     decoration: TextDecoration.lineThrough,
-                                    color: Color(0xFF94A3B8),
+                                    color: const Color(0xFF94A3B8),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -1295,43 +1771,39 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                // BUY NOW BUTTON
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: selectedSlot != null ? AppColors.primary : Colors.grey.shade400,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                    ),
-                    onPressed: selectedSlot != null ? () {
-                      Navigator.pop(ctx);
-                      _bookServiceSession(srv, selectedSlot!.slotId);
-                    } : null,
-                    icon: const Icon(Icons.bolt_rounded, color: Colors.amberAccent, size: 20),
-                    label: Text(
-                      selectedSlot != null ? 'PAY & CONFIRM BOOKING' : 'SELECT A GREEN SLOT',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: selectedSlot != null ? AppColors.primary : Colors.grey.shade400,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          elevation: selectedSlot != null ? 3 : 0,
+                        ),
+                        onPressed: selectedSlot != null
+                            ? () {
+                                Navigator.pop(ctx);
+                                _bookServiceSession(srv, selectedSlot!.slotId);
+                              }
+                            : null,
+                        icon: const Icon(Icons.bolt_rounded, color: Colors.amberAccent, size: 18),
+                        label: Text(
+                          selectedSlot != null ? 'PAY & CONFIRM' : 'SELECT A SLOT',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ],
             ),
           );
-        }
+        },
       ),
-    );
-  }
+    ),
+  );
+}
 }
