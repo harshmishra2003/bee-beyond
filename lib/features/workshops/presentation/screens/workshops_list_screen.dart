@@ -518,6 +518,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                           onPressed: () {
                             context.push(
                               '${RoutePaths.workshopDetail}?id=${item.id}',
+                              extra: item,
                             );
                           },
                           style: OutlinedButton.styleFrom(
