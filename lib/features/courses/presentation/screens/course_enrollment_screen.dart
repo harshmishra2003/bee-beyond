@@ -279,15 +279,19 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (modalContext, setModalState) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.82,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            padding: const EdgeInsets.all(20),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (sheetCtx, scrollController) => StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -471,7 +475,8 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
           );
         },
       ),
-    );
+    ),
+  );
   }
 
   void _executeCoursePayment({
@@ -1415,10 +1420,17 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return _SearchablePickerBottomSheet(
-          title: title,
-          items: items,
-          currentSelected: currentSelected,
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (sheetContext, scrollController) => _SearchablePickerBottomSheet(
+            title: title,
+            items: items,
+            currentSelected: currentSelected,
+            scrollController: scrollController,
+          ),
         );
       },
     );
