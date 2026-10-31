@@ -101,17 +101,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _hasNavigated = true;
     debugPrint('[AUTH] Navigation triggered with status: ${authState.status} (forced: $force)');
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final currentAuth = ref.read(authStateProvider);
-      if (currentAuth.status == AuthStatus.authenticated) {
-        context.go(RoutePaths.home);
-      } else if (currentAuth.status == AuthStatus.unauthenticated && !currentAuth.hasSeenOnboarding) {
-        context.go(RoutePaths.onboarding);
-      } else {
-        context.go(RoutePaths.login);
-      }
-    });
+    if (authState.status == AuthStatus.authenticated) {
+      context.go(RoutePaths.home);
+    } else if (authState.status == AuthStatus.unauthenticated && !authState.hasSeenOnboarding) {
+      context.go(RoutePaths.onboarding);
+    } else {
+      context.go(RoutePaths.login);
+    }
   }
 
   @override
