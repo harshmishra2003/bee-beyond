@@ -9,7 +9,7 @@ class SecureStorageService {
       : _storage = storage ??
             const FlutterSecureStorage(
               aOptions: AndroidOptions(
-                encryptedSharedPreferences: true,
+                encryptedSharedPreferences: false,
                 resetOnError: true,
               ),
               iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
@@ -36,7 +36,7 @@ class SecureStorageService {
 
     try {
       final token = await _storage.read(key: StorageKeys.authToken).timeout(
-        const Duration(milliseconds: 500),
+        const Duration(milliseconds: 300),
         onTimeout: () => null,
       );
       if (token != null && token.trim().isNotEmpty) {
@@ -78,7 +78,7 @@ class SecureStorageService {
 
     try {
       final data = await _storage.read(key: StorageKeys.userData).timeout(
-        const Duration(milliseconds: 500),
+        const Duration(milliseconds: 300),
         onTimeout: () => null,
       );
       if (data != null && data.trim().isNotEmpty) {
