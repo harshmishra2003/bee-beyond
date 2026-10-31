@@ -337,12 +337,21 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // THUMBNAIL WITH BADGES
-          Stack(
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            context.push(
+              '${RoutePaths.workshopDetail}?id=${item.id}',
+              extra: item,
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // THUMBNAIL
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 child: item.thumbnailUrl.startsWith('http')
@@ -369,175 +378,95 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                       ),
               ),
 
-              // CATEGORY BADGE
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: item.categoryColor,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.black26, blurRadius: 4),
-                    ],
-                  ),
-                  child: Text(
-                    item.categoryBadge,
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-              ),
-
-              // RATING BADGE
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.75),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${item.rating}',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // CONTENT
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
+              // CONTENT
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.person_outline_rounded, size: 15, color: AppColors.textSecondary),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        '${item.instructor} • ${item.lineage}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11.5,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time_rounded, size: 14, color: AppColors.primary),
-                    const SizedBox(width: 4),
                     Text(
-                      item.duration,
+                      item.title,
                       style: GoogleFonts.poppins(
-                        fontSize: 11.5,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.remove_red_eye_outlined, size: 14, color: AppColors.textSecondary),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${item.views} Attendees',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11.5,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-
-                // PRICE & ACTION BUTTONS
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 6),
+                    Row(
                       children: [
-                        if (item.discount > 0)
-                          Text(
-                            CurrencyUtils.formatINR(item.basePrice),
+                        const Icon(Icons.person_outline_rounded, size: 15, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '${item.instructor} • ${item.lineage}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              color: AppColors.textHint,
-                              decoration: TextDecoration.lineThrough,
+                              fontSize: 11.5,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
                             ),
-                          ),
-                        Text(
-                          CurrencyUtils.formatINR(item.finalPrice),
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.primary,
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
-                        OutlinedButton(
-                          onPressed: () {
-                            context.push(
-                              '${RoutePaths.workshopDetail}?id=${item.id}',
-                              extra: item,
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.primary, width: 1.2),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'Details',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
+                        const Icon(Icons.access_time_rounded, size: 14, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          item.duration,
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.5,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
+                        const Icon(Icons.remove_red_eye_outlined, size: 14, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${item.views} Attendees',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.5,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+                    const SizedBox(height: 12),
+
+                    // PRICE & ACTION BUTTONS
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (item.discount > 0)
+                              Text(
+                                CurrencyUtils.formatINR(item.basePrice),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color: AppColors.textHint,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            Text(
+                              CurrencyUtils.formatINR(item.finalPrice),
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
                         ElevatedButton(
                           onPressed: () {
                             context.push(
@@ -566,10 +495,10 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
