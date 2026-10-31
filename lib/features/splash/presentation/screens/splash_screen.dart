@@ -23,11 +23,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final AnimationController _pulseController;
 
   Timer? _navigationTimer;
-  Timer? _failsafeTimer;
+  Timer? _fallbackTimer;
   Timer? _affirmationTimer;
   int _affirmationIndex = 0;
-  bool _minDurationPassed = false;
   bool _hasNavigated = false;
+  bool _minTimeElapsed = false;
 
   final List<String> _affirmations = [
     "Inhale tranquil clarity, exhale noise...",
@@ -56,7 +56,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
 
-    // Affirmation text rotator (every 2.2 seconds)
     _affirmationTimer = Timer.periodic(const Duration(milliseconds: 2200), (_) {
       if (mounted) {
         setState(() {
@@ -65,75 +64,60 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
     });
 
-    // Minimum animation duration for smooth splash intro (1200ms)
-    _navigationTimer = Timer(const Duration(milliseconds: 1200), () {
+    // Primary splash display timer (1000ms for smooth experience)
+    _navigationTimer = Timer(const Duration(milliseconds: 1000), () {
       if (mounted) {
-        _minDurationPassed = true;
-        _checkAndNavigate();
+        _minTimeElapsed = true;
+        _tryNavigate();
       }
     });
 
-    // Failsafe timer (2500ms): Guarantee instant navigation under any circumstance
-    _failsafeTimer = Timer(const Duration(milliseconds: 2500), () {
+    // Fallback timer (2200ms) to guarantee app NEVER gets stuck on splash screen
+    _fallbackTimer = Timer(const Duration(milliseconds: 2200), () {
       if (mounted && !_hasNavigated) {
-        _minDurationPassed = true;
-        _forceNavigate();
+        _minTimeElapsed = true;
+        _tryNavigate(force: true);
+      }
+    });
+
+    // Listen to Auth state changes once in initState cleanly
+    ref.listenManual<AuthState>(authStateProvider, (previous, next) {
+      if (!_hasNavigated && next.status != AuthStatus.loading) {
+        _tryNavigate();
       }
     });
   }
 
-  void _checkAndNavigate() {
-    if (_hasNavigated || !mounted || !_minDurationPassed) return;
+  void _tryNavigate({bool force = false}) {
+    if (_hasNavigated || !mounted || !_minTimeElapsed) return;
 
     final authState = ref.read(authStateProvider);
-    if (authState.status == AuthStatus.loading) {
+
+    // Wait until authentication restoration completes (unless fallback timer forces it)
+    if (authState.status == AuthStatus.loading && !force) {
       return;
     }
 
-    _performNavigation(authState);
-  }
+    _hasNavigated = true;
+    debugPrint('[AUTH] Navigation triggered with status: ${authState.status} (forced: $force)');
 
-  void _forceNavigate() {
-    if (_hasNavigated || !mounted) return;
-    var authState = ref.read(authStateProvider);
-    if (authState.status == AuthStatus.loading) {
-      // Guarantee instant navigation even if auth status is loading
-      authState = const AuthState(
-        status: AuthStatus.unauthenticated,
-        user: null,
-        hasSeenOnboarding: true,
-      );
-    }
-    _performNavigation(authState);
-  }
-
-  void _performNavigation(AuthState authState) {
-    if (_hasNavigated || !mounted) return;
-
-    if (authState.status == AuthStatus.authenticated) {
-      _hasNavigated = true;
-      context.go(RoutePaths.home);
-    } else if (authState.status == AuthStatus.unauthenticated) {
-      _hasNavigated = true;
-      if (!authState.hasSeenOnboarding) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final currentAuth = ref.read(authStateProvider);
+      if (currentAuth.status == AuthStatus.authenticated) {
+        context.go(RoutePaths.home);
+      } else if (currentAuth.status == AuthStatus.unauthenticated && !currentAuth.hasSeenOnboarding) {
         context.go(RoutePaths.onboarding);
       } else {
         context.go(RoutePaths.login);
       }
-    } else {
-      _hasNavigated = true;
-      if (!authState.hasSeenOnboarding) {
-        context.go(RoutePaths.onboarding);
-      } else {
-        context.go(RoutePaths.login);
-      }
-    }
+    });
   }
 
   @override
   void dispose() {
     _navigationTimer?.cancel();
-    _failsafeTimer?.cancel();
+    _fallbackTimer?.cancel();
     _affirmationTimer?.cancel();
     _orbitController.dispose();
     _lotusController.dispose();
@@ -143,12 +127,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AuthState>(authStateProvider, (previous, next) {
-      if (next.status != AuthStatus.loading && _minDurationPassed) {
-        _checkAndNavigate();
-      }
-    });
-
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -480,10 +458,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
   }
-
-  // ---------------------------------------------------------------------------
-  // Helper Widgets & Canvas Painters
-  // ---------------------------------------------------------------------------
 
   Widget _buildOrb(double size, Color color) {
     return IgnorePointer(
