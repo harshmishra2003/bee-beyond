@@ -27,24 +27,22 @@ class RouterNotifier extends ChangeNotifier {
     final status = authState.status;
     final hasSeenOnboarding = authState.hasSeenOnboarding;
 
+    // 1) Loading State -> Prevent deep links from bypassing auth check
+    if (status == AuthStatus.loading) {
+      return location == RoutePaths.splash ? null : RoutePaths.splash;
+    }
+
     // While on splash screen, allow SplashScreen to manage initial navigation
     if (location == RoutePaths.splash) {
       return null;
     }
 
-    // 1) Loading State -> Allow explicit navigation without forcing redirects
-    if (status == AuthStatus.loading) {
-      return null;
-    }
-
     // 2) Unauthenticated State -> Auth Stack or Onboarding
     if (status == AuthStatus.unauthenticated) {
-      // If user hasn't seen onboarding, force onboarding screen
       if (!hasSeenOnboarding) {
         return location == RoutePaths.onboarding ? null : RoutePaths.onboarding;
       }
 
-      // If user has seen onboarding, allow access to Auth routes (login, register, forgot-password, otp)
       final isAuthRoute = location == RoutePaths.login ||
                           location == RoutePaths.register ||
                           location == RoutePaths.forgotPassword ||
@@ -54,13 +52,12 @@ class RouterNotifier extends ChangeNotifier {
         return null;
       }
 
-      // Otherwise (trying to access protected AppStack route or splash/onboarding), redirect to Login
+      debugPrint('[ROUTER] Navigation destination: ${RoutePaths.login}');
       return RoutePaths.login;
     }
 
     // 3) Authenticated State -> App Stack
     if (status == AuthStatus.authenticated) {
-      // An authenticated user should NEVER be redirected to splash, onboarding, or auth screens
       final isAuthOrSplashRoute = location == RoutePaths.splash ||
                                   location == RoutePaths.onboarding ||
                                   location == RoutePaths.login ||
@@ -69,10 +66,10 @@ class RouterNotifier extends ChangeNotifier {
                                   location == RoutePaths.otp;
 
       if (isAuthOrSplashRoute) {
+        debugPrint('[ROUTER] Navigation destination: ${RoutePaths.home}');
         return RoutePaths.home;
       }
 
-      // Otherwise, allow access to protected AppStack route
       return null;
     }
 
