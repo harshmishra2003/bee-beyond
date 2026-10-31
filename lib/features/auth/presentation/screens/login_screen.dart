@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/utils/app_alert_manager.dart';
-import '../../../../core/errors/failures.dart';
 import '../../../../routing/route_paths.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_background_wrapper.dart';
@@ -231,133 +229,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _Shining3DLoginButton(
                 text: 'Login',
                 onTap: _onLogin,
-              ),
-
-              const SizedBox(height: 20),
-
-              // OR CONTINUE WITH Divider
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Divider(color: Color(0xFFE2E8F0)),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
-                    ),
-                    child: Text(
-                      'OR CONTINUE WITH',
-                      style: GoogleFonts.poppins(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF94A3B8),
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 18),
-
-              // Social Sign-In Buttons (Google & Apple)
-              Row(
-                children: [
-                  // Google Sign-In Button
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        AppAlertManager.showError(
-                          context,
-                          const PermissionFailure("Google Sign-In is temporarily unavailable."),
-                          customTitle: "Not Available",
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        backgroundColor: Colors.white,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            AssetPaths.googleIcon,
-                            width: 18,
-                            height: 18,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.g_mobiledata,
-                              size: 22,
-                              color: Colors.red,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Google',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF334155),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Apple Sign-In Button
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        AppAlertManager.showError(
-                          context,
-                          const PermissionFailure("Apple Sign-In is temporarily unavailable."),
-                          customTitle: "Not Available",
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        backgroundColor: Colors.white,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            AssetPaths.appleIcon,
-                            width: 18,
-                            height: 18,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.apple,
-                              size: 20,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Apple',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF334155),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
               ),
 
               const SizedBox(height: 22),
