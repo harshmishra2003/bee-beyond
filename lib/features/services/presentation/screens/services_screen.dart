@@ -366,221 +366,221 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
       featureDescription: '1-on-1 practitioner bookings, Prakriti analysis & Vastu consultations',
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-      appBar: const CustomAppBar(title: 'Wellness & Consultation Services'),
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        onRefresh: () async {
-          ref.invalidate(servicesProvider);
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-          child: Column(
-            children: [
-              // Top Hero Banner with Radiant Wellness Gradients
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                padding: const EdgeInsets.all(22),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF4A154B),
-                      Color(0xFF7E22CE),
-                      Color(0xFF4338CA),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x307E22CE),
-                      blurRadius: 16,
-                      offset: Offset(0, 6),
+        appBar: const CustomAppBar(title: 'Wellness & Consultation Services'),
+        body: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            ref.invalidate(servicesProvider);
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            child: Column(
+              children: [
+                // Top Hero Banner with Radiant Wellness Gradients
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF4A154B),
+                        Color(0xFF7E22CE),
+                        Color(0xFF4338CA),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: -20,
-                      bottom: -20,
-                      child: Icon(
-                        Icons.spa_rounded,
-                        size: 110,
-                        color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x307E22CE),
+                        blurRadius: 16,
+                        offset: Offset(0, 6),
                       ),
-                    ),
-                    Column(
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -20,
+                        bottom: -20,
+                        child: Icon(
+                          Icons.spa_rounded,
+                          size: 110,
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.support_agent_rounded, color: Colors.amberAccent, size: 24),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Expert Practitioner Sessions',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.amberAccent,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 15,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Book 1-on-1 private consultations with certified Ayurvedic doctors, Vastu masters, Bach therapists, and mind-body experts.',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 12,
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // Services List & Category Filter
+                servicesAsync.when(
+                  skipLoadingOnRefresh: true,
+                  data: (servicesList) {
+                    if (servicesList.isEmpty) {
+                      return _buildEmptyState();
+                    }
+
+                    final categories = _extractCategories(servicesList);
+                    final filteredServices = servicesList.where((s) {
+                      if (_selectedCategory == 'All') return true;
+                      return s.category.toLowerCase() == _selectedCategory.toLowerCase();
+                    }).toList();
+
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.support_agent_rounded, color: Colors.amberAccent, size: 24),
+                        // Category Filter Chips Bar
+                        if (categories.length > 1)
+                          SizedBox(
+                            height: 38,
+                            child: ListView.separated(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: categories.length,
+                              separatorBuilder: (context, index) => const SizedBox(width: 8),
+                              itemBuilder: (context, index) {
+                                final cat = categories[index];
+                                final isSelected = _selectedCategory == cat;
+
+                                return GestureDetector(
+                                  onTap: () => setState(() => _selectedCategory = cat),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? AppColors.primary : Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: isSelected
+                                          ? [
+                                        BoxShadow(
+                                          color: AppColors.primary.withValues(alpha: 0.25),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        )
+                                      ]
+                                          : null,
+                                    ),
+                                    child: Text(
+                                      cat,
+                                      style: TextStyle(
+                                        color: isSelected ? Colors.white : AppColors.textSecondary,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                        fontSize: 12.5,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Expert Practitioner Sessions',
-                              style: GoogleFonts.poppins(
-                                color: Colors.amberAccent,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 15,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Book 1-on-1 private consultations with certified Ayurvedic doctors, Vastu masters, Bach therapists, and mind-body experts.',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 12,
-                            height: 1.45,
                           ),
+
+                        const SizedBox(height: 16),
+
+                        // Services List Header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '$_selectedCategory Sessions (${filteredServices.length})',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.titleLarge.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.support_agent_rounded, color: AppColors.primary, size: 22),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Services Cards
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: filteredServices.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 16),
+                          itemBuilder: (context, index) {
+                            final srv = filteredServices[index];
+                            return _buildServiceCard(context, srv, index);
+                          },
                         ),
                       ],
+                    );
+                  },
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(40.0),
+                    child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                  ),
+                  error: (err, stack) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Text('Error loading services: $err', style: const TextStyle(color: AppColors.error)),
                     ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // Services List & Category Filter
-              servicesAsync.when(
-                skipLoadingOnRefresh: true,
-                data: (servicesList) {
-                  if (servicesList.isEmpty) {
-                    return _buildEmptyState();
-                  }
-
-                  final categories = _extractCategories(servicesList);
-                  final filteredServices = servicesList.where((s) {
-                    if (_selectedCategory == 'All') return true;
-                    return s.category.toLowerCase() == _selectedCategory.toLowerCase();
-                  }).toList();
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Category Filter Chips Bar
-                      if (categories.length > 1)
-                        SizedBox(
-                          height: 38,
-                          child: ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: categories.length,
-                            separatorBuilder: (context, index) => const SizedBox(width: 8),
-                            itemBuilder: (context, index) {
-                              final cat = categories[index];
-                              final isSelected = _selectedCategory == cat;
-
-                              return GestureDetector(
-                                onTap: () => setState(() => _selectedCategory = cat),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: isSelected ? AppColors.primary : Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
-                                      width: 1.5,
-                                    ),
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: AppColors.primary.withValues(alpha: 0.25),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 3),
-                                            )
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Text(
-                                    cat,
-                                    style: TextStyle(
-                                      color: isSelected ? Colors.white : AppColors.textSecondary,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                      fontSize: 12.5,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                      const SizedBox(height: 16),
-
-                      // Services List Header
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '$_selectedCategory Sessions (${filteredServices.length})',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.titleLarge.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.support_agent_rounded, color: AppColors.primary, size: 22),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Services Cards
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: filteredServices.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 16),
-                        itemBuilder: (context, index) {
-                          final srv = filteredServices[index];
-                          return _buildServiceCard(context, srv, index);
-                        },
-                      ),
-                    ],
-                  );
-                },
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(40.0),
-                  child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-                ),
-                error: (err, stack) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Text('Error loading services: $err', style: const TextStyle(color: AppColors.error)),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 32),
-            ],
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -687,90 +687,90 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
         children: [
           // Real-time Availability Counter Dashboard
           Container(
-             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-             decoration: const BoxDecoration(
-               color: Colors.white,
-               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-               border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
-             ),
-             child: Column(
-               crossAxisAlignment: CrossAxisAlignment.start,
-               children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 7,
-                              height: 7,
-                              decoration: BoxDecoration(
-                                color: hasSlotsData && remainingSlots > 0
-                                    ? const Color(0xFF10B981)
-                                    : const Color(0xFF3B82F6),
-                                shape: BoxShape.circle,
-                              ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: hasSlotsData && remainingSlots > 0
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFF3B82F6),
+                              shape: BoxShape.circle,
                             ),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                'Today\'s Slot Availability',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        hasSlotsData
-                            ? '$remainingSlots Available | $totalSlots Total'
-                            : 'Open for Booking Today',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: hasSlotsData && remainingSlots > 0
-                              ? const Color(0xFF059669)
-                              : AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Dynamic Segmented Progress Bar
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: hasSlotsData
-                        ? Row(
-                            children: [
-                               Expanded(
-                                 flex: bookedSlots > 0 ? bookedSlots : 0,
-                                 child: Container(height: 6, color: const Color(0xFF94A3B8)), // Booked: Grey
-                               ),
-                               Expanded(
-                                 flex: remainingSlots > 0 ? remainingSlots : 1,
-                                 child: Container(height: 6, color: const Color(0xFF10B981)), // Remaining: Emerald
-                               ),
-                            ],
-                          )
-                        : Container(
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFF3B82F6), Color(0xFF10B981)],
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              'Today\'s Slot Availability',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF64748B),
                               ),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      hasSlotsData
+                          ? '$remainingSlots Available | $totalSlots Total'
+                          : 'Open for Booking Today',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: hasSlotsData && remainingSlots > 0
+                            ? const Color(0xFF059669)
+                            : AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Dynamic Segmented Progress Bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: hasSlotsData
+                      ? Row(
+                    children: [
+                      Expanded(
+                        flex: bookedSlots > 0 ? bookedSlots : 0,
+                        child: Container(height: 6, color: const Color(0xFF94A3B8)), // Booked: Grey
+                      ),
+                      Expanded(
+                        flex: remainingSlots > 0 ? remainingSlots : 1,
+                        child: Container(height: 6, color: const Color(0xFF10B981)), // Remaining: Emerald
+                      ),
+                    ],
+                  )
+                      : Container(
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF3B82F6), Color(0xFF10B981)],
+                      ),
+                    ),
                   ),
-               ],
-             ),
+                ),
+              ],
+            ),
           ),
 
           // Offer Image Banner - CLEAN WITHOUT ANY OVERLAY TEXT (Compact height)
@@ -941,79 +941,79 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 
                 // Post-Booking Media Access
                 if (srv.slots.any((s) => s.isBookedByMe)) ...[
-                   const SizedBox(height: 16),
-                   Container(
-                     padding: const EdgeInsets.all(12),
-                     decoration: BoxDecoration(
-                       color: const Color(0xFFF0FDF4), // Light Green bg
-                       borderRadius: BorderRadius.circular(12),
-                       border: Border.all(color: const Color(0xFF86EFAC)),
-                     ),
-                     child: Column(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                       children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 18),
-                              SizedBox(width: 6),
-                              Text(
-                                'You have a booked appointment',
-                                style: TextStyle(
-                                  color: Color(0xFF16A34A),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12.5,
-                                ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4), // Light Green bg
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF86EFAC)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 18),
+                            SizedBox(width: 6),
+                            Text(
+                              'You have a booked appointment',
+                              style: TextStyle(
+                                color: Color(0xFF16A34A),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12.5,
                               ),
-                            ],
+                            ),
+                          ],
+                        ),
+                        if (srv.meetingLink.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF10B981),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const Icon(Icons.video_call_rounded, size: 20),
+                              label: const Text('JOIN MEETING NOW', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              onPressed: () {
+                                // Normally you would launch the URL here
+                                AppAlertManager.showFloatingToast(context, title: 'Opening Meeting...', message: 'Connecting to virtual room', icon: Icons.videocam);
+                              },
+                            ),
                           ),
-                          if (srv.meetingLink.isNotEmpty) ...[
-                             const SizedBox(height: 10),
-                             SizedBox(
-                               width: double.infinity,
-                               child: ElevatedButton.icon(
-                                 style: ElevatedButton.styleFrom(
-                                   backgroundColor: const Color(0xFF10B981),
-                                   foregroundColor: Colors.white,
-                                   elevation: 0,
-                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                 ),
-                                 icon: const Icon(Icons.video_call_rounded, size: 20),
-                                 label: const Text('JOIN MEETING NOW', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                 onPressed: () {
-                                    // Normally you would launch the URL here
-                                    AppAlertManager.showFloatingToast(context, title: 'Opening Meeting...', message: 'Connecting to virtual room', icon: Icons.videocam);
-                                 },
-                               ),
-                             ),
-                          ],
-                          if (srv.mediaPdfs.isNotEmpty || srv.mediaVideos.isNotEmpty) ...[
-                             const SizedBox(height: 10),
-                             const Text('Provided Materials:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF16A34A))),
-                             const SizedBox(height: 4),
-                             ...srv.mediaPdfs.map((pdf) => Padding(
-                               padding: const EdgeInsets.only(bottom: 4.0),
-                               child: Row(
-                                 children: [
-                                   const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFEF4444), size: 14),
-                                   const SizedBox(width: 4),
-                                   Expanded(child: Text(pdf.title, style: const TextStyle(fontSize: 11, color: Color(0xFF16A34A), decoration: TextDecoration.underline))),
-                                 ],
-                               ),
-                             )),
-                             ...srv.mediaVideos.map((vid) => Padding(
-                               padding: const EdgeInsets.only(bottom: 4.0),
-                               child: Row(
-                                 children: [
-                                   const Icon(Icons.play_circle_rounded, color: AppColors.primary, size: 14),
-                                   const SizedBox(width: 4),
-                                   Expanded(child: Text(vid.title, style: const TextStyle(fontSize: 11, color: AppColors.primary, decoration: TextDecoration.underline))),
-                                 ],
-                               ),
-                             )),
-                          ],
-                       ],
-                     ),
-                   ),
+                        ],
+                        if (srv.mediaPdfs.isNotEmpty || srv.mediaVideos.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          const Text('Provided Materials:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF16A34A))),
+                          const SizedBox(height: 4),
+                          ...srv.mediaPdfs.map((pdf) => Padding(
+                            padding: const EdgeInsets.only(bottom: 4.0),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFEF4444), size: 14),
+                                const SizedBox(width: 4),
+                                Expanded(child: Text(pdf.title, style: const TextStyle(fontSize: 11, color: Color(0xFF16A34A), decoration: TextDecoration.underline))),
+                              ],
+                            ),
+                          )),
+                          ...srv.mediaVideos.map((vid) => Padding(
+                            padding: const EdgeInsets.only(bottom: 4.0),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.play_circle_rounded, color: AppColors.primary, size: 14),
+                                const SizedBox(width: 4),
+                                Expanded(child: Text(vid.title, style: const TextStyle(fontSize: 11, color: AppColors.primary, decoration: TextDecoration.underline))),
+                              ],
+                            ),
+                          )),
+                        ],
+                      ],
+                    ),
+                  ),
                 ],
 
                 const SizedBox(height: 16),
@@ -1062,7 +1062,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
   }
 
   // Beautiful Bottom Sheet for booking slots
-  void _showServiceBookingSheet(BuildContext context, ServiceItem srv) {
+  Future<void> _showServiceBookingSheet(BuildContext context, ServiceItem srv) async {
     ServiceSlot? selectedSlot;
     DateTime selectedDate = DateTime.now();
     int weekOffset = 0; // 0 = current week, 1 = next week, etc.
@@ -1094,35 +1094,31 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
       ];
     }
 
-    showModalBottomSheet(
+    final String? bookedSlotId = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.4,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (sheetContext, scrollController) => StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            final startOfWeek = getStartOfWeek(DateTime.now(), weekOffset);
-            final weekDays = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
-            final activeSlots = getSlotsForDate(selectedDate);
-            final availableSlots = activeSlots.where((s) => !s.isBooked).toList();
-            final bookedSlots = activeSlots.where((s) => s.isBooked && !s.isBookedByMe).toList();
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final startOfWeek = getStartOfWeek(DateTime.now(), weekOffset);
+          final weekDays = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
+          final activeSlots = getSlotsForDate(selectedDate);
+          final availableSlots = activeSlots.where((s) => !s.isBooked).toList();
+          final bookedSlots = activeSlots.where((s) => s.isBooked && !s.isBookedByMe).toList();
 
-            final weekRangeStr = "${DateFormat('dd MMM').format(startOfWeek)} - ${DateFormat('dd MMM yyyy').format(startOfWeek.add(const Duration(days: 6)))}";
+          final weekRangeStr = "${DateFormat('dd MMM').format(startOfWeek)} - ${DateFormat('dd MMM yyyy').format(startOfWeek.add(const Duration(days: 6)))}";
 
-            return Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFAFAFC),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                boxShadow: [
-                  BoxShadow(color: Colors.black26, blurRadius: 20, offset: Offset(0, -5)),
-                ],
-              ),
-              child: Column(
+          return Container(
+            height: MediaQuery.of(ctx).size.height * 0.85,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFAFAFC),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              boxShadow: [
+                BoxShadow(color: Colors.black26, blurRadius: 20, offset: Offset(0, -5)),
+              ],
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Top Handle Bar
@@ -1169,7 +1165,10 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -1179,6 +1178,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                   ),
                                   child: Text(
                                     srv.category.toUpperCase(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: GoogleFonts.poppins(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w900,
@@ -1186,7 +1187,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                   decoration: BoxDecoration(
@@ -1194,15 +1194,20 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       const Icon(Icons.timer_outlined, size: 10, color: Colors.white),
                                       const SizedBox(width: 3),
-                                      Text(
-                                        srv.duration,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
+                                      Flexible(
+                                        child: Text(
+                                          srv.duration,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -1340,12 +1345,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     InkWell(
                       onTap: weekOffset > 0
                           ? () {
-                              setSheetState(() {
-                                weekOffset--;
-                                selectedDate = getStartOfWeek(DateTime.now(), weekOffset);
-                                selectedSlot = null;
-                              });
-                            }
+                        setSheetState(() {
+                          weekOffset--;
+                          selectedDate = getStartOfWeek(DateTime.now(), weekOffset);
+                          selectedSlot = null;
+                        });
+                      }
                           : null,
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(
@@ -1417,7 +1422,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 
                 // DAY & DATE PILLS CAROUSEL (7 DAYS OF SELECTED WEEK)
                 SizedBox(
-                  height: 68,
+                  height: 76,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
@@ -1433,11 +1438,11 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         onTap: isPast
                             ? null
                             : () {
-                                setSheetState(() {
-                                  selectedDate = dayDate;
-                                  selectedSlot = null;
-                                });
-                              },
+                          setSheetState(() {
+                            selectedDate = dayDate;
+                            selectedSlot = null;
+                          });
+                        },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           width: 58,
@@ -1445,10 +1450,10 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                           decoration: BoxDecoration(
                             gradient: isSelected
                                 ? const LinearGradient(
-                                    colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                  )
+                              colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            )
                                 : null,
                             color: isSelected
                                 ? null
@@ -1462,12 +1467,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             ),
                             boxShadow: isSelected
                                 ? [
-                                    BoxShadow(
-                                      color: const Color(0xFF312E81).withValues(alpha: 0.35),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ]
+                              BoxShadow(
+                                color: const Color(0xFF312E81).withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
                                 : null,
                           ),
                           child: Column(
@@ -1518,7 +1523,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 // SCROLLABLE SLOTS CONTENT AREA
                 Expanded(
                   child: SingleChildScrollView(
-                    controller: scrollController,
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1587,12 +1591,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                     ),
                                     boxShadow: isSelected
                                         ? [
-                                            BoxShadow(
-                                              color: const Color(0xFF059669).withValues(alpha: 0.35),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 3),
-                                            ),
-                                          ]
+                                      BoxShadow(
+                                        color: const Color(0xFF059669).withValues(alpha: 0.35),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ]
                                         : null,
                                   ),
                                   child: Row(
@@ -1769,6 +1773,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       ),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(0, 44),
                           backgroundColor: selectedSlot != null ? AppColors.primary : Colors.grey.shade400,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -1776,9 +1781,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         ),
                         onPressed: selectedSlot != null
                             ? () {
-                                Navigator.pop(ctx);
-                                _bookServiceSession(srv, selectedSlot!.slotId);
-                              }
+                          Navigator.pop(ctx, selectedSlot!.slotId);
+                        }
                             : null,
                         icon: const Icon(Icons.bolt_rounded, color: Colors.amberAccent, size: 18),
                         label: Text(
@@ -1799,7 +1803,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
           );
         },
       ),
-    ),
-  );
-}
+    );
+
+    if (bookedSlotId == null || !mounted) return;
+    // Sheet ka exit animation khatam hone do, phir hi payment dialog push karo
+    await Future.delayed(const Duration(milliseconds: 350));
+    if (!mounted) return;
+    _bookServiceSession(srv, bookedSlotId);
+  }
 }
