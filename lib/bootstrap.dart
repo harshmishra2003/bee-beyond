@@ -10,8 +10,8 @@ import 'core/services/secure_storage_service.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 
 Future<void> bootstrap(Widget Function() builder) async {
-  WidgetsFlutterBinding.ensureInitialized();
   runZonedGuarded(() {
+    WidgetsFlutterBinding.ensureInitialized();
     debugPrint('[STARTUP] Flutter binding initialized in Zone');
 
     FlutterError.onError = (details) {
