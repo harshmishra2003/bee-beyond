@@ -24,6 +24,7 @@ dependencies:
   # Local Storage & Security
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.2.3
+  flutter_native_splash: ^2.4.1
 
   # UI Utilities & Styling
   cupertino_icons: ^1.0.8
@@ -63,6 +64,17 @@ flutter_launcher_icons:
   min_sdk_android: 21
   adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/images/Bee Beeyond.png"
+
+flutter_native_splash:
+  color: "#F9FBFA"
+  image: "assets/images/Bee Beeyond.png"
+  android_12:
+    image: "assets/images/Bee Beeyond.png"
+    icon_background_color: "#F9FBFA"
+    color: "#F9FBFA"
+  android: true
+  ios: true
+  web: false
 
 flutter:
   uses-material-design: true
