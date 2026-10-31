@@ -3,6 +3,9 @@
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowDisablePreview">true</item>
         <item name="android:windowBackground">#F9FBFA</item>
+        <item name="android:windowSplashScreenBackground">#F9FBFA</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/transparent</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#F9FBFA</item>
     </style>
 
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
