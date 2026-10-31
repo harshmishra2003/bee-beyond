@@ -22,15 +22,6 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  static const List<String> _categories = [
-    'All',
-    'Sound Healing',
-    'Ayurveda',
-    'Vastu',
-    'Meditation',
-    'Life Coaching',
-  ];
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -109,7 +100,10 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
               const SizedBox(height: 16),
 
               // CATEGORY CHIPS
-              _buildCategorySelector(selectedCategory),
+              ref.watch(allWorkshopsProvider).maybeWhen(
+                data: (allList) => _buildCategorySelector(selectedCategory, allList),
+                orElse: () => _buildCategorySelector(selectedCategory, []),
+              ),
 
               const SizedBox(height: 20),
 
@@ -281,17 +275,25 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
     );
   }
 
-  Widget _buildCategorySelector(String selectedCategory) {
+  Widget _buildCategorySelector(String selectedCategory, List<WorkshopItem> allWorkshops) {
+    final categoriesSet = <String>{'All'};
+    for (final item in allWorkshops) {
+      if (item.category.trim().isNotEmpty) {
+        categoriesSet.add(item.category.trim());
+      }
+    }
+    final categories = categoriesSet.toList();
+
     return SizedBox(
       height: 38,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        itemCount: _categories.length,
+        itemCount: categories.length,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final cat = _categories[index];
+          final cat = categories[index];
           final isSelected = selectedCategory == cat;
 
           return ChoiceChip(
