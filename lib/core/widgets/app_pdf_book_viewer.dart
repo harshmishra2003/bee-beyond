@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pdfrx/pdfrx.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../routing/route_paths.dart';
 import '../services/secure_storage_service.dart';
@@ -148,7 +148,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
   bool _showTextTab = false;
   bool _isNightMode = false;
 
-  // ValueNotifiers to isolate UI rebuilds during high-speed 60fps scrolling
+  // ValueNotifiers to isolate UI rebuilds during high-speed scrolling
   final ValueNotifier<int> _currentPageNotifier = ValueNotifier<int>(1);
   final ValueNotifier<int> _totalPagesNotifier = ValueNotifier<int>(0);
 
@@ -163,6 +163,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
   void dispose() {
     _currentPageNotifier.dispose();
     _totalPagesNotifier.dispose();
+    _pdfViewerController.dispose();
     super.dispose();
   }
 
@@ -369,7 +370,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
               final target = int.tryParse(controller.text);
               if (target != null && target >= 1 && target <= total) {
                 Navigator.pop(ctx);
-                _pdfViewerController.goToPage(pageNumber: target);
+                _pdfViewerController.jumpToPage(target);
               }
             },
             child: const Text('Go'),
@@ -390,426 +391,435 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
         height: MediaQuery.of(context).size.height * 0.94,
         decoration: BoxDecoration(
           color: _isNightMode ? const Color(0xFF121212) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          Container(
-            width: 38,
-            height: 4,
-            decoration: BoxDecoration(
-              color: _isNightMode ? Colors.grey.shade700 : Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          // HEADER CONTROL BAR
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _isNightMode ? const Color(0xFF2A1A1A) : const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.menu_book_rounded,
-                    color: Color(0xFFEF4444),
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: _isNightMode ? Colors.white : AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14.5,
-                        ),
-                      ),
-                      Text(
-                        widget.subtitle ?? 'Official Study Handbook & PDF Reader',
-                        style: TextStyle(
-                          color: _isNightMode ? Colors.grey.shade400 : AppColors.textSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // NIGHT READING MODE TOGGLE
-                IconButton(
-                  tooltip: _isNightMode ? 'Day Mode' : 'Night Mode',
-                  icon: Icon(
-                    _isNightMode ? Icons.wb_sunny_rounded : Icons.nightlight_round_rounded,
-                    color: _isNightMode ? Colors.amber : const Color(0xFF475569),
-                    size: 20,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isNightMode = !_isNightMode;
-                    });
-                  },
-                ),
-
-                // JUMP TO PAGE DIALOG BUTTON
-                ValueListenableBuilder<int>(
-                  valueListenable: _totalPagesNotifier,
-                  builder: (context, totalPages, child) {
-                    if (totalPages <= 0) return const SizedBox.shrink();
-                    return IconButton(
-                      tooltip: 'Jump to Page',
-                      icon: Icon(
-                        Icons.unfold_more_rounded,
-                        color: _isNightMode ? Colors.white70 : const Color(0xFF475569),
-                        size: 20,
-                      ),
-                      onPressed: _showJumpToPageDialog,
-                    );
-                  },
-                ),
-
-                IconButton(
-                  icon: Icon(Icons.close_rounded, color: _isNightMode ? Colors.white : AppColors.primary),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-
-          // TOGGLE TABS (PDF vs TEXT NOTES)
-          if (hasTextContent)
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-              padding: const EdgeInsets.all(3),
+              width: 38,
+              height: 4,
               decoration: BoxDecoration(
-                color: _isNightMode ? const Color(0xFF1E1E1E) : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(10),
+                color: _isNightMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
               ),
+            ),
+
+            // HEADER CONTROL BAR
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _showTextTab = false),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        decoration: BoxDecoration(
-                          color: !_showTextTab ? (_isNightMode ? const Color(0xFF2D2D2D) : Colors.white) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: !_showTextTab
-                              ? const [
-                                  BoxShadow(color: Color(0x1A000000), blurRadius: 4, offset: Offset(0, 1))
-                                ]
-                              : [],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.picture_as_pdf_rounded,
-                              size: 14,
-                              color: !_showTextTab ? const Color(0xFFEF4444) : AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'PDF View',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: !_showTextTab
-                                    ? (_isNightMode ? Colors.white : AppColors.primary)
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _isNightMode ? const Color(0xFF2A1A1A) : const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      color: Color(0xFFEF4444),
+                      size: 22,
                     ),
                   ),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _showTextTab = true),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _showTextTab ? (_isNightMode ? const Color(0xFF2D2D2D) : Colors.white) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: _showTextTab
-                              ? const [
-                                  BoxShadow(color: Color(0x1A000000), blurRadius: 4, offset: Offset(0, 1))
-                                ]
-                              : [],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: _isNightMode ? Colors.white : AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14.5,
+                          ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.notes_rounded,
-                              size: 14,
-                              color: _showTextTab ? AppColors.primary : AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Text / Reading Notes',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: _showTextTab
-                                    ? (_isNightMode ? Colors.white : AppColors.primary)
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          widget.subtitle ?? 'Official Study Handbook & PDF Reader',
+                          style: TextStyle(
+                            color: _isNightMode ? Colors.grey.shade400 : AppColors.textSecondary,
+                            fontSize: 11,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
+                  ),
+
+                  // NIGHT READING MODE TOGGLE
+                  IconButton(
+                    tooltip: _isNightMode ? 'Day Mode' : 'Night Mode',
+                    icon: Icon(
+                      _isNightMode ? Icons.wb_sunny_rounded : Icons.nightlight_round_rounded,
+                      color: _isNightMode ? Colors.amber : const Color(0xFF475569),
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isNightMode = !_isNightMode;
+                      });
+                    },
+                  ),
+
+                  // JUMP TO PAGE DIALOG BUTTON
+                  ValueListenableBuilder<int>(
+                    valueListenable: _totalPagesNotifier,
+                    builder: (context, totalPages, child) {
+                      if (totalPages <= 0) return const SizedBox.shrink();
+                      return IconButton(
+                        tooltip: 'Jump to Page',
+                        icon: Icon(
+                          Icons.unfold_more_rounded,
+                          color: _isNightMode ? Colors.white70 : const Color(0xFF475569),
+                          size: 20,
+                        ),
+                        onPressed: _showJumpToPageDialog,
+                      );
+                    },
+                  ),
+
+                  IconButton(
+                    icon: Icon(Icons.close_rounded, color: _isNightMode ? Colors.white : AppColors.primary),
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
             ),
 
-          Divider(height: 1, color: _isNightMode ? Colors.white12 : AppColors.borderSubtle),
-
-          // MAIN PDF READER CANVAS
-          Expanded(
-            child: _showTextTab
-                ? _buildTextContentBody()
-                : (_isLoading
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const CircularProgressIndicator(color: Color(0xFFEF4444)),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Opening Study PDF Reader...',
-                              style: TextStyle(
-                                color: _isNightMode ? Colors.white : AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13.5,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Preparing PDFium GPU accelerated engine',
-                              style: TextStyle(
-                                color: _isNightMode ? Colors.grey.shade400 : AppColors.textSecondary,
-                                fontSize: 11.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : (_localFilePath != null
-                        ? RepaintBoundary(
-                            child: Stack(
-                              children: [
-                                // HIGH-PERFORMANCE PDFIUM CONTINUOUS READER WITH NIGHT MODE FILTER
-                                ColorFiltered(
-                                  colorFilter: _isNightMode
-                                      ? const ColorFilter.matrix([
-                                          -1,  0,  0, 0, 255,
-                                           0, -1,  0, 0, 255,
-                                           0,  0, -1, 0, 255,
-                                           0,  0,  0, 1,   0,
-                                        ])
-                                      : const ColorFilter.mode(
-                                          Colors.transparent,
-                                          BlendMode.dst,
-                                        ),
-                                  child: PdfViewer.file(
-                                    _localFilePath!,
-                                    controller: _pdfViewerController,
-                                    params: PdfViewerParams(
-                                      maxImageBytesCachedOnMemory: 120 * 1024 * 1024, // 120MB GPU Texture Limit
-                                      limitRenderingCache: true,
-                                      verticalCacheExtent: 1.5,
-                                      scrollPhysics: const BouncingScrollPhysics(),
-                                      annotationRenderingMode: PdfAnnotationRenderingMode.none, // High performance pure reading mode
-                                      pageAnchor: PdfPageAnchor.top,
-                                      margin: 4,
-                                    onDocumentChanged: (document) {
-                                      if (document != null && mounted) {
-                                        _totalPagesNotifier.value = document.pages.length;
-                                      }
-                                    },
-                                    onPageChanged: (pageNumber) {
-                                      if (pageNumber != null) {
-                                        if (widget.isPreviewMode && pageNumber > 2) {
-                                          _pdfViewerController.goToPage(pageNumber: 2);
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Preview limit reached (Max 2 pages). Please purchase the book to unlock full reading access.'),
-                                                backgroundColor: Colors.redAccent,
-                                                duration: Duration(seconds: 3),
-                                              ),
-                                            );
-                                          }
-                                        }
-                                        _currentPageNotifier.value = pageNumber;
-                                      }
-                                    },
-                                    errorBannerBuilder: (context, error, stackTrace, documentRef) {
-                                      return Center(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Text(
-                                            'Error rendering PDF page: $error',
-                                            style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-
-                                // FLOATING PAGE BADGE OVERLAY
-                                Positioned(
-                                  top: 12,
-                                  right: 14,
-                                  child: ValueListenableBuilder<int>(
-                                    valueListenable: _totalPagesNotifier,
-                                    builder: (context, totalPages, child) {
-                                      if (totalPages <= 0) return const SizedBox.shrink();
-                                      return ValueListenableBuilder<int>(
-                                        valueListenable: _currentPageNotifier,
-                                        builder: (context, currentPage, child) {
-                                          final percent = ((currentPage / totalPages) * 100).toInt();
-                                          return Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withValues(alpha: 0.75),
-                                              borderRadius: BorderRadius.circular(16),
-                                              border: Border.all(color: Colors.white24, width: 0.8),
-                                              boxShadow: const [
-                                                BoxShadow(color: Color(0x40000000), blurRadius: 6, offset: Offset(0, 2))
-                                              ],
-                                            ),
-                                            child: Text(
-                                              '$currentPage / $totalPages ($percent%)',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : _buildErrorOrEmptyState())),
-          ),
-
-          // BOTTOM READING CONTROL BAR WITH SCRUBBER SLIDER
-          ValueListenableBuilder<int>(
-            valueListenable: _totalPagesNotifier,
-            builder: (context, totalPages, child) {
-              if (totalPages <= 0 || _showTextTab || _localFilePath == null) {
-                return const SizedBox.shrink();
-              }
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            // TOGGLE TABS (PDF vs TEXT NOTES)
+            if (hasTextContent)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
-                  color: _isNightMode ? const Color(0xFF1E1E1E) : Colors.white,
-                  border: Border(top: BorderSide(color: _isNightMode ? Colors.white12 : AppColors.borderSubtle)),
+                  color: _isNightMode ? const Color(0xFF1E1E1E) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
                   children: [
-                    // PAGE SCRUBBER SLIDER
-                    ValueListenableBuilder<int>(
-                      valueListenable: _currentPageNotifier,
-                      builder: (context, currentPage, child) {
-                        final safeCurrent = currentPage.clamp(1, totalPages).toDouble();
-                        return Row(
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.chevron_left_rounded, color: _isNightMode ? Colors.white : AppColors.primary),
-                              onPressed: currentPage > 1
-                                  ? () => _pdfViewerController.goToPage(pageNumber: currentPage - 1)
-                                  : null,
-                            ),
-                            Expanded(
-                              child: SliderTheme(
-                                data: SliderThemeData(
-                                  trackHeight: 3,
-                                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                                  activeTrackColor: AppColors.primary,
-                                  inactiveTrackColor: _isNightMode ? Colors.grey.shade800 : Colors.grey.shade200,
-                                  thumbColor: AppColors.primary,
-                                ),
-                                child: Slider(
-                                  value: safeCurrent,
-                                  min: 1,
-                                  max: totalPages.toDouble(),
-                                  divisions: totalPages > 1 ? totalPages - 1 : 1,
-                                  onChanged: (val) {
-                                    final target = val.round();
-                                    _currentPageNotifier.value = target;
-                                    _pdfViewerController.goToPage(pageNumber: target);
-                                  },
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _showTextTab = false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          decoration: BoxDecoration(
+                            color: !_showTextTab ? (_isNightMode ? const Color(0xFF2D2D2D) : Colors.white) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: !_showTextTab
+                                ? const [
+                                    BoxShadow(color: Color(0x1A000000), blurRadius: 4, offset: Offset(0, 1))
+                                  ]
+                                : [],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.picture_as_pdf_rounded,
+                                size: 14,
+                                color: !_showTextTab ? const Color(0xFFEF4444) : AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'PDF View',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: !_showTextTab
+                                      ? (_isNightMode ? Colors.white : AppColors.primary)
+                                      : AppColors.textSecondary,
                                 ),
                               ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.chevron_right_rounded, color: _isNightMode ? Colors.white : AppColors.primary),
-                              onPressed: currentPage < totalPages
-                                  ? () => _pdfViewerController.goToPage(pageNumber: currentPage + 1)
-                                  : null,
-                            ),
-                          ],
-                        );
-                      },
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-
-                    // QUICK ACTION BUTTONS
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        TextButton.icon(
-                          onPressed: () => _pdfViewerController.zoomUp(),
-                          icon: Icon(Icons.zoom_in_rounded, size: 16, color: _isNightMode ? Colors.white70 : AppColors.textSecondary),
-                          label: Text('Zoom In', style: TextStyle(fontSize: 11, color: _isNightMode ? Colors.white70 : AppColors.textSecondary)),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _showTextTab = true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _showTextTab ? (_isNightMode ? const Color(0xFF2D2D2D) : Colors.white) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: _showTextTab
+                                ? const [
+                                    BoxShadow(color: Color(0x1A000000), blurRadius: 4, offset: Offset(0, 1))
+                                  ]
+                                : [],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.notes_rounded,
+                                size: 14,
+                                color: _showTextTab ? AppColors.primary : AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Text / Reading Notes',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: _showTextTab
+                                      ? (_isNightMode ? Colors.white : AppColors.primary)
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        TextButton.icon(
-                          onPressed: () => _pdfViewerController.zoomDown(),
-                          icon: Icon(Icons.zoom_out_rounded, size: 16, color: _isNightMode ? Colors.white70 : AppColors.textSecondary),
-                          label: Text('Zoom Out', style: TextStyle(fontSize: 11, color: _isNightMode ? Colors.white70 : AppColors.textSecondary)),
-                        ),
-                        TextButton.icon(
-                          onPressed: () => _pdfViewerController.goToPage(pageNumber: 1),
-                          icon: Icon(Icons.first_page_rounded, size: 16, color: _isNightMode ? Colors.white70 : AppColors.textSecondary),
-                          label: Text('Top', style: TextStyle(fontSize: 11, color: _isNightMode ? Colors.white70 : AppColors.textSecondary)),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
-              );
-            },
+              ),
+
+            Divider(height: 1, color: _isNightMode ? Colors.white12 : AppColors.borderSubtle),
+
+            // MAIN PDF READER CANVAS
+            Expanded(
+              child: _showTextTab
+                  ? _buildTextContentBody()
+                  : (_isLoading
+                      ? _buildLoadingState()
+                      : (_localFilePath != null
+                          ? _buildPdfCanvas()
+                          : _buildErrorOrEmptyState())),
+            ),
+
+            // BOTTOM READING CONTROL BAR WITH SCRUBBER SLIDER
+            ValueListenableBuilder<int>(
+              valueListenable: _totalPagesNotifier,
+              builder: (context, totalPages, child) {
+                if (totalPages <= 0 || _showTextTab || _localFilePath == null) {
+                  return const SizedBox.shrink();
+                }
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _isNightMode ? const Color(0xFF1E1E1E) : Colors.white,
+                    border: Border(top: BorderSide(color: _isNightMode ? Colors.white12 : AppColors.borderSubtle)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // PAGE SCRUBBER SLIDER
+                      ValueListenableBuilder<int>(
+                        valueListenable: _currentPageNotifier,
+                        builder: (context, currentPage, child) {
+                          final safeCurrent = currentPage.clamp(1, totalPages).toDouble();
+                          return Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.chevron_left_rounded, color: _isNightMode ? Colors.white : AppColors.primary),
+                                onPressed: currentPage > 1
+                                    ? () => _pdfViewerController.jumpToPage(currentPage - 1)
+                                    : null,
+                              ),
+                              Expanded(
+                                child: SliderTheme(
+                                  data: SliderThemeData(
+                                    trackHeight: 3,
+                                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                                    activeTrackColor: AppColors.primary,
+                                    inactiveTrackColor: _isNightMode ? Colors.grey.shade800 : Colors.grey.shade200,
+                                    thumbColor: AppColors.primary,
+                                  ),
+                                  child: Slider(
+                                    value: safeCurrent,
+                                    min: 1,
+                                    max: totalPages.toDouble(),
+                                    divisions: totalPages > 1 ? totalPages - 1 : 1,
+                                    onChanged: (val) {
+                                      final target = val.round();
+                                      _currentPageNotifier.value = target;
+                                      _pdfViewerController.jumpToPage(target);
+                                    },
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.chevron_right_rounded, color: _isNightMode ? Colors.white : AppColors.primary),
+                                onPressed: currentPage < totalPages
+                                    ? () => _pdfViewerController.jumpToPage(currentPage + 1)
+                                    : null,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+
+                      // QUICK ACTION BUTTONS
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          TextButton.icon(
+                            onPressed: () {
+                              _pdfViewerController.zoomLevel = (_pdfViewerController.zoomLevel + 0.25).clamp(1.0, 3.0);
+                            },
+                            icon: Icon(Icons.zoom_in_rounded, size: 16, color: _isNightMode ? Colors.white70 : AppColors.textSecondary),
+                            label: Text('Zoom In', style: TextStyle(fontSize: 11, color: _isNightMode ? Colors.white70 : AppColors.textSecondary)),
+                          ),
+                          TextButton.icon(
+                            onPressed: () {
+                              _pdfViewerController.zoomLevel = (_pdfViewerController.zoomLevel - 0.25).clamp(1.0, 3.0);
+                            },
+                            icon: Icon(Icons.zoom_out_rounded, size: 16, color: _isNightMode ? Colors.white70 : AppColors.textSecondary),
+                            label: Text('Zoom Out', style: TextStyle(fontSize: 11, color: _isNightMode ? Colors.white70 : AppColors.textSecondary)),
+                          ),
+                          TextButton.icon(
+                            onPressed: () {
+                              _pdfViewerController.jumpToPage(1);
+                            },
+                            icon: Icon(Icons.first_page_rounded, size: 16, color: _isNightMode ? Colors.white70 : AppColors.textSecondary),
+                            label: Text('Top', style: TextStyle(fontSize: 11, color: _isNightMode ? Colors.white70 : AppColors.textSecondary)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(color: Color(0xFFEF4444)),
+          const SizedBox(height: 16),
+          Text(
+            'Opening Study PDF Reader...',
+            style: TextStyle(
+              color: _isNightMode ? Colors.white : AppColors.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 13.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Loading PDF document pages',
+            style: TextStyle(
+              color: _isNightMode ? Colors.grey.shade400 : AppColors.textSecondary,
+              fontSize: 11.5,
+            ),
           ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildPdfCanvas() {
+    return RepaintBoundary(
+      child: Stack(
+        children: [
+          // HIGH-PERFORMANCE PDF READER WITH NIGHT MODE FILTER
+          ColorFiltered(
+            colorFilter: _isNightMode
+                ? const ColorFilter.matrix([
+                    -1,  0,  0, 0, 255,
+                     0, -1,  0, 0, 255,
+                     0,  0, -1, 0, 255,
+                     0,  0,  0, 1,   0,
+                  ])
+                : const ColorFilter.mode(
+                    Colors.transparent,
+                    BlendMode.dst,
+                  ),
+            child: SfPdfViewer.file(
+              File(_localFilePath!),
+              controller: _pdfViewerController,
+              canShowScrollHead: false,
+              canShowScrollStatus: false,
+              enableDoubleTapZooming: true,
+              enableTextSelection: true,
+              pageSpacing: 4,
+              onPageChanged: (PdfPageChangedDetails details) {
+                if (widget.isPreviewMode && details.newPageNumber > 2) {
+                  _pdfViewerController.jumpToPage(2);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Preview limit reached (Max 2 pages). Please purchase the book to unlock full reading access.'),
+                        backgroundColor: Colors.redAccent,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                }
+                _currentPageNotifier.value = details.newPageNumber;
+              },
+              onDocumentLoaded: (PdfDocumentLoadedDetails details) {
+                if (mounted) {
+                  _totalPagesNotifier.value = details.document.pages.count;
+                  setState(() {
+                    _isLoading = false;
+                  });
+                }
+              },
+              onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
+                if (mounted) {
+                  setState(() {
+                    _isLoading = false;
+                    _errorMessage = 'Could not render PDF document: ${details.description}';
+                  });
+                }
+              },
+            ),
+          ),
+
+          // FLOATING PAGE BADGE OVERLAY
+          Positioned(
+            top: 12,
+            right: 14,
+            child: ValueListenableBuilder<int>(
+              valueListenable: _totalPagesNotifier,
+              builder: (context, totalPages, child) {
+                if (totalPages <= 0) return const SizedBox.shrink();
+                return ValueListenableBuilder<int>(
+                  valueListenable: _currentPageNotifier,
+                  builder: (context, currentPage, child) {
+                    final percent = ((currentPage / totalPages) * 100).toInt();
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white24, width: 0.8),
+                        boxShadow: const [
+                          BoxShadow(color: Color(0x40000000), blurRadius: 6, offset: Offset(0, 2))
+                        ],
+                      ),
+                      child: Text(
+                        '$currentPage / $totalPages ($percent%)',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildTextContentBody() {
     final description = widget.description ?? '';
