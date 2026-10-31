@@ -8,6 +8,6 @@ class AppConstants {
   static const String whatsappPhone = '+919967326151';
   static const String officeLocation = 'Malad West, Mumbai - 400095, Maharashtra, India';
   static const int defaultPageSize = 10;
-  static const int connectTimeoutSeconds = 30;
-  static const int receiveTimeoutSeconds = 30;
+  static const int connectTimeoutSeconds = 8;
+  static const int receiveTimeoutSeconds = 8;
 }
