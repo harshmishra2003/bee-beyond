@@ -1804,6 +1804,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
         );
       },
     ),
-  );
+  ),
+);
 }
 }
