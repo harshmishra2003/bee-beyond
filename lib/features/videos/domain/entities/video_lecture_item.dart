@@ -10,6 +10,8 @@ class VideoLectureItem extends Equatable {
   final String thumbnailUrl;
   final double rating;
   final int views;
+  final int likes;
+  final String uploadDate;
   final String description;
   final bool isYouTube;
 
@@ -23,11 +25,13 @@ class VideoLectureItem extends Equatable {
     required this.thumbnailUrl,
     required this.rating,
     required this.views,
+    required this.likes,
+    required this.uploadDate,
     required this.description,
     this.isYouTube = true,
   });
 
-  static const String youtubeChannelUrl = 'https://youtube.com/@beebeyonndofficial';
+  static const String youtubeChannelUrl = 'https://youtube.com/@beebeyonndofficial?si=z6Us3m4bXfOWo_jj';
 
   String? get youtubeVideoId {
     if (videoUrl.contains('youtu.be/')) {
@@ -64,7 +68,9 @@ class VideoLectureItem extends Equatable {
       videoUrl: vUrl,
       thumbnailUrl: json['thumbnailUrl']?.toString() ?? json['image']?.toString() ?? '',
       rating: double.tryParse(json['rating']?.toString() ?? '4.9') ?? 4.9,
-      views: int.tryParse(json['views']?.toString() ?? '3200') ?? 3200,
+      views: int.tryParse(json['views']?.toString() ?? '12850') ?? 12850,
+      likes: int.tryParse(json['likes']?.toString() ?? '1240') ?? 1240,
+      uploadDate: json['uploadDate']?.toString() ?? json['upload_date']?.toString() ?? '12 Oct 2024',
       description: json['description']?.toString() ?? 'Official video from Bee Beyonnd YouTube Channel (@beebeyonndofficial).',
       isYouTube: isYt,
     );
@@ -81,6 +87,8 @@ class VideoLectureItem extends Equatable {
         thumbnailUrl,
         rating,
         views,
+        likes,
+        uploadDate,
         description,
         isYouTube,
       ];
