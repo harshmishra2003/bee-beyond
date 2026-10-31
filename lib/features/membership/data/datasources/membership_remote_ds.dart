@@ -1,13 +1,17 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:logger/logger.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../domain/entities/membership_order_response_entity.dart';
 import '../../domain/entities/membership_verify_result_entity.dart';
 import '../models/membership_plan_model.dart';
+import '../../presentation/providers/expiry_provider.dart';
 
 abstract class MembershipRemoteDataSource {
   Future<List<MembershipPlanModel>> getMembershipPlans();
   Future<MembershipPlanModel?> getMembershipPlanDetail(String id);
+  Future<UserPassSubscription?> getActiveUserMembership();
   Future<MembershipOrderResponseEntity?> createMembershipOrder({
     required int planId,
     required String billingPeriod,
@@ -28,128 +32,50 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
   @override
   Future<List<MembershipPlanModel>> getMembershipPlans() async {
     final dio = _dioClient;
+    final logger = Logger();
+
     if (dio != null) {
-      final candidateEndpoints = [
-        ApiEndpoints.membershipPlans,
-        '/membership_plans.php',
-        '/membership.php',
-        '/memberships.php',
-        '/membership/plans.php',
-      ];
+      try {
+        logger.i('[MEMBERSHIP_API_LOG] Fetching membership plans from ${ApiEndpoints.membershipPlans}');
+        final response = await dio.get(
+          ApiEndpoints.membershipPlans,
+          queryParameters: {
+            '_t': DateTime.now().millisecondsSinceEpoch,
+          },
+        );
 
-      for (final endpoint in candidateEndpoints) {
-        try {
-          final response = await dio.get(
-            endpoint,
-            queryParameters: {
-              '_t': DateTime.now().millisecondsSinceEpoch,
-            },
-          );
-
-          if (response.statusCode == 200 && response.data != null) {
-            dynamic rawData = response.data;
-            if (rawData is String) {
-              rawData = jsonDecode(rawData);
-            }
-
-            final List<dynamic> list = rawData is Map
-                ? (rawData['data'] ?? rawData['plans'] ?? rawData['memberships'] ?? [])
-                : (rawData is List ? rawData : []);
-
-            if (list.isNotEmpty) {
-              return list
-                  .map((json) => MembershipPlanModel.fromJson(json as Map<String, dynamic>))
-                  .toList();
-            }
+        if (response.statusCode == 200 && response.data != null) {
+          dynamic rawData = response.data;
+          if (rawData is String) {
+            rawData = jsonDecode(rawData);
           }
-        } catch (_) {
-          // Fall through candidate endpoints on error
+
+          final List<dynamic> list = rawData is Map
+              ? (rawData['data'] ?? rawData['plans'] ?? rawData['memberships'] ?? [])
+              : (rawData is List ? rawData : []);
+
+          logger.i('[MEMBERSHIP_API_LOG] Membership plans API returned ${list.length} plans.');
+
+          return list
+              .map((json) => MembershipPlanModel.fromJson(json as Map<String, dynamic>))
+              .toList();
         }
+      } catch (e) {
+        logger.e('[MEMBERSHIP_API_LOG] Failed to fetch membership plans from backend: $e');
       }
     }
 
-    // Default 4 Official VIP Membership Plans with Banner Images
-    return const [
-      MembershipPlanModel(
-        id: '1',
-        slug: 'bloom',
-        name: 'Bloom',
-        tagline: 'BLOOM MEMBERSHIP PASS',
-        badgeText: 'POPULAR',
-        price: 1999.0,
-        currency: 'INR',
-        accessDuration: 1,
-        accessType: 'year',
-        durationLabel: '1 YEAR ACCESS',
-        features: [
-          'Annual savings: 389rs (16.3%) compared with paying monthly for 12 months.',
-          '• Access to selected digital books, PDFs, music and videos',
-          '• 5% off eligible courses, workshops and paid services.',
-          'Early notifications about new courses and workshops.',
-        ],
-      ),
-      MembershipPlanModel(
-        id: '2',
-        slug: 'elevate',
-        name: 'Elevate',
-        tagline: 'ELEVATE MEMBERSHIP PASS',
-        badgeText: 'RECOMMENDED',
-        price: 2500.0,
-        currency: 'INR',
-        accessDuration: 1,
-        accessType: 'year',
-        durationLabel: '1 YEAR ACCESS',
-        features: [
-          '20% Flat Discount on Courses, Remedies & Vastu Services',
-          'Free Monthly Live Breathwork & Meditation Webinars',
-          'Priority Q&A Access in Student & Doctor Forums',
-          'Unlimited Audio & PDF Material Downloads',
-        ],
-      ),
-      MembershipPlanModel(
-        id: '3',
-        slug: 'transform',
-        name: 'Transform',
-        tagline: 'TRANSFORM MEMBERSHIP PASS',
-        badgeText: 'BEST VALUE',
-        price: 4999.0,
-        currency: 'INR',
-        accessDuration: 2,
-        accessType: 'year',
-        durationLabel: '2 YEARS ACCESS',
-        features: [
-          '35% FLAT OFF ON EVERYTHING Across Bee Beyonnd Portal',
-          '1-on-1 Personal Video Consultation with Doctor (1 Hour)',
-          'Unlimited Video Workshop & Course Recordings Access',
-          'Free Express Delivery & Priority Tax Invoices',
-        ],
-      ),
-      MembershipPlanModel(
-        id: '4',
-        slug: 'infinity',
-        name: 'Infinity',
-        tagline: 'INFINITY MEMBERSHIP PASS',
-        badgeText: 'LIFETIME VIP',
-        price: 9999.0,
-        currency: 'INR',
-        accessDuration: 99,
-        accessType: 'year',
-        durationLabel: 'LIFETIME VIP ACCESS',
-        features: [
-          '50% FLAT OFF Lifetime VIP Privileges Across All Products',
-          'Quarterly Personal Health & Vastu Consultations',
-          'VIP Access to All Future Workshops, Courses & Audios',
-          'Dedicated 24/7 VIP Concierge & Doctor Support',
-        ],
-      ),
-    ];
+    return [];
   }
 
   @override
   Future<MembershipPlanModel?> getMembershipPlanDetail(String id) async {
     final dio = _dioClient;
+    final logger = Logger();
+
     if (dio != null) {
       try {
+        logger.i('[MEMBERSHIP_API_LOG] Fetching plan detail for id=$id from ${ApiEndpoints.membershipPlanDetails}');
         final response = await dio.get(
           ApiEndpoints.membershipPlanDetails,
           queryParameters: {
@@ -171,11 +97,120 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
             return MembershipPlanModel.fromJson(data);
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        logger.e('[MEMBERSHIP_API_LOG] Failed to fetch plan detail for id=$id: $e');
+      }
     }
 
     final plans = await getMembershipPlans();
-    return plans.firstWhere((p) => p.id == id, orElse: () => plans.first);
+    try {
+      return plans.firstWhere((p) => p.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<UserPassSubscription?> getActiveUserMembership() async {
+    final dio = _dioClient;
+    final logger = Logger();
+
+    if (dio != null) {
+      try {
+        logger.i('[MEMBERSHIP_API_LOG] Fetching active user membership from ${ApiEndpoints.activeMembership}');
+        final response = await dio.get(
+          ApiEndpoints.activeMembership,
+          queryParameters: {'_t': DateTime.now().millisecondsSinceEpoch},
+          options: Options(validateStatus: (status) => true),
+        );
+
+        if (response.statusCode == 200 && response.data != null) {
+          dynamic rawData = response.data;
+          if (rawData is String) {
+            rawData = jsonDecode(rawData);
+          }
+
+          if (rawData is Map) {
+            // ============================================================
+            // EXACT BACKEND SHAPE (from status endpoint):
+            // {
+            //   "success": true,
+            //   "data": {
+            //     "active_membership": { ... } | null,
+            //     "scheduled_memberships": [...],
+            //     "memberships": [...]
+            //   }
+            // }
+            // ============================================================
+            Map<String, dynamic>? activeMap;
+
+            if (rawData['data'] is Map) {
+              final data = Map<String, dynamic>.from(rawData['data']);
+
+              // Primary key used by your backend
+              if (data['active_membership'] is Map) {
+                activeMap = Map<String, dynamic>.from(data['active_membership']);
+              }
+              // Fallbacks (in case backend changes later)
+              else if (data['membership'] is Map) {
+                activeMap = Map<String, dynamic>.from(data['membership']);
+              } else if (data['subscription'] is Map) {
+                activeMap = Map<String, dynamic>.from(data['subscription']);
+              } else if (data['pass'] is Map) {
+                activeMap = Map<String, dynamic>.from(data['pass']);
+              }
+            }
+
+            // Final fallback: if the whole response is the membership object
+            if (activeMap == null && rawData['status'] != null && rawData['plan_id'] != null) {
+              activeMap = Map<String, dynamic>.from(rawData);
+            }
+
+            if (activeMap != null && activeMap.isNotEmpty) {
+              final statusRaw = (activeMap['status'] ??
+                  activeMap['membership_status'] ??
+                  '')
+                  .toString()
+                  .toLowerCase()
+                  .trim();
+
+              final isActiveFlag = activeMap['is_active'] == true ||
+                  activeMap['active'] == true;
+
+              final isActiveStatus = statusRaw == 'active' ||
+                  statusRaw == 'activated' ||
+                  statusRaw == 'live' ||
+                  statusRaw == 'valid';
+
+              // Backend already filters by dates, but we still double-check
+              if (isActiveFlag || isActiveStatus) {
+                final pass = UserPassSubscription.fromJson(activeMap);
+
+                if (!pass.isExpired) {
+                  logger.i(
+                    '[MEMBERSHIP_API_LOG] Active membership found: '
+                        '${pass.passName} | plan_id=${activeMap['plan_id']} | '
+                        'Expires: ${pass.expiresAt}',
+                  );
+                  return pass;
+                } else {
+                  logger.i('[MEMBERSHIP_API_LOG] Membership found but already expired on client side.');
+                }
+              } else {
+                logger.i('[MEMBERSHIP_API_LOG] Membership object present but status is not active: "$statusRaw"');
+              }
+            } else {
+              logger.i('[MEMBERSHIP_API_LOG] No active_membership object in response (user has no active pass).');
+            }
+          }
+        } else {
+          logger.i('[MEMBERSHIP_API_LOG] Active membership endpoint returned HTTP ${response.statusCode}');
+        }
+      } catch (e) {
+        logger.e('[MEMBERSHIP_API_LOG] Failed to fetch active membership from backend: $e');
+      }
+    }
+    return null;
   }
 
   @override
@@ -184,12 +219,14 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
     required String billingPeriod,
   }) async {
     final dio = _dioClient;
+    final logger = Logger();
 
     if (dio == null) {
       return null;
     }
 
     try {
+      logger.i('[MEMBERSHIP_API_LOG] Creating order: plan_id=$planId, billing_period=$billingPeriod');
       final response = await dio.post(
         ApiEndpoints.membershipCreateOrder,
         data: {
@@ -212,26 +249,24 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
         return null;
       }
 
-      final Map<String, dynamic> data =
-          Map<String, dynamic>.from(rawData);
+      final Map<String, dynamic> data = Map<String, dynamic>.from(rawData);
 
       if (data['success'] != true) {
+        logger.w('[MEMBERSHIP_API_LOG] Order creation failed at backend: ${data['message']}');
         return null;
       }
 
       final order = MembershipOrderResponseEntity.fromJson(data);
 
-      // Only accept a real order ID returned by the backend.
       if (order.razorpayOrderId.isEmpty ||
-          !RegExp(r'^order_[A-Za-z0-9]+$')
-              .hasMatch(order.razorpayOrderId)) {
+          !RegExp(r'^order_[A-Za-z0-9]+$').hasMatch(order.razorpayOrderId)) {
+        logger.e('[MEMBERSHIP_API_LOG] Invalid razorpay_order_id received: ${order.razorpayOrderId}');
         return null;
       }
 
       return order;
     } catch (e) {
-      // Do not invent a local order or retry another endpoint.
-      // The caller should display an order-creation error.
+      logger.e('[MEMBERSHIP_API_LOG] Network exception creating membership order: $e');
       return null;
     }
   }
@@ -244,12 +279,21 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
     required String razorpaySignature,
   }) async {
     final dio = _dioClient;
+    final logger = Logger();
 
     if (dio == null) {
       return null;
     }
 
     try {
+      logger.i(
+        '[MEMBERSHIP_VERIFY_LOG] Verification API Request Sent:\n'
+            '  Endpoint: ${ApiEndpoints.membershipVerifyPayment}\n'
+            '  Membership Order ID: $membershipOrderId\n'
+            '  Razorpay Payment ID: $razorpayPaymentId\n'
+            '  Razorpay Order ID: $razorpayOrderId',
+      );
+
       final response = await dio.post(
         ApiEndpoints.membershipVerifyPayment,
         data: {
@@ -261,6 +305,7 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
       );
 
       if (response.statusCode != 200 || response.data == null) {
+        logger.e('[MEMBERSHIP_VERIFY_LOG] HTTP Error: ${response.statusCode}');
         return null;
       }
 
@@ -271,14 +316,26 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
       }
 
       if (rawData is! Map) {
+        logger.e('[MEMBERSHIP_VERIFY_LOG] Response data is not a JSON object.');
         return null;
       }
 
-      final Map<String, dynamic> data =
-          Map<String, dynamic>.from(rawData);
+      final Map<String, dynamic> data = Map<String, dynamic>.from(rawData);
+      final result = MembershipVerifyResultEntity.fromJson(data);
 
-      return MembershipVerifyResultEntity.fromJson(data);
-    } catch (_) {
+      logger.i(
+        '[MEMBERSHIP_VERIFY_LOG] Verification API Response Received:\n'
+            '  Success: ${result.success}\n'
+            '  Message: ${result.message}\n'
+            '  Membership Status: ${result.membershipStatus}\n'
+            '  Is Active: ${result.isActive}\n'
+            '  Start Date: ${result.startDate}\n'
+            '  End Date: ${result.endDate}',
+      );
+
+      return result;
+    } catch (e) {
+      logger.e('[MEMBERSHIP_API_LOG] Verification network exception: $e');
       return null;
     }
   }

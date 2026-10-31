@@ -15,11 +15,12 @@ import '../features/courses/presentation/screens/course_material_screen.dart';
 import '../features/courses/presentation/screens/courses_list_screen.dart';
 import '../features/courses/presentation/screens/joined_courses_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
-import '../features/library/presentation/screens/library_screen.dart';
-import '../features/library/presentation/screens/material_screen.dart';
-import '../features/library/presentation/screens/music_screen.dart';
-import '../features/library/presentation/screens/video_screen.dart';
-import '../features/library/presentation/screens/workshop_booking_screen.dart';
+import '../features/workshops/presentation/screens/workshops_list_screen.dart';
+import '../features/workshops/presentation/screens/workshop_detail_screen.dart';
+import '../features/workshops/presentation/screens/workshop_booking_screen.dart';
+import '../features/books/presentation/screens/material_screen.dart';
+import '../features/music/presentation/screens/music_screen.dart';
+import '../features/videos/presentation/screens/video_screen.dart';
 import '../features/main_layout/presentation/screens/main_screen.dart';
 import '../features/membership/domain/entities/membership_plan_entity.dart';
 import '../features/membership/presentation/screens/membership_plan_detail_screen.dart';
@@ -402,16 +403,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // Library
+      // Workshops
       GoRoute(
-        path: RoutePaths.library,
-        name: RouteNames.library,
+        path: RoutePaths.workshops,
+        name: RouteNames.workshops,
         pageBuilder: (context, state) => buildCustomTransitionPage(
           context: context,
           state: state,
-          child: const LibraryScreen(),
+          child: const WorkshopsListScreen(),
           type: AppTransitionType.slideRight,
         ),
+      ),
+      GoRoute(
+        path: RoutePaths.workshopDetail,
+        name: RouteNames.workshopDetail,
+        pageBuilder: (context, state) {
+          final id = state.uri.queryParameters['id'] ?? 'ws_101';
+          return buildCustomTransitionPage(
+            context: context,
+            state: state,
+            child: WorkshopDetailScreen(workshopId: id),
+            type: AppTransitionType.slideUp,
+          );
+        },
       ),
       GoRoute(
         path: RoutePaths.workshopBooking,
@@ -422,10 +436,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             context: context,
             state: state,
             child: WorkshopBookingScreen(workshopData: extra),
-            type: AppTransitionType.slideRight,
+            type: AppTransitionType.slideUp,
           );
         },
       ),
+
+      // Material (Books & Handbooks)
+      GoRoute(
+        path: RoutePaths.material,
+        name: RouteNames.material,
+        pageBuilder: (context, state) => buildCustomTransitionPage(
+          context: context,
+          state: state,
+          child: const MaterialScreen(),
+          type: AppTransitionType.slideRight,
+        ),
+      ),
+
+      // Music & Audio Portal
       GoRoute(
         path: RoutePaths.music,
         name: RouteNames.music,
@@ -436,23 +464,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           type: AppTransitionType.slideRight,
         ),
       ),
+
+      // Video Lectures Portal
       GoRoute(
         path: RoutePaths.video,
-        name: 'video',
+        name: RouteNames.video,
         pageBuilder: (context, state) => buildCustomTransitionPage(
           context: context,
           state: state,
           child: const VideoScreen(),
-          type: AppTransitionType.slideRight,
-        ),
-      ),
-      GoRoute(
-        path: RoutePaths.material,
-        name: 'material',
-        pageBuilder: (context, state) => buildCustomTransitionPage(
-          context: context,
-          state: state,
-          child: const MaterialScreen(),
           type: AppTransitionType.slideRight,
         ),
       ),

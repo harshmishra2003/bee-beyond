@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
@@ -21,8 +22,11 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
   @override
   Future<List<CourseModel>> getAllCourses() async {
     final dio = _dioClient;
+    final logger = Logger();
+
     if (dio != null) {
       try {
+        logger.i('[COURSE_API_LOG] Fetching all courses from ${ApiEndpoints.courses}');
         final response = await dio.get(
           ApiEndpoints.courses,
           queryParameters: {
@@ -39,11 +43,14 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
               ? (rawData['data'] ?? rawData['courses'] ?? [])
               : (rawData is List ? rawData : []);
 
+          logger.i('[COURSE_API_LOG] Successfully fetched ${list.length} courses.');
+
           return list
               .map((json) => CourseModel.fromJson(json as Map<String, dynamic>))
               .toList();
         }
-      } catch (_) {
+      } catch (e) {
+        logger.e('[COURSE_API_LOG] Error fetching courses: $e');
         return [];
       }
     }
@@ -53,8 +60,11 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
   @override
   Future<CourseModel> getCourseById(String id) async {
     final dio = _dioClient;
+    final logger = Logger();
+
     if (dio != null) {
       try {
+        logger.i('[COURSE_API_LOG] Fetching course detail for id=$id from ${ApiEndpoints.courseDetail}');
         final response = await dio.get(
           ApiEndpoints.courseDetail,
           queryParameters: {
@@ -76,24 +86,13 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
             return CourseModel.fromJson(json);
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        logger.e('[COURSE_API_LOG] Error fetching course detail for id=$id: $e');
+      }
     }
 
     final courses = await getAllCourses();
-    return courses.firstWhere(
-      (c) => c.id == id,
-      orElse: () => CourseModel(
-        id: id,
-        title: 'Course Detail',
-        description: 'Details for this course will be loaded dynamically.',
-        category: 'General',
-        imageUrl: '',
-        price: 0.0,
-        duration: 'Self-Paced',
-        rating: 5.0,
-        modulesCount: 10,
-      ),
-    );
+    return courses.firstWhere((c) => c.id == id);
   }
 
   @override

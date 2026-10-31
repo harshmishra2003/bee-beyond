@@ -12,8 +12,10 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/digital_clock_countdown.dart';
 import '../../../../core/widgets/three_d_button.dart';
 import '../../../../routing/route_paths.dart';
+import '../../../membership/presentation/providers/expiry_provider.dart';
 import '../../domain/entities/course_entity.dart';
 import '../providers/course_provider.dart';
+import 'package:logger/logger.dart';
 
 class CourseDetailScreen extends ConsumerStatefulWidget {
   final String courseId;
@@ -136,11 +138,15 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
   Widget build(BuildContext context) {
     final courseAsync = ref.watch(courseDetailProvider(widget.courseId));
     final joinedCoursesAsync = ref.watch(joinedCoursesProvider);
+    final activePass = ref.watch(activePassProvider);
 
-    final isEnrolled = joinedCoursesAsync.maybeWhen(
+    final isDirectlyEnrolled = joinedCoursesAsync.maybeWhen(
       data: (list) => list.any((c) => c.courseId == widget.courseId),
       orElse: () => false,
     );
+
+    final isVipPassActive = activePass != null && !activePass.isExpired;
+    final isEnrolled = isDirectlyEnrolled || isVipPassActive;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -510,11 +516,24 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen>
                                   contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 6),
                                   onTap: () {
+                                    final logger = Logger();
+                                    logger.i(
+                                      '[PDF_ACCESS_DIAGNOSTIC] Module Tapped:\n'
+                                      '  Title: ${module.title}\n'
+                                      '  Type: ${module.type}\n'
+                                      '  Module Is Paid: ${module.isPaid}\n'
+                                      '  Directly Enrolled: $isDirectlyEnrolled\n'
+                                      '  VIP Pass Active: $isVipPassActive\n'
+                                      '  Final Is Locked: ${module.isPaid && !isEnrolled}\n'
+                                      '  Media URL: ${module.mediaUrl}'
+                                    );
+
                                     if (module.isPaid && !isEnrolled) {
+                                      logger.w('[PDF_ACCESS_DIAGNOSTIC] Blocked on UI Side: Module is paid and user is neither directly enrolled nor has active VIP pass.');
                                       AppAlertManager.showFloatingToast(
                                         context,
                                         title: 'Module Locked',
-                                        message: 'Please enroll in the course to unlock this module.',
+                                        message: 'Please enroll in the course or upgrade to VIP membership to unlock this module.',
                                         icon: Icons.lock_rounded,
                                         backgroundColor: const Color(0xFF9F1239), // dark red
                                         accentColor: const Color(0xFFF43F5E),

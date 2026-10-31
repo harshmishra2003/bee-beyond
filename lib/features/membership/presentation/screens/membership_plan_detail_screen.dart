@@ -69,19 +69,22 @@ class _MembershipPlanDetailScreenState
   ) async {
     final activePass = ref.read(activePassProvider);
     final isYearlyUpgrade = _selectedBillingPeriod == BillingPeriod.yearly;
+    final isCurrentPassYearly = activePass != null && activePass.expiresAt.difference(activePass.startDate).inDays > 300;
 
-    // Allow purchasing a yearly plan when a monthly plan is active (so it gets scheduled).
-    // Only block if trying to purchase a duplicate monthly plan while the same plan is active.
-    if (!isYearlyUpgrade && activePass != null && activePass.isMatchingPlanActive(plan.id, plan.slug)) {
-      StatusDialog.show(
-        context,
-        title: 'Plan Already Active! 👑',
-        description: 'You are currently subscribed to ${activePass.passName}.\nValid until: ${DateFormat('dd MMM yyyy, hh:mm a').format(activePass.expiresAt)}.\n\nYou do not need to purchase this plan again while active.',
-        isSuccess: false,
-        onAction: () {},
-        actionText: 'OK',
-      );
-      return;
+    // Block if trying to purchase when the same plan is active and NOT expiring soon.
+    // We allow if it's a monthly -> yearly upgrade.
+    if (activePass != null && activePass.isMatchingPlanActive(plan.id, plan.slug) && !activePass.isExpiringSoon) {
+      if (!isYearlyUpgrade || (isYearlyUpgrade && isCurrentPassYearly)) {
+        StatusDialog.show(
+          context,
+          title: 'Plan Already Active! 👑',
+          description: 'You are currently subscribed to ${activePass.passName}.\nValid until: ${DateFormat('dd MMM yyyy, hh:mm a').format(activePass.expiresAt)}.\n\nYou do not need to purchase this plan again while active.',
+          isSuccess: false,
+          onAction: () {},
+          actionText: 'OK',
+        );
+        return;
+      }
     }
 
     final billingPeriodStr =
@@ -195,6 +198,9 @@ class _MembershipPlanDetailScreenState
               amountPaid: price,
               transactionId: paymentId,
             );
+
+            // Force refresh from remote DB to ensure all properties & IDs perfectly match backend truth
+            ref.read(activePassProvider.notifier).reloadForCurrentUser();
 
             if (!mounted) return;
 
@@ -698,6 +704,19 @@ class _MembershipPlanDetailScreenState
   }
 
   Widget _buildDetailContent(MembershipPlanEntity plan) {
+    final activePass = ref.watch(activePassProvider);
+    final isMatching = activePass != null && activePass.matchesPlan(plan.id, plan.slug);
+    final isCurrentActive = isMatching && activePass.isActive;
+    final isExpiringSoon = isMatching && activePass.isExpiringSoon;
+    final isCurrentExpired = isMatching && activePass.isExpired;
+
+    String subscribeButtonText = 'Subscribe Now →';
+    if (isExpiringSoon || isCurrentExpired) {
+      subscribeButtonText = 'Renew Now →';
+    } else if (isCurrentActive) {
+      subscribeButtonText = 'Already Claimed ✓';
+    }
+
     final defaultFeatures = [
       'Annual savings: 389rs (16.3%) compared with paying monthly for 12 months.',
       '• Access to selected digital books, PDFs, music and videos',
@@ -1141,11 +1160,24 @@ class _MembershipPlanDetailScreenState
               const SizedBox(width: 16),
               Expanded(
                 child: _ShiningSubscribeButton(
-                  text: 'Subscribe Now →',
+                  text: subscribeButtonText,
                   color: _selectedBillingPeriod == BillingPeriod.monthly
                       ? const Color(0xFF6845C4)
                       : const Color(0xFF059669),
-                  onPressed: () => _openCheckoutScreen(plan),
+                  onPressed: () {
+                    if (isCurrentActive && !isExpiringSoon) {
+                      StatusDialog.show(
+                        context,
+                        title: 'Plan Already Active! 👑',
+                        description: 'You are currently subscribed to ${activePass.passName}.\nValid until: ${DateFormat('dd MMM yyyy, hh:mm a').format(activePass.expiresAt)}.\n\nYou do not need to purchase this plan again while active.',
+                        isSuccess: false,
+                        onAction: () {},
+                        actionText: 'OK',
+                      );
+                    } else {
+                      _openCheckoutScreen(plan);
+                    }
+                  },
                 ),
               ),
             ],

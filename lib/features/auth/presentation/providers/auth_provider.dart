@@ -12,6 +12,7 @@ import '../../domain/entities/auth_state.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 
+
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService();
 });
@@ -147,6 +148,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     try {
       await _repository.logout();
+    } catch (_) {}
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('bee_active_vip_pass_v2');
     } catch (_) {}
 
     final prefs = await SharedPreferences.getInstance();

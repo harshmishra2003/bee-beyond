@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/courses/presentation/providers/course_provider.dart';
 import '../../features/home/presentation/providers/home_provider.dart';
-import '../../features/library/presentation/providers/library_provider.dart';
+import '../../features/workshops/presentation/providers/workshop_provider.dart';
 import '../../features/membership/presentation/providers/membership_provider.dart';
 import '../../features/orders/presentation/providers/order_provider.dart';
 import '../../features/products/presentation/providers/product_provider.dart';
@@ -80,7 +80,9 @@ class AutoDataSyncService with WidgetsBindingObserver {
   void stopSync() {
     _syncTimer?.cancel();
     _syncTimer = null;
-    ref.read(autoSyncStatusProvider.notifier).setForegroundStatus(false);
+    try {
+      ref.read(autoSyncStatusProvider.notifier).setForegroundStatus(false);
+    } catch (_) {}
   }
 
   /// App Lifecycle Interceptor: Resume sync when app comes back to foreground
@@ -108,10 +110,8 @@ class AutoDataSyncService with WidgetsBindingObserver {
       // 2. Refresh Courses Data
       ref.invalidate(allCoursesProvider);
 
-      // 3. Refresh Library & Media (Books, Music, Videos)
-      ref.invalidate(booksAndMaterialsProvider);
-      ref.invalidate(audioTracksProvider);
-      ref.invalidate(videoWorkshopsProvider);
+      // 3. Refresh Workshops & Masterclasses
+      ref.invalidate(allWorkshopsProvider);
 
       // 4. Refresh E-Commerce Products
       ref.invalidate(allProductsProvider);

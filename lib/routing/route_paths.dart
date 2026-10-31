@@ -25,12 +25,14 @@ class RoutePaths {
   static const String products = '/products';
   static const String productDetail = '/products/detail';
 
-  // Library
-  static const String library = '/library';
-  static const String workshopBooking = '/library/workshop-booking';
-  static const String music = '/library/music';
-  static const String video = '/library/video';
-  static const String material = '/library/material';
+  // Workshops, Material, Music & Videos
+  static const String workshops = '/workshops';
+  static const String workshopDetail = '/workshops/detail';
+  static const String workshopBooking = '/workshops/booking';
+  static const String library = '/workshops';
+  static const String music = '/music';
+  static const String video = '/video';
+  static const String material = '/material';
 
   // Orders & Checkout & Receipts
   static const String checkout = '/checkout';

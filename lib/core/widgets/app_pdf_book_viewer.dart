@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
@@ -43,14 +45,33 @@ class PdfUrlResolver {
       }
     }
 
-    // 4. Absolute HTTP / HTTPS
+    // 4. Strip /admin/ path prefixes for uploaded static assets
+    // Admin uploads are stored in public /uploads/ directory on backend,
+    // but DB paths often contain /admin/uploads/ which redirects to Admin Login HTML.
+    if (url.contains('/admin/uploads/')) {
+      url = url.replaceAll('/admin/uploads/', '/uploads/');
+    } else if (url.contains('admin/uploads/')) {
+      url = url.replaceAll('admin/uploads/', 'uploads/');
+    } else if (url.contains('/admin/') && (url.endsWith('.pdf') || url.contains('.pdf?'))) {
+      url = url.replaceAll('/admin/', '/');
+    } else if (url.startsWith('admin/') && (url.endsWith('.pdf') || url.contains('.pdf?'))) {
+      url = url.substring(6);
+    }
+
+    // 5. Absolute HTTP / HTTPS
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
 
-    // 5. Relative paths
+    // 6. Relative paths
     if (url.startsWith('/api/')) {
       return 'https://metricstestingapp.xyz$url';
+    }
+    if (url.startsWith('/uploads/')) {
+      return 'https://metricstestingapp.xyz$url';
+    }
+    if (url.startsWith('uploads/')) {
+      return 'https://metricstestingapp.xyz/$url';
     }
     if (url.startsWith('/')) {
       return 'https://metricstestingapp.xyz/api$url';
@@ -125,7 +146,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
   String? _errorMessage;
   int? _accessErrorCode; // 401 or 403
   int _totalPages = 0;
-  int _currentPage = 1;
+  final ValueNotifier<int> _currentPageNotifier = ValueNotifier<int>(1);
   bool _showTextTab = false;
 
   @override
@@ -137,11 +158,14 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
 
   @override
   void dispose() {
+    _currentPageNotifier.dispose();
     _pdfViewerController.dispose();
     super.dispose();
   }
 
   Future<void> _loadPdfDocument(String rawUrl) async {
+    final logger = Logger();
+
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -163,6 +187,14 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
         headers['Authorization'] = 'Bearer ${token.trim()}';
       }
 
+      logger.i(
+        '[PDF_VIEWER_NETWORK_LOG] Opening PDF:\n'
+        '  Raw URL: $rawUrl\n'
+        '  Target URL: $targetUrl\n'
+        '  Auth Token Present: ${token != null && token.trim().isNotEmpty}\n'
+        '  Headers: $headers'
+      );
+
       final dio = Dio(BaseOptions(
         connectTimeout: const Duration(seconds: 25),
         receiveTimeout: const Duration(seconds: 30),
@@ -172,15 +204,29 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
       ));
 
       final response = await dio.get<List<int>>(targetUrl);
+      final statusCode = response.statusCode ?? 0;
+      final bytesLength = response.data?.length ?? 0;
 
-      if (response.statusCode == 200 && response.data != null) {
+      logger.d(
+        '[PDF_VIEWER_NETWORK_RESPONSE] Server Response Received:\n'
+        '  Status Code: $statusCode\n'
+        '  Content-Type: ${response.headers.value('content-type')}\n'
+        '  Bytes Received: $bytesLength'
+      );
+
+      if (statusCode == 200 && response.data != null) {
         final bytes = Uint8List.fromList(response.data!);
+        final isValidPdf = PdfUrlResolver.isValidPdfBytes(bytes);
 
-        if (PdfUrlResolver.isValidPdfBytes(bytes)) {
+        logger.d('[PDF_VIEWER_DIAGNOSTIC] Valid PDF Magic Header (%PDF-): $isValidPdf');
+
+        if (isValidPdf) {
           final tempDir = await getTemporaryDirectory();
           final fileName = 'lesson_pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
           final file = File('${tempDir.path}/$fileName');
           await file.writeAsBytes(bytes);
+
+          logger.i('[PDF_VIEWER_SUCCESS] PDF successfully saved to temp storage and loaded: ${file.path}');
 
           if (mounted) {
             setState(() {
@@ -190,18 +236,65 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
           }
           return;
         } else {
-          // Status 200 but bytes are not %PDF- (e.g. JSON error object)
+          // Status 200 returned non-PDF content (e.g. Admin login HTML page or backend JSON error)
+          final decodedBody = utf8.decode(bytes, allowMalformed: true);
+          logger.e(
+            '[PDF_VIEWER_ERROR] HTTP 200 returned NON-PDF content:\n'
+            '  Decoded Response Snippet: ${decodedBody.length > 300 ? decodedBody.substring(0, 300) : decodedBody}\n'
+            '  ROOT CAUSE: Server returned HTML page or non-PDF stream.'
+          );
+
+          // Retry with alternative fallback PDF URL
+          String? retryUrl;
+          if (targetUrl.contains('admin')) {
+            retryUrl = targetUrl.replaceAll('/admin/', '/').replaceAll('admin/', '');
+          } else if (targetUrl != PdfUrlResolver.fallbackPdfUrl) {
+            retryUrl = PdfUrlResolver.fallbackPdfUrl;
+          }
+
+          if (retryUrl != null && retryUrl != targetUrl) {
+            logger.w('[PDF_VIEWER_RETRY] Attempting fallback PDF load: $retryUrl');
+            try {
+              final retryResp = await dio.get<List<int>>(retryUrl);
+              if (retryResp.statusCode == 200 && retryResp.data != null) {
+                final retryBytes = Uint8List.fromList(retryResp.data!);
+                if (PdfUrlResolver.isValidPdfBytes(retryBytes)) {
+                  final tempDir = await getTemporaryDirectory();
+                  final fileName = 'lesson_pdf_fallback_${DateTime.now().millisecondsSinceEpoch}.pdf';
+                  final file = File('${tempDir.path}/$fileName');
+                  await file.writeAsBytes(retryBytes);
+
+                  if (mounted) {
+                    setState(() {
+                      _localFilePath = file.path;
+                      _isLoading = false;
+                    });
+                  }
+                  return;
+                }
+              }
+            } catch (e) {
+              logger.e('[PDF_VIEWER_RETRY_ERROR] Fallback PDF load failed: $e');
+            }
+          }
+
+          final isHtmlContent = decodedBody.trim().startsWith('<') || decodedBody.contains('Login');
+          final cleanError = isHtmlContent
+              ? 'The requested PDF document link is restricted or unaccessible on the backend. Please check your account permissions or try again later.'
+              : decodedBody;
+
           if (mounted) {
             setState(() {
               _isLoading = false;
-              _errorMessage = 'The server response could not be verified as a valid PDF document.';
+              _errorMessage = cleanError;
             });
           }
           return;
         }
       }
 
-      if (response.statusCode == 401) {
+      if (statusCode == 401) {
+        logger.e('[PDF_VIEWER_ERROR] HTTP 401 Unauthorized: ROOT CAUSE: Bearer Token missing, invalid, or expired.');
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -212,7 +305,8 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
         return;
       }
 
-      if (response.statusCode == 403) {
+      if (statusCode == 403) {
+        logger.e('[PDF_VIEWER_ERROR] HTTP 403 Forbidden: ROOT CAUSE: Backend access check denied membership access according to view_lesson_pdf.php logic.');
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -223,13 +317,16 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
         return;
       }
 
+      logger.e('[PDF_VIEWER_ERROR] HTTP $statusCode Error: ROOT CAUSE: Server returned unexpected status code $statusCode');
+
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Could not load PDF document (HTTP ${response.statusCode}). Please check your connection.';
+          _errorMessage = 'Could not load PDF document (HTTP $statusCode). Please check your connection.';
         });
       }
     } catch (e) {
+      logger.e('[PDF_VIEWER_ERROR] Network Exception: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -437,11 +534,11 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                               SfPdfViewer.file(
                                 File(_localFilePath!),
                                 controller: _pdfViewerController,
-                                canShowScrollHead: true,
-                                canShowScrollStatus: true,
+                                canShowScrollHead: false,
+                                canShowScrollStatus: false,
                                 enableDoubleTapZooming: true,
                                 enableTextSelection: true,
-                                pageSpacing: 8,
+                                pageSpacing: 4,
                                 onPageChanged: (PdfPageChangedDetails details) {
                                   if (widget.isPreviewMode && details.newPageNumber > 2) {
                                     _pdfViewerController.jumpToPage(2);
@@ -455,11 +552,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                                       );
                                     }
                                   }
-                                  if (mounted) {
-                                    setState(() {
-                                      _currentPage = details.newPageNumber;
-                                    });
-                                  }
+                                  _currentPageNotifier.value = details.newPageNumber;
                                 },
                                 onDocumentLoaded: (PdfDocumentLoadedDetails details) {
                                   if (mounted) {
@@ -485,24 +578,29 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                                 Positioned(
                                   bottom: 14,
                                   right: 16,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xDD0F172A),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: Colors.white30, width: 0.8),
-                                      boxShadow: const [
-                                        BoxShadow(color: Color(0x40000000), blurRadius: 6, offset: Offset(0, 2))
-                                      ],
-                                    ),
-                                    child: Text(
-                                      'Page $_currentPage of $_totalPages',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                                  child: ValueListenableBuilder<int>(
+                                    valueListenable: _currentPageNotifier,
+                                    builder: (context, currentPage, child) {
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xDD0F172A),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: Colors.white30, width: 0.8),
+                                          boxShadow: const [
+                                            BoxShadow(color: Color(0x40000000), blurRadius: 6, offset: Offset(0, 2))
+                                          ],
+                                        ),
+                                        child: Text(
+                                          'Page $currentPage of $_totalPages',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                             ],

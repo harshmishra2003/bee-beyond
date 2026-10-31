@@ -5,9 +5,14 @@ import '../../data/repositories/membership_repository_impl.dart';
 import '../../domain/entities/membership_plan_entity.dart';
 import '../../domain/repositories/membership_repository.dart';
 
-final membershipRepositoryProvider = Provider<MembershipRepository>((ref) {
+final membershipRemoteDataSourceProvider = Provider<MembershipRemoteDataSource>((ref) {
   final dioClient = ref.watch(dioClientProvider);
-  return MembershipRepositoryImpl(MembershipRemoteDataSourceImpl(dioClient));
+  return MembershipRemoteDataSourceImpl(dioClient);
+});
+
+final membershipRepositoryProvider = Provider<MembershipRepository>((ref) {
+  final remoteDs = ref.watch(membershipRemoteDataSourceProvider);
+  return MembershipRepositoryImpl(remoteDs);
 });
 
 final membershipPlansProvider =

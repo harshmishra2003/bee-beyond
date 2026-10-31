@@ -183,7 +183,7 @@ class HomeDrawer extends ConsumerWidget {
                   title: 'Workshops & Masterclasses',
                   onTap: () {
                     Navigator.pop(context);
-                    context.push(RoutePaths.library);
+                    context.push(RoutePaths.workshops);
                   },
                 ),
                 _DrawerTile(

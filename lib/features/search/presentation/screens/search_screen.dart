@@ -167,14 +167,14 @@ class _SearchScreenState extends State<SearchScreen> {
       route: RoutePaths.services,
     ),
     SearchResultItem(
-      id: 'b_1',
-      title: 'Bach Flower Remedies Handbook (PDF & Print)',
-      category: 'Library & Books',
-      description: 'Official guidebook containing all 38 remedies guide and diagnostic charts.',
-      type: SearchItemType.book,
-      price: 399.0,
-      extraInfo: 'Digital + Print',
-      route: RoutePaths.library,
+      id: 'ws_101',
+      title: 'Certified Sound Healing & 528Hz Binaural Masterclass',
+      category: 'Workshops',
+      description: 'Master sacred sound frequency activation, singing bowls, and chakra alignment.',
+      type: SearchItemType.course,
+      price: 1999.0,
+      extraInfo: 'Certified Masterclass',
+      route: RoutePaths.workshops,
     ),
   ];
 

@@ -2,6 +2,7 @@ import '../../domain/entities/membership_order_response_entity.dart';
 import '../../domain/entities/membership_plan_entity.dart';
 import '../../domain/entities/membership_verify_result_entity.dart';
 import '../../domain/repositories/membership_repository.dart';
+import '../../presentation/providers/expiry_provider.dart';
 import '../datasources/membership_remote_ds.dart';
 
 class MembershipRepositoryImpl implements MembershipRepository {
@@ -17,6 +18,11 @@ class MembershipRepositoryImpl implements MembershipRepository {
   @override
   Future<MembershipPlanEntity?> getMembershipPlanDetail(String id) async {
     return await remoteDataSource.getMembershipPlanDetail(id);
+  }
+
+  @override
+  Future<UserPassSubscription?> getActiveUserMembership() async {
+    return await remoteDataSource.getActiveUserMembership();
   }
 
   @override

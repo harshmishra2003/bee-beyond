@@ -28,7 +28,7 @@ class KPIActionGrid extends StatelessWidget {
     KPIActionItem(
       title: 'WORKSHOPS',
       fallbackIcon: Icons.workspace_premium_rounded,
-      route: RoutePaths.library,
+      route: RoutePaths.workshops,
     ),
     KPIActionItem(
       title: 'MATERIAL',

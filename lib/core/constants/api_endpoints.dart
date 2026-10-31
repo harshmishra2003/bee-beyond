@@ -18,10 +18,12 @@ class ApiEndpoints {
   static const String viewLessonPdf = '/view_lesson_pdf.php';
   static const String joinedCourses = '/courses/joined';
 
-  // Library & Media
-  static const String library = '/library';
+  // Workshops & Masterclasses
+  static const String workshops = '/workshops.php';
+  static const String workshopDetail = '/workshop_details.php';
+
+  // Books, Music & Video
   static const String books = '/books.php';
-  static const String bookDetail = '/book_details.php';
   static const String music = '/music.php';
   static const String video = '/videos.php';
 
@@ -31,6 +33,8 @@ class ApiEndpoints {
   static const String membershipPlanDetails = '/membership_plan_details.php';
   static const String membershipCreateOrder = '/checkout/membership_create_order.php';
   static const String membershipVerifyPayment = '/checkout/membership_verify_payment.php';
+  static const String activeMembership = '/membership/active.php';
+  static const String myMemberships = '/membership/history.php';
 
   // Products
   static const String products = '/products.php';

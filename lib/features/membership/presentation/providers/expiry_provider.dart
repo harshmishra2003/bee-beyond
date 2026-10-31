@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/expiry_manager_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import 'membership_provider.dart';
 
 class UserPassSubscription {
   final String passId;
@@ -39,7 +42,10 @@ class UserPassSubscription {
     final targetId = targetPlanId.toLowerCase().trim();
     final targetS = (targetSlug ?? '').toLowerCase().trim();
 
-    return cleanPassId == targetId ||
+    if (cleanPassId.isEmpty && cleanSlug.isEmpty) return false;
+    if (targetId.isEmpty && targetS.isEmpty) return false;
+
+    return (cleanPassId.isNotEmpty && cleanPassId == targetId) ||
         (targetS.isNotEmpty && cleanPassId == targetS) ||
         (cleanSlug.isNotEmpty && cleanSlug == targetId) ||
         (cleanSlug.isNotEmpty && targetS.isNotEmpty && cleanSlug == targetS);
@@ -87,19 +93,25 @@ class UserPassSubscription {
   }
 
   factory UserPassSubscription.fromJson(Map<String, dynamic> json) {
+    final rawPassId = json['passId']?.toString() ?? json['plan_id']?.toString() ?? json['membership_plan_id']?.toString() ?? json['id']?.toString() ?? '';
+    final rawPassName = json['passName']?.toString() ?? json['plan_name']?.toString() ?? json['name']?.toString() ?? 'VIP Membership Pass';
+    final rawSlug = json['slug']?.toString() ?? json['plan_slug']?.toString() ?? '';
+
+    final rawStart = json['startDate'] ?? json['start_date'] ?? json['created_at'];
+    final rawEnd = json['expiresAt'] ?? json['end_date'] ?? json['expires_at'] ?? json['valid_until'];
+
+    final parsedStart = rawStart != null ? DateTime.tryParse(rawStart.toString()) ?? DateTime.now() : DateTime.now();
+    final parsedEnd = rawEnd != null ? DateTime.tryParse(rawEnd.toString()) ?? DateTime.now().add(const Duration(days: 30)) : DateTime.now().add(const Duration(days: 30));
+
     return UserPassSubscription(
-      passId: json['passId']?.toString() ?? 'gold_pass',
-      passName: json['passName']?.toString() ?? 'Gold VIP Membership',
-      slug: json['slug']?.toString() ?? 'gold',
-      startDate: json['startDate'] != null
-          ? DateTime.parse(json['startDate'])
-          : DateTime.now().subtract(const Duration(days: 300)),
-      expiresAt: json['expiresAt'] != null
-          ? DateTime.parse(json['expiresAt'])
-          : DateTime.now().add(const Duration(days: 18)),
-      autoRenew: json['autoRenew'] == true,
-      amountPaid: (json['amountPaid'] as num?)?.toDouble() ?? 2999.0,
-      transactionId: json['transactionId']?.toString() ?? 'TXN-VIP-1001',
+      passId: rawPassId,
+      passName: rawPassName,
+      slug: rawSlug,
+      startDate: parsedStart,
+      expiresAt: parsedEnd,
+      autoRenew: json['autoRenew'] == true || json['auto_renew'] == 1 || json['auto_renew'] == true || json['auto_renew'] == '1',
+      amountPaid: double.tryParse(json['amountPaid']?.toString() ?? json['amount_paid']?.toString() ?? json['amount']?.toString() ?? '2999') ?? 2999.0,
+      transactionId: json['transactionId']?.toString() ?? json['payment_id']?.toString() ?? json['transaction_id']?.toString() ?? 'TXN-VIP-1001',
     );
   }
 }
@@ -110,13 +122,16 @@ final liveTickerProvider = StreamProvider.autoDispose<int>((ref) {
 });
 
 /// Active Pass State Notifier
-final activePassProvider =
+final StateNotifierProvider<ActivePassNotifier, UserPassSubscription?> activePassProvider =
     StateNotifierProvider<ActivePassNotifier, UserPassSubscription?>((ref) {
-  return ActivePassNotifier(ref);
+  final notifier = ActivePassNotifier(ref);
+  ref.listen(authStateProvider, (previous, next) {
+    notifier.reloadForCurrentUser();
+  });
+  return notifier;
 });
 
 class ActivePassNotifier extends StateNotifier<UserPassSubscription?> {
-  static const String _storageKey = 'bee_active_vip_pass_v2';
   final Ref _ref;
   Timer? _timer;
 
@@ -125,11 +140,12 @@ class ActivePassNotifier extends StateNotifier<UserPassSubscription?> {
     _startCountdownTimer();
   }
 
+  String _getUserStorageKey(String userId) => 'bee_active_vip_pass_user_$userId';
+
   void _startCountdownTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (state != null) {
-        // Force state update to trigger listener updates for live countdown
         state = state;
       }
     });
@@ -142,18 +158,80 @@ class ActivePassNotifier extends StateNotifier<UserPassSubscription?> {
   }
 
   Future<void> _loadActivePass() async {
+    final logger = Logger();
+    final user = _ref.read(authStateProvider).user;
+
+    // Purge legacy unscoped key from device
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonStr = prefs.getString(_storageKey);
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        final decoded = jsonDecode(jsonStr);
-        state = UserPassSubscription.fromJson(decoded);
-        return;
-      }
+      await prefs.remove('bee_active_vip_pass_v2');
     } catch (_) {}
 
-    // Default to null when no active membership pass exists in local storage
+    if (user == null || user.id.trim().isEmpty) {
+      logger.i('[MEMBERSHIP_DIAGNOSTIC] Guest or Unauthenticated User. Active pass set to NULL.');
+      state = null;
+      return;
+    }
+
+    final userKey = _getUserStorageKey(user.id);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString(userKey);
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final decoded = jsonDecode(jsonStr);
+        final pass = UserPassSubscription.fromJson(decoded);
+        if (!pass.isExpired) {
+          state = pass;
+        } else {
+          state = null;
+        }
+      } else {
+        state = null;
+      }
+    } catch (_) {
+      state = null;
+    }
+
+    // Always synchronize active membership status directly from remote MySQL DB!
+    try {
+      final remoteDs = _ref.read(membershipRemoteDataSourceProvider);
+      final remotePass = await remoteDs.getActiveUserMembership();
+      if (remotePass != null && !remotePass.isExpired) {
+        logger.i('[MEMBERSHIP_DIAGNOSTIC] Synced Active Pass from Remote Backend MySQL for User (${user.id}): ${remotePass.passName}');
+        state = remotePass;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(userKey, jsonEncode(remotePass.toJson()));
+      } else {
+        // If remote says no pass, but we have a locally active pass (e.g. just paid, replica lag), keep it!
+        final isLocallyActive = state != null && !state!.isExpired;
+        if (!isLocallyActive) {
+          logger.w('[MEMBERSHIP_DIAGNOSTIC] Backend MySQL returned NO active membership for User (${user.id}). Setting active pass to NULL.');
+          state = null;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove(userKey);
+        } else {
+          logger.w('[MEMBERSHIP_DIAGNOSTIC] Backend returned NO active pass, but local is active. Preventing overwrite due to possible replica lag.');
+        }
+      }
+    } catch (e) {
+      logger.e('[MEMBERSHIP_DIAGNOSTIC] Error syncing active pass from remote backend: $e');
+    }
+  }
+
+  Future<void> clearPass() async {
+    final logger = Logger();
+    final user = _ref.read(authStateProvider).user;
     state = null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (user != null && user.id.trim().isEmpty) {
+        await prefs.remove(_getUserStorageKey(user.id));
+      }
+      await prefs.remove('bee_active_vip_pass_v2'); // Clean legacy global key as well
+      logger.i('[MEMBERSHIP_DIAGNOSTIC] Active pass cleared successfully on logout/reset.');
+    } catch (e) {
+      logger.e('[MEMBERSHIP_DIAGNOSTIC] Error clearing active pass: $e');
+    }
   }
 
   Future<void> activatePass({
@@ -165,6 +243,8 @@ class ActivePassNotifier extends StateNotifier<UserPassSubscription?> {
     double amountPaid = 2999.0,
     String? transactionId,
   }) async {
+    final logger = Logger();
+    final user = _ref.read(authStateProvider).user;
     final txn = transactionId ?? 'TXN-VIP-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
 
     final newPass = UserPassSubscription(
@@ -178,15 +258,23 @@ class ActivePassNotifier extends StateNotifier<UserPassSubscription?> {
     );
 
     state = newPass;
+    logger.i('[MEMBERSHIP_DIAGNOSTIC] Pass Activated Successfully for User (${user?.id}): $passName (Expires: $expiresAt)');
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final jsonStr = jsonEncode(newPass.toJson());
-      await prefs.setString(_storageKey, jsonStr);
-    } catch (_) {}
+    if (user != null && user.id.trim().isNotEmpty) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final jsonStr = jsonEncode(newPass.toJson());
+        await prefs.setString(_getUserStorageKey(user.id), jsonStr);
+      } catch (e) {
+        logger.e('[MEMBERSHIP_DIAGNOSTIC] Error saving active pass to storage: $e');
+      }
+    }
 
-    // Also add to membership history
     _ref.read(membershipHistoryProvider.notifier).addHistoryRecord(newPass);
+  }
+
+  void reloadForCurrentUser() {
+    _loadActivePass();
   }
 
   Future<void> expirePassForTesting() async {
@@ -203,9 +291,12 @@ class ActivePassNotifier extends StateNotifier<UserPassSubscription?> {
       state = expiredPass;
 
       try {
-        final prefs = await SharedPreferences.getInstance();
-        final jsonStr = jsonEncode(expiredPass.toJson());
-        await prefs.setString(_storageKey, jsonStr);
+        final user = _ref.read(authStateProvider).user;
+        if (user != null && user.id.trim().isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          final jsonStr = jsonEncode(expiredPass.toJson());
+          await prefs.setString(_getUserStorageKey(user.id), jsonStr);
+        }
       } catch (_) {}
     }
   }

@@ -184,7 +184,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           child: Column(
             children: [
               // ACTIVE PASS STATUS CARD
-              if (activePass != null)
+              if (activePass != null && !activePass.isExpired)
                 _buildActivePassStatusCard(activePass)
               else
                 _buildNoActivePassCard(),
@@ -321,46 +321,53 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      activePass.isExpired ? Icons.access_time_filled_rounded : Icons.verified_rounded,
-                      color: statusColor,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'ACTIVE MEMBER PASS',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF64748B),
-                          letterSpacing: 0.8,
-                        ),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 1),
-                      Text(
-                        activePass.passName,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
+                      child: Icon(
+                        activePass.isExpired ? Icons.access_time_filled_rounded : Icons.verified_rounded,
+                        color: statusColor,
+                        size: 20,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'ACTIVE MEMBER PASS',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF64748B),
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 1),
+                          Text(
+                            activePass.passName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -665,14 +672,22 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     MembershipPlanEntity plan,
     UserPassSubscription? activePass,
   ) {
-    final isCurrentActive = activePass != null && activePass.isMatchingPlanActive(plan.id, plan.slug);
+    final isMatching = activePass != null && activePass.matchesPlan(plan.id, plan.slug);
+    final isCurrentActive = isMatching && activePass.isActive;
+    final isExpiringSoon = isMatching && activePass.isExpiringSoon;
 
     void handleCardTap() {
-      if (isCurrentActive) {
+      if (isCurrentActive && !isExpiringSoon) {
         _showAlreadyActivePlanDialog(context, activePass);
       } else {
         context.push('${RoutePaths.membershipDetail}?id=${plan.id}', extra: plan);
       }
+    }
+
+    Color getBorderColor() {
+      if (isExpiringSoon) return const Color(0xFFF59E0B);
+      if (isCurrentActive) return const Color(0xFF10B981);
+      return plan.cardThemeColor.withValues(alpha: 0.3);
     }
 
     return GestureDetector(
@@ -682,9 +697,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
         border: Border.all(
-          color: isCurrentActive
-              ? const Color(0xFF10B981)
-              : plan.cardThemeColor.withValues(alpha: 0.3),
+          color: getBorderColor(),
           width: isCurrentActive ? 2.2 : (plan.isPopular ? 2.0 : 1.2),
         ),
         boxShadow: [
@@ -1057,27 +1070,29 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
   @override
   Widget build(BuildContext context) {
     final pass = widget.activePass;
-    final isCurrentActive = pass != null && pass.isMatchingPlanActive(widget.plan.id, widget.plan.slug);
-    final isCurrentExpired = pass != null && pass.isMatchingPlanExpired(widget.plan.id, widget.plan.slug);
+    final isMatching = pass != null && pass.matchesPlan(widget.plan.id, widget.plan.slug);
+    final isCurrentActive = isMatching && pass.isActive;
+    final isExpiringSoon = isMatching && pass.isExpiringSoon;
+    final isCurrentExpired = isMatching && pass.isExpired;
 
     List<Color> gradientColors;
     String buttonText;
     IconData buttonIcon;
 
-    if (isCurrentActive) {
-      gradientColors = const [Color(0xFF047857), Color(0xFF10B981)];
-      buttonText = 'CLAIMED / ACTIVE PASS';
-      buttonIcon = Icons.check_circle_rounded;
-    } else if (isCurrentExpired) {
+    if (isExpiringSoon || isCurrentExpired) {
       gradientColors = const [Color(0xFFD97706), Color(0xFFF59E0B)];
       buttonText = 'RENEW MEMBERSHIP PASS';
       buttonIcon = Icons.autorenew_rounded;
+    } else if (isCurrentActive) {
+      gradientColors = const [Color(0xFF047857), Color(0xFF10B981)];
+      buttonText = 'CLAIMED ✓';
+      buttonIcon = Icons.check_circle_rounded;
     } else {
       gradientColors = [
         widget.plan.cardThemeColor,
         widget.plan.cardThemeColor.withValues(alpha: 0.85),
       ];
-      buttonText = 'CLAIM ${widget.plan.name.toUpperCase()} PASS';
+      buttonText = 'BUY ${widget.plan.name.toUpperCase()} PASS';
       buttonIcon = Icons.arrow_forward_rounded;
     }
 
