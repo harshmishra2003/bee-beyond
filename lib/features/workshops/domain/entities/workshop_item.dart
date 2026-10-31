@@ -69,6 +69,19 @@ class WorkshopItem extends Equatable {
     return '📹 VIDEO WORKSHOP';
   }
 
+  static String fixImageUrl(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return '';
+    final trimmed = raw.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    const baseUrl = 'https://metricstestingapp.xyz';
+    if (trimmed.startsWith('/')) {
+      return '$baseUrl$trimmed';
+    }
+    return '$baseUrl/$trimmed';
+  }
+
   factory WorkshopItem.fromJson(Map<String, dynamic> json) {
     List<String> parseList(dynamic val) {
       if (val is List) {
@@ -80,23 +93,77 @@ class WorkshopItem extends Equatable {
       return [];
     }
 
+    final rawBasePrice = double.tryParse(
+      json['base_price']?.toString() ?? json['basePrice']?.toString() ?? json['price']?.toString() ?? '0',
+    ) ?? 0.0;
+
+    final rawSalePrice = double.tryParse(
+      json['sale_price']?.toString() ?? json['salePrice']?.toString() ?? '0',
+    ) ?? 0.0;
+
+    final rawDiscount = double.tryParse(
+      json['discount']?.toString() ?? '0',
+    ) ?? 0.0;
+
+    double calculatedDiscount = rawDiscount;
+    if (rawBasePrice > 0 && rawSalePrice > 0 && rawBasePrice >= rawSalePrice) {
+      calculatedDiscount = rawBasePrice - rawSalePrice;
+    }
+
+    final rawRating = double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0;
+    final displayRating = rawRating > 0 ? rawRating : 4.8;
+
+    final deliveryType = json['delivery_type']?.toString().toLowerCase() ?? '';
+    final isLiveVal = deliveryType == 'live' ||
+        json['isLive'] == true ||
+        json['is_live'] == 1 ||
+        json['is_live'] == '1' ||
+        json['type'] == 'live';
+
+    final rawImg = json['thumbnail_url']?.toString() ??
+        json['thumbnailUrl']?.toString() ??
+        json['image']?.toString() ??
+        '';
+
+    final startDt = json['start_datetime']?.toString() ?? '';
+    final endDt = json['end_datetime']?.toString() ?? '';
+    List<String> datesList = parseList(json['upcomingDates'] ?? json['dates']);
+    if (datesList.isEmpty && startDt.isNotEmpty) {
+      if (endDt.isNotEmpty) {
+        datesList = ['Start: $startDt', 'End: $endDt'];
+      } else {
+        datesList = ['Start Date: $startDt'];
+      }
+    }
+
+    final categoryStr = json['category']?.toString() ?? 'Wellness & Remedies';
+    final subcategoryStr = json['subcategory']?.toString() ?? '';
+    final mentorName = json['mentor_name']?.toString() ??
+        json['instructor']?.toString() ??
+        json['mentor']?.toString() ??
+        'Certified Instructor';
+
+    final lineageStr = subcategoryStr.isNotEmpty && subcategoryStr != categoryStr
+        ? subcategoryStr
+        : 'Accredited Wellness Masterclass';
+
     return WorkshopItem(
       id: json['id']?.toString() ?? json['workshop_id']?.toString() ?? 'ws_${DateTime.now().millisecondsSinceEpoch}',
-      title: json['title']?.toString() ?? json['name']?.toString() ?? 'Certified Holistic Workshop',
-      instructor: json['instructor']?.toString() ?? json['mentor']?.toString() ?? 'Acharya Devraj',
-      lineage: json['lineage']?.toString() ?? '35 Yrs Sacred Vedic Lineage',
-      category: json['category']?.toString() ?? 'Ayurveda & Wellness',
-      description: json['description']?.toString() ?? 'Interactive masterclass offering hands-on training and certification.',
-      duration: json['duration']?.toString() ?? '2.5 Hours',
-      basePrice: double.tryParse(json['basePrice']?.toString() ?? json['price']?.toString() ?? '1499') ?? 1499.0,
-      discount: double.tryParse(json['discount']?.toString() ?? '300') ?? 300.0,
-      rating: double.tryParse(json['rating']?.toString() ?? '4.9') ?? 4.9,
-      thumbnailUrl: json['thumbnailUrl']?.toString() ?? json['image']?.toString() ?? '',
+      title: json['title']?.toString() ?? json['name']?.toString() ?? 'Holistic Masterclass',
+      instructor: mentorName,
+      lineage: lineageStr,
+      category: categoryStr,
+      description: json['description']?.toString() ?? '',
+      duration: json['duration']?.toString() ?? '2 Hours',
+      basePrice: rawBasePrice > 0 ? rawBasePrice : (rawSalePrice > 0 ? rawSalePrice : 1000.0),
+      discount: calculatedDiscount,
+      rating: displayRating,
+      thumbnailUrl: fixImageUrl(rawImg),
       videoUrl: json['videoUrl']?.toString() ?? json['video_url']?.toString() ?? '',
       takeaways: parseList(json['takeaways'] ?? json['highlights']),
-      upcomingDates: parseList(json['upcomingDates'] ?? json['dates']),
-      isLive: json['isLive'] == true || json['is_live'] == 1 || json['type'] == 'live',
-      views: int.tryParse(json['views']?.toString() ?? '1250') ?? 1250,
+      upcomingDates: datesList,
+      isLive: isLiveVal,
+      views: int.tryParse(json['available_seats']?.toString() ?? json['capacity']?.toString() ?? json['views']?.toString() ?? '100') ?? 100,
     );
   }
 
