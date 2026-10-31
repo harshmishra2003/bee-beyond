@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -301,12 +302,33 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Container(
-              width: 70,
-              height: 70,
-              color: const Color(0xFF1E1B4B),
-              child: const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 36),
-            ),
+            child: image.isNotEmpty && image.startsWith('http')
+                ? CachedNetworkImage(
+                    imageUrl: image,
+                    width: 70,
+                    height: 70,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      width: 70,
+                      height: 70,
+                      color: const Color(0xFF1E1B4B),
+                      child: const Center(
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 70,
+                      height: 70,
+                      color: const Color(0xFF1E1B4B),
+                      child: const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 36),
+                    ),
+                  )
+                : Container(
+                    width: 70,
+                    height: 70,
+                    color: const Color(0xFF1E1B4B),
+                    child: const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 36),
+                  ),
           ),
           const SizedBox(width: 14),
           Expanded(
