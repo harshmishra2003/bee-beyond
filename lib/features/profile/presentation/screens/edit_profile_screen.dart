@@ -172,34 +172,48 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text('Select State / Territory', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (sheetCtx, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView.builder(
-              itemCount: states.length,
-              itemBuilder: (ctx, i) {
-                final st = states[i];
-                return ListTile(
-                  title: Text(st, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  trailing: st == _selectedState ? const Icon(Icons.check_circle, color: AppColors.primary) : null,
-                  onTap: () {
-                    setState(() {
-                      _selectedState = st;
-                      _selectedCity = _indiaStateCityData[st]!.first;
-                    });
-                    Navigator.pop(ctx);
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('Select State / Territory', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  itemCount: states.length,
+                  itemBuilder: (ctx, i) {
+                    final st = states[i];
+                    return ListTile(
+                      title: Text(st, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      trailing: st == _selectedState ? const Icon(Icons.check_circle, color: AppColors.primary) : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedState = st;
+                          _selectedCity = _indiaStateCityData[st]!.first;
+                        });
+                        Navigator.pop(ctx);
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -210,33 +224,47 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text('Select City ($_selectedState)', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (sheetCtx, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView.builder(
-              itemCount: cities.length,
-              itemBuilder: (ctx, i) {
-                final ct = cities[i];
-                return ListTile(
-                  title: Text(ct, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  trailing: ct == _selectedCity ? const Icon(Icons.check_circle, color: AppColors.primary) : null,
-                  onTap: () {
-                    setState(() {
-                      _selectedCity = ct;
-                    });
-                    Navigator.pop(ctx);
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Select City ($_selectedState)', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  itemCount: cities.length,
+                  itemBuilder: (ctx, i) {
+                    final ct = cities[i];
+                    return ListTile(
+                      title: Text(ct, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      trailing: ct == _selectedCity ? const Icon(Icons.check_circle, color: AppColors.primary) : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedCity = ct;
+                        });
+                        Navigator.pop(ctx);
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
