@@ -10,7 +10,6 @@ abstract class HomeRemoteDataSource {
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<List<CategoryModel>> getCategories() async {
-    await Future.delayed(const Duration(milliseconds: 200));
     return const [
       CategoryModel(
         id: 'cat_1',
@@ -125,7 +124,6 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Future<List<BannerModel>> getBanners() async {
-    await Future.delayed(const Duration(milliseconds: 200));
     return const [
       BannerModel(
         id: 'b_1',
