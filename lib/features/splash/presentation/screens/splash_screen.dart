@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
-import '../../../../routing/route_paths.dart';
+import '../../../../routing/router_notifier.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -27,7 +26,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Timer? _affirmationTimer;
   int _affirmationIndex = 0;
   bool _hasNavigated = false;
-  bool _minTimeElapsed = false;
 
   final List<String> _affirmations = [
     "Inhale tranquil clarity, exhale noise...",
@@ -67,47 +65,33 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Primary splash display timer (1000ms for smooth experience)
     _navigationTimer = Timer(const Duration(milliseconds: 1000), () {
       if (mounted) {
-        _minTimeElapsed = true;
-        _tryNavigate();
+        _finishSplash();
       }
     });
 
-    // Fallback timer (2200ms) to guarantee app NEVER gets stuck on splash screen
-    _fallbackTimer = Timer(const Duration(milliseconds: 2200), () {
+    // Fallback timer (1800ms) to guarantee splash screen NEVER gets stuck
+    _fallbackTimer = Timer(const Duration(milliseconds: 1800), () {
       if (mounted && !_hasNavigated) {
-        _minTimeElapsed = true;
-        _tryNavigate(force: true);
+        _finishSplash();
       }
     });
 
     // Listen to Auth state changes once in initState cleanly
     ref.listenManual<AuthState>(authStateProvider, (previous, next) {
       if (!_hasNavigated && next.status != AuthStatus.loading) {
-        _tryNavigate();
+        _finishSplash();
       }
     });
   }
 
-  void _tryNavigate({bool force = false}) {
-    if (_hasNavigated || !mounted || !_minTimeElapsed) return;
+  void _finishSplash() {
+    if (_hasNavigated || !mounted) return;
 
     final authState = ref.read(authStateProvider);
 
-    // Wait until authentication restoration completes (unless fallback timer forces it)
-    if (authState.status == AuthStatus.loading && !force) {
-      return;
-    }
-
     _hasNavigated = true;
-    debugPrint('[AUTH] Navigation triggered with status: ${authState.status} (forced: $force)');
-
-    if (authState.status == AuthStatus.authenticated) {
-      context.go(RoutePaths.home);
-    } else if (authState.status == AuthStatus.unauthenticated && !authState.hasSeenOnboarding) {
-      context.go(RoutePaths.onboarding);
-    } else {
-      context.go(RoutePaths.login);
-    }
+    debugPrint('[SPLASH] Splash timer completed with status: ${authState.status}. Notifying router.');
+    ref.read(routerNotifierProvider).markSplashFinished();
   }
 
   @override
