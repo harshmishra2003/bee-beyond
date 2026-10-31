@@ -123,14 +123,21 @@ class AppPdfBookViewer extends StatefulWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => AppPdfBookViewer(
-        title: title,
-        pdfUrl: pdfUrl,
-        subtitle: subtitle,
-        description: description,
-        samplePagesContent: samplePagesContent,
-        isPreviewMode: isPreviewMode,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.94,
+        minChildSize: 0.5,
+        maxChildSize: 0.98,
+        expand: false,
+        builder: (sheetContext, scrollController) => AppPdfBookViewer(
+          title: title,
+          pdfUrl: pdfUrl,
+          subtitle: subtitle,
+          description: description,
+          samplePagesContent: samplePagesContent,
+          isPreviewMode: isPreviewMode,
+        ),
       ),
     );
   }
@@ -324,7 +331,6 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
     return Material(
       color: Colors.transparent,
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.94,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
