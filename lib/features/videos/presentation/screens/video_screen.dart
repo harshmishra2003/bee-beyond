@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/video_lecture_item.dart';
 import '../providers/video_provider.dart';
+import '../widgets/smart_video_player_sheet.dart';
 
 class VideoScreen extends ConsumerStatefulWidget {
   const VideoScreen({super.key});
@@ -27,6 +28,8 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
     'Bach Flower',
     'Vastu',
     'Ayurveda',
+    'DMIT',
+    'Graphology',
   ];
 
   @override
@@ -48,14 +51,8 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
     }
   }
 
-  Future<void> _playVideo(VideoLectureItem video) async {
-    final targetUrl = video.videoUrl.isNotEmpty ? video.videoUrl : VideoLectureItem.youtubeChannelUrl;
-    final uri = Uri.parse(targetUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      await _openYouTubeChannel();
-    }
+  void _playVideo(VideoLectureItem video, List<VideoLectureItem> playlist) {
+    SmartVideoPlayerSheet.show(context, video, playlist);
   }
 
   @override
@@ -159,7 +156,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                     itemCount: filtered.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 16),
                     itemBuilder: (context, index) {
-                      return _buildVideoCard(filtered[index]);
+                      return _buildVideoCard(filtered[index], videos);
                     },
                   );
                 },
@@ -246,7 +243,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Watch latest uploaded holistic healing lectures, Bach Flower Remedy diagnosis, and Vastu energy masterclasses directly from YouTube.',
+            'Watch latest uploaded holistic healing lectures, Bach Flower Remedy diagnosis, and Vastu energy masterclasses directly inside the app.',
             style: GoogleFonts.poppins(
               fontSize: 11.5,
               color: const Color(0xFFAAAAAA),
@@ -302,7 +299,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
     );
   }
 
-  Widget _buildVideoCard(VideoLectureItem video) {
+  Widget _buildVideoCard(VideoLectureItem video, List<VideoLectureItem> playlist) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -319,9 +316,9 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // THUMBNAIL WITH YOUTUBE BADGE
+          // THUMBNAIL (CLEAN - NO YOUTUBE BADGE OVERLAY)
           GestureDetector(
-            onTap: () => _playVideo(video),
+            onTap: () => _playVideo(video, playlist),
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -345,7 +342,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                   ),
                 ),
 
-                // RED PLAY BUTTON
+                // RED PLAY BUTTON OVERLAY
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: const BoxDecoration(
@@ -362,35 +359,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                   ),
                 ),
 
-                // YOUTUBE BADGE
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.black87,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.play_circle_fill_rounded, color: Color(0xFFFF0000), size: 12),
-                        const SizedBox(width: 4),
-                        Text(
-                          'YOUTUBE',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // DURATION
+                // DURATION BADGE
                 Positioned(
                   bottom: 12,
                   right: 12,
@@ -414,12 +383,47 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
             ),
           ),
 
-          // DETAILS
+          // DETAILS SECTION WITH GENUINE METADATA
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFE4E6),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        video.category.toUpperCase(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFFF0000),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Uploaded ${video.uploadDate}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Text(
                   video.title,
                   style: GoogleFonts.poppins(
@@ -429,17 +433,32 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                     height: 1.25,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     const Icon(Icons.person_outline_rounded, size: 14, color: AppColors.textSecondary),
                     const SizedBox(width: 4),
                     Text(
-                      '${video.instructor} • ${video.views} Views',
+                      video.instructor,
                       style: GoogleFonts.poppins(
                         fontSize: 11.5,
-                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
                       ),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.visibility_outlined, size: 13, color: AppColors.textSecondary),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${video.views}',
+                      style: GoogleFonts.poppins(fontSize: 11, color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(Icons.thumb_up_alt_outlined, size: 13, color: AppColors.textSecondary),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${video.likes}',
+                      style: GoogleFonts.poppins(fontSize: 11, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -458,10 +477,10 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _playVideo(video),
+                    onPressed: () => _playVideo(video, playlist),
                     icon: const Icon(Icons.play_circle_filled_rounded, size: 16),
                     label: Text(
-                      'Watch on YouTube',
+                      'Play Video In-App',
                       style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -494,27 +513,27 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.play_circle_outline_rounded,
+                Icons.video_library_outlined,
                 size: 56,
                 color: Color(0xFFFF0000),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              'No Videos Found',
+              'No Videos Uploaded Yet',
               style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 6),
             Text(
-              'Watch all official holistic videos directly on our YouTube Channel @beebeyonndofficial.',
+              'Bee Beyonnd Official YouTube Channel (@beebeyonndofficial) has no public videos uploaded at the moment. New holistic health, Bach Flower, and Vastu lectures will appear here automatically as soon as they are published.',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             ElevatedButton.icon(
               onPressed: _openYouTubeChannel,
-              icon: const Icon(Icons.open_in_new_rounded, size: 16),
-              label: Text('Open @beebeyonndofficial on YouTube', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.subscriptions_rounded, size: 16),
+              label: Text('Visit @beebeyonndofficial on YouTube', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF0000),
                 foregroundColor: Colors.white,
