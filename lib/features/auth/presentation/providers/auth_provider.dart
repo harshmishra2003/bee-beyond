@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/storage_keys.dart';
@@ -7,11 +9,11 @@ import '../../../../core/network/interceptors/auth_interceptor.dart';
 import '../../../../core/network/interceptors/logging_interceptor.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../data/datasources/auth_remote_ds.dart';
+import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/auth_state.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
-
 
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService();
@@ -56,39 +58,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> checkCurrentUser() async {
-    state = AuthState.loading();
+    debugPrint('[AUTH] Authentication restoration started');
+    debugPrint('[AUTH] Authentication state: loading');
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? false;
-
-      final token = await _secureStorage.getAuthToken().timeout(
-        const Duration(seconds: 1),
-        onTimeout: () => null,
+      final prefs = await SharedPreferences.getInstance().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => throw TimeoutException('SharedPreferences timeout'),
       );
+      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? true;
+
+      final token = prefs.getString(StorageKeys.authToken);
 
       if (token != null && token.trim().isNotEmpty) {
-        UserEntity? user;
-        try {
-          user = await _repository.getCurrentUser().timeout(
-            const Duration(seconds: 1),
-            onTimeout: () => null,
-          );
-        } catch (_) {
-          user = null;
-        }
-
-        if (user != null) {
-          if (!hasSeenOnboarding) {
-            await prefs.setBool(StorageKeys.isOnboardingCompleted, true);
+        final userDataJson = prefs.getString(StorageKeys.userData);
+        if (userDataJson != null && userDataJson.trim().isNotEmpty) {
+          try {
+            final userMap = jsonDecode(userDataJson.trim()) as Map<String, dynamic>;
+            final user = UserModel.fromJson(userMap);
+            debugPrint('[AUTH] Authentication state: authenticated');
+            state = AuthState.authenticated(user, hasSeenOnboarding: true);
+            return;
+          } catch (_) {
+            debugPrint('[AUTH] Failed to parse user data');
           }
-          state = AuthState.authenticated(user, hasSeenOnboarding: true);
-          return;
         }
       }
 
+      debugPrint('[AUTH] Authentication state: unauthenticated');
       state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
-    } catch (_) {
-      state = const AuthState(status: AuthStatus.unauthenticated, user: null, hasSeenOnboarding: false);
+    } catch (e) {
+      debugPrint('[AUTH ERROR] Restoration failed: $e');
+      debugPrint('[AUTH] Authentication state: unauthenticated');
+      state = const AuthState(status: AuthStatus.unauthenticated, user: null, hasSeenOnboarding: true);
     }
   }
 
