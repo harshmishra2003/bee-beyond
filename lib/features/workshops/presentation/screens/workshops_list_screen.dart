@@ -339,20 +339,11 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            context.push(
-              '${RoutePaths.workshopDetail}?id=${item.id}',
-              extra: item,
-            );
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               // THUMBNAIL
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -501,8 +492,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildEmptyState() {
