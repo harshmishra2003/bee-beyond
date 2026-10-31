@@ -95,7 +95,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
-        child: Column(
+          child: Column(
           children: [
             const SizedBox(height: 12),
             Container(
@@ -234,7 +234,8 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildTopAppBar() {
