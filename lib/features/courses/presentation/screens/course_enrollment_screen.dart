@@ -1667,11 +1667,13 @@ class _SearchablePickerBottomSheet extends StatefulWidget {
   final String title;
   final List<String> items;
   final String? currentSelected;
+  final ScrollController? scrollController;
 
   const _SearchablePickerBottomSheet({
     required this.title,
     required this.items,
     this.currentSelected,
+    this.scrollController,
   });
 
   @override
@@ -1691,7 +1693,6 @@ class _SearchablePickerBottomSheetState extends State<_SearchablePickerBottomShe
         !filteredItems.any((i) => i.toLowerCase() == _searchQuery.trim().toLowerCase());
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
       padding: EdgeInsets.only(
         top: 16,
         left: 16,
@@ -1766,6 +1767,7 @@ class _SearchablePickerBottomSheetState extends State<_SearchablePickerBottomShe
           // Items List
           Expanded(
             child: ListView(
+              controller: widget.scrollController,
               children: [
                 // Custom Typed Location Option
                 if (showCustomOption)
