@@ -33,8 +33,8 @@ class ApiEndpoints {
   static const String membershipPlanDetails = '/membership_plan_details.php';
   static const String membershipCreateOrder = '/checkout/membership_create_order.php';
   static const String membershipVerifyPayment = '/checkout/membership_verify_payment.php';
-  static const String activeMembership = '/membership/active.php';
-  static const String myMemberships = '/membership/history.php';
+  static const String activeMembership = '/user/membership_status.php';
+  // static const String myMemberships = '/membership/history.php';
 
   // Products
   static const String products = '/products.php';
