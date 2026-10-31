@@ -8,6 +8,7 @@ import 'route_paths.dart';
 
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
+  bool _isSplashFinished = false;
 
   RouterNotifier(this._ref) {
     _ref.listen<AuthState>(
@@ -21,23 +22,48 @@ class RouterNotifier extends ChangeNotifier {
     );
   }
 
+  void markSplashFinished() {
+    if (!_isSplashFinished) {
+      _isSplashFinished = true;
+      debugPrint('[ROUTER] Splash screen finished. Triggering router redirect.');
+      notifyListeners();
+    }
+  }
+
   String? redirect(BuildContext context, GoRouterState state) {
     final location = state.uri.path;
     final authState = _ref.read(authStateProvider);
     final status = authState.status;
     final hasSeenOnboarding = authState.hasSeenOnboarding;
 
-    // 1) Loading State -> Prevent deep links from bypassing auth check
-    if (status == AuthStatus.loading) {
-      return location == RoutePaths.splash ? null : RoutePaths.splash;
-    }
-
-    // While on splash screen, allow SplashScreen to manage initial navigation
-    if (location == RoutePaths.splash) {
+    // 1) While splash screen timer hasn't finished, stay on splash screen
+    if (!_isSplashFinished && location == RoutePaths.splash) {
       return null;
     }
 
-    // 2) Unauthenticated State -> Auth Stack or Onboarding
+    // 2) If on splash screen and splash timer is done
+    if (location == RoutePaths.splash) {
+      if (status == AuthStatus.loading) {
+        return null; // Wait for auth restoration if still loading
+      }
+      if (status == AuthStatus.authenticated) {
+        debugPrint('[ROUTER] Redirecting from Splash -> Home');
+        return RoutePaths.home;
+      }
+      if (!hasSeenOnboarding) {
+        debugPrint('[ROUTER] Redirecting from Splash -> Onboarding');
+        return RoutePaths.onboarding;
+      }
+      debugPrint('[ROUTER] Redirecting from Splash -> Login');
+      return RoutePaths.login;
+    }
+
+    // 3) Loading State -> Prevent deep links from bypassing splash
+    if (status == AuthStatus.loading) {
+      return RoutePaths.splash;
+    }
+
+    // 4) Unauthenticated State -> Auth Stack or Onboarding
     if (status == AuthStatus.unauthenticated) {
       if (!hasSeenOnboarding) {
         return location == RoutePaths.onboarding ? null : RoutePaths.onboarding;
@@ -56,7 +82,7 @@ class RouterNotifier extends ChangeNotifier {
       return RoutePaths.login;
     }
 
-    // 3) Authenticated State -> App Stack
+    // 5) Authenticated State -> App Stack
     if (status == AuthStatus.authenticated) {
       final isAuthOrSplashRoute = location == RoutePaths.splash ||
                                   location == RoutePaths.onboarding ||
