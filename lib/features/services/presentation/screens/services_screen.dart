@@ -1105,8 +1105,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
         expand: false,
         builder: (sheetContext, scrollController) => StatefulBuilder(
           builder: (ctx, setSheetState) {
-            final mediaQuery = MediaQuery.maybeOf(ctx);
-
             final startOfWeek = getStartOfWeek(DateTime.now(), weekOffset);
             final weekDays = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
             final activeSlots = getSlotsForDate(selectedDate);
@@ -1115,18 +1113,16 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 
             final weekRangeStr = "${DateFormat('dd MMM').format(startOfWeek)} - ${DateFormat('dd MMM yyyy').format(startOfWeek.add(const Duration(days: 6)))}";
 
-            return Padding(
-              padding: EdgeInsets.only(bottom: mediaQuery?.viewInsets.bottom ?? 0),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFAFAFC),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black26, blurRadius: 20, offset: Offset(0, -5)),
-                  ],
-                ),
-                child: Column(
+            return Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFAFAFC),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black26, blurRadius: 20, offset: Offset(0, -5)),
+                ],
+              ),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Top Handle Bar
@@ -1800,11 +1796,10 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 ),
               ],
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     ),
-  ),
-);
+  );
 }
 }
