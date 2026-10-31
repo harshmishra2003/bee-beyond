@@ -85,12 +85,16 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(context).size.height * 0.70,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.70,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (sheetCtx, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
         child: Column(
           children: [
             const SizedBox(height: 12),
@@ -170,6 +174,7 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
             // Categories List
             Expanded(
               child: ListView.separated(
+                controller: scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 physics: const BouncingScrollPhysics(),
                 itemCount: _categoryData.length,
