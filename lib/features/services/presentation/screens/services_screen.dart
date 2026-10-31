@@ -1126,7 +1126,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     BoxShadow(color: Colors.black26, blurRadius: 20, offset: Offset(0, -5)),
                   ],
                 ),
-            child: Column(
+                child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Top Handle Bar
