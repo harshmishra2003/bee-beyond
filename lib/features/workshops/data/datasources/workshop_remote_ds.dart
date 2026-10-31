@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
@@ -136,9 +137,38 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
 
   @override
   Future<WorkshopItem?> getWorkshopDetail(String id) async {
+    if (_dioClient != null) {
+      try {
+        final response = await _dioClient.get(
+          ApiEndpoints.workshopDetail,
+          queryParameters: {
+            'id': id,
+            '_t': DateTime.now().millisecondsSinceEpoch,
+          },
+          options: Options(validateStatus: (status) => true),
+        );
+
+        if (response.statusCode == 200 && response.data != null) {
+          dynamic rawData = response.data;
+          if (rawData is String) rawData = jsonDecode(rawData);
+
+          final Map<String, dynamic> data = rawData is Map
+              ? (rawData['data'] is Map ? rawData['data'] : rawData)
+              : {};
+
+          if (data.isNotEmpty && (data['id'] != null || data['title'] != null)) {
+            return WorkshopItem.fromJson(data);
+          }
+        }
+      } catch (_) {}
+    }
+
     final list = await getWorkshops();
     try {
-      return list.firstWhere((w) => w.id == id);
+      final cleanId = id.trim().toLowerCase();
+      return list.firstWhere(
+        (w) => w.id.trim().toLowerCase() == cleanId || w.id.toString() == id.toString(),
+      );
     } catch (_) {
       return list.isNotEmpty ? list.first : null;
     }
