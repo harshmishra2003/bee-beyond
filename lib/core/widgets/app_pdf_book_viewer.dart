@@ -3,14 +3,20 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
-import '../../routing/route_paths.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/books/presentation/providers/books_provider.dart';
+import '../../features/checkout/presentation/providers/payment_provider.dart';
+import '../services/razorpay_service.dart';
 import '../services/secure_storage_service.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_alert_manager.dart';
+import '../utils/currency_utils.dart';
 
 class PdfUrlResolver {
   static const String fallbackPdfUrl =
@@ -20,7 +26,6 @@ class PdfUrlResolver {
     if (rawUrl == null || rawUrl.trim().isEmpty) return fallbackPdfUrl;
     String url = rawUrl.trim();
 
-    // 1. Convert Google Drive file URLs
     if (url.contains('drive.google.com')) {
       final regExp = RegExp(r'/(?:file/d/|id=)([\w-]+)');
       final match = regExp.firstMatch(url);
@@ -30,12 +35,10 @@ class PdfUrlResolver {
       }
     }
 
-    // 2. Convert Dropbox links
     if (url.contains('dropbox.com') && url.contains('dl=0')) {
       return url.replaceAll('dl=0', 'dl=1');
     }
 
-    // 3. Convert Google Docs URLs
     if (url.contains('docs.google.com/document/d/')) {
       final regExp = RegExp(r'/document/d/([\w-]+)');
       final match = regExp.firstMatch(url);
@@ -45,9 +48,6 @@ class PdfUrlResolver {
       }
     }
 
-    // 4. Strip /admin/ path prefixes for uploaded static assets
-    // Admin uploads are stored in public /uploads/ directory on backend,
-    // but DB paths often contain /admin/uploads/ which redirects to Admin Login HTML.
     if (url.contains('/admin/uploads/')) {
       url = url.replaceAll('/admin/uploads/', '/uploads/');
     } else if (url.contains('admin/uploads/')) {
@@ -58,12 +58,10 @@ class PdfUrlResolver {
       url = url.substring(6);
     }
 
-    // 5. Absolute HTTP / HTTPS
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
 
-    // 6. Relative paths
     if (url.startsWith('/api/')) {
       return 'https://metricstestingapp.xyz$url';
     }
@@ -84,7 +82,6 @@ class PdfUrlResolver {
 
   static bool isValidPdfBytes(Uint8List bytes) {
     if (bytes.length < 5) return false;
-    // Magic header check: %PDF-
     return bytes[0] == 0x25 &&
         bytes[1] == 0x50 &&
         bytes[2] == 0x44 &&
@@ -92,13 +89,15 @@ class PdfUrlResolver {
   }
 }
 
-class AppPdfBookViewer extends StatefulWidget {
+class AppPdfBookViewer extends ConsumerStatefulWidget {
   final String title;
   final String pdfUrl;
   final String? subtitle;
   final String? description;
-  final List<String>? samplePagesContent;
-  final bool isPreviewMode;
+  final int totalPages;
+  final bool isSampleMode;
+  final double price;
+  final String bookId;
 
   const AppPdfBookViewer({
     super.key,
@@ -106,19 +105,22 @@ class AppPdfBookViewer extends StatefulWidget {
     required this.pdfUrl,
     this.subtitle,
     this.description,
-    this.samplePagesContent,
-    this.isPreviewMode = false,
+    this.totalPages = 120,
+    this.isSampleMode = false,
+    this.price = 0.0,
+    this.bookId = '',
   });
 
-  /// Static helper method to show the viewer in a modal bottom sheet
   static void show(
     BuildContext context, {
     required String title,
     required String pdfUrl,
     String? subtitle,
     String? description,
-    List<String>? samplePagesContent,
-    bool isPreviewMode = false,
+    int totalPages = 120,
+    bool isSampleMode = false,
+    double price = 0.0,
+    String bookId = '',
   }) {
     showModalBottomSheet(
       context: context,
@@ -126,8 +128,8 @@ class AppPdfBookViewer extends StatefulWidget {
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.94,
-        minChildSize: 0.5,
+        initialChildSize: 0.96,
+        minChildSize: 0.6,
         maxChildSize: 0.98,
         expand: false,
         builder: (sheetContext, scrollController) => AppPdfBookViewer(
@@ -135,25 +137,28 @@ class AppPdfBookViewer extends StatefulWidget {
           pdfUrl: pdfUrl,
           subtitle: subtitle,
           description: description,
-          samplePagesContent: samplePagesContent,
-          isPreviewMode: isPreviewMode,
+          totalPages: totalPages,
+          isSampleMode: isSampleMode,
+          price: price,
+          bookId: bookId,
         ),
       ),
     );
   }
 
   @override
-  State<AppPdfBookViewer> createState() => _AppPdfBookViewerState();
+  ConsumerState<AppPdfBookViewer> createState() => _AppPdfBookViewerState();
 }
 
-class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
+class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
   late final PdfViewerController _pdfViewerController;
+  RazorpayService? _razorpayService;
+
   String? _localFilePath;
   bool _isLoading = true;
   String? _errorMessage;
-  int? _accessErrorCode; // 401 or 403
+  bool _isShowingSampleDialog = false;
 
-  // ValueNotifiers to isolate UI rebuilds during high-speed scrolling
   final ValueNotifier<int> _currentPageNotifier = ValueNotifier<int>(1);
   final ValueNotifier<int> _totalPagesNotifier = ValueNotifier<int>(0);
 
@@ -161,7 +166,45 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
   void initState() {
     super.initState();
     _pdfViewerController = PdfViewerController();
+    _razorpayService = RazorpayService();
+    _setupRazorpayListeners();
     _loadPdfDocument(widget.pdfUrl);
+  }
+
+  void _setupRazorpayListeners() {
+    _razorpayService?.onSuccess = (response) async {
+      if (!mounted) return;
+      if (widget.bookId.isNotEmpty) {
+        ref.read(purchasedBooksProvider.notifier).markPurchased(widget.bookId);
+      }
+      Navigator.pop(context);
+      AppAlertManager.showFloatingToast(
+        context,
+        title: 'Full E-Book Unlocked! 🎉',
+        message: 'Thank you! You now have full access to "${widget.title}".',
+        icon: Icons.check_circle_rounded,
+      );
+
+      AppPdfBookViewer.show(
+        context,
+        title: widget.title,
+        pdfUrl: widget.pdfUrl,
+        subtitle: widget.subtitle,
+        description: widget.description,
+        totalPages: widget.totalPages,
+        isSampleMode: false,
+      );
+    };
+
+    _razorpayService?.onError = (response) {
+      if (!mounted) return;
+      AppAlertManager.showFloatingToast(
+        context,
+        title: 'Payment Cancelled / Declined',
+        message: response.message ?? 'Transaction was cancelled.',
+        icon: Icons.info_outline_rounded,
+      );
+    };
   }
 
   @override
@@ -169,6 +212,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
     _currentPageNotifier.dispose();
     _totalPagesNotifier.dispose();
     _pdfViewerController.dispose();
+    _razorpayService?.dispose();
     super.dispose();
   }
 
@@ -179,7 +223,6 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
-        _accessErrorCode = null;
       });
     }
 
@@ -195,13 +238,6 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
       if (token != null && token.trim().isNotEmpty) {
         headers['Authorization'] = 'Bearer ${token.trim()}';
       }
-
-      logger.i(
-        '[PDF_VIEWER_NETWORK_LOG] Opening PDF:\n'
-        '  Raw URL: $rawUrl\n'
-        '  Target URL: $targetUrl\n'
-        '  Auth Token Present: ${token != null && token.trim().isNotEmpty}'
-      );
 
       final dio = Dio(BaseOptions(
         connectTimeout: const Duration(seconds: 25),
@@ -224,8 +260,6 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
           final file = File('${tempDir.path}/$fileName');
           await file.writeAsBytes(bytes);
 
-          logger.i('[PDF_VIEWER_SUCCESS] PDF saved to local temp storage: ${file.path}');
-
           if (mounted) {
             setState(() {
               _localFilePath = file.path;
@@ -233,80 +267,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
             });
           }
           return;
-        } else {
-          // Status 200 returned non-PDF content (e.g. Admin login HTML page or backend error)
-          final decodedBody = utf8.decode(bytes, allowMalformed: true);
-          logger.e('[PDF_VIEWER_ERROR] HTTP 200 returned NON-PDF content: ${decodedBody.substring(0, decodedBody.length > 200 ? 200 : decodedBody.length)}');
-
-          // Attempt fallback load if targetUrl was customized
-          String? retryUrl;
-          if (targetUrl.contains('admin')) {
-            retryUrl = targetUrl.replaceAll('/admin/', '/').replaceAll('admin/', '');
-          } else if (targetUrl != PdfUrlResolver.fallbackPdfUrl) {
-            retryUrl = PdfUrlResolver.fallbackPdfUrl;
-          }
-
-          if (retryUrl != null && retryUrl != targetUrl) {
-            logger.w('[PDF_VIEWER_RETRY] Attempting fallback PDF load: $retryUrl');
-            try {
-              final retryResp = await dio.get<List<int>>(retryUrl);
-              if (retryResp.statusCode == 200 && retryResp.data != null) {
-                final retryBytes = Uint8List.fromList(retryResp.data!);
-                if (PdfUrlResolver.isValidPdfBytes(retryBytes)) {
-                  final tempDir = await getTemporaryDirectory();
-                  final fileName = 'book_pdf_fallback_${DateTime.now().millisecondsSinceEpoch}.pdf';
-                  final file = File('${tempDir.path}/$fileName');
-                  await file.writeAsBytes(retryBytes);
-
-                  if (mounted) {
-                    setState(() {
-                      _localFilePath = file.path;
-                      _isLoading = false;
-                    });
-                  }
-                  return;
-                }
-              }
-            } catch (e) {
-              logger.e('[PDF_VIEWER_RETRY_ERROR] Fallback PDF load failed: $e');
-            }
-          }
-
-          final isHtmlContent = decodedBody.trim().startsWith('<') || decodedBody.contains('Login');
-          final cleanError = isHtmlContent
-              ? 'The requested study PDF file link is restricted or unaccessible on the backend server. Please check your account permissions or try again later.'
-              : decodedBody;
-
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-              _errorMessage = cleanError;
-            });
-          }
-          return;
         }
-      }
-
-      if (statusCode == 401) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _accessErrorCode = 401;
-            _errorMessage = 'Authentication required. Please log in again to access this study PDF.';
-          });
-        }
-        return;
-      }
-
-      if (statusCode == 403) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _accessErrorCode = 403;
-            _errorMessage = 'VIP Membership Required 👑\nThis lesson PDF is exclusive to paid members. Upgrade your plan to unlock instant reading access.';
-          });
-        }
-        return;
       }
 
       if (mounted) {
@@ -320,9 +281,140 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Could not connect to the PDF server. Please check your internet connection.';
+          _errorMessage = 'Could not connect to PDF server. Please check your internet connection.';
         });
       }
+    }
+  }
+
+  int _calculateSampleLimit(int total) {
+    if (total <= 0) total = widget.totalPages;
+    final calculated = (total * 0.10).round();
+    return calculated.clamp(3, 12);
+  }
+
+  void _showSampleLimitReachedDialog(int sampleLimit) {
+    if (_isShowingSampleDialog) return;
+    _isShowingSampleDialog = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.bookmark_remove_rounded, color: AppColors.primary, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Sample Limit Reached',
+              style: GoogleFonts.poppins(color: const Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'You have reached the end of the free sample ($sampleLimit pages) for "${widget.title}".',
+              style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Full E-Book Price:',
+                    style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                  Text(
+                    CurrencyUtils.formatINR(widget.price),
+                    style: GoogleFonts.poppins(color: AppColors.primary, fontSize: 15, fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _isShowingSampleDialog = false;
+              Navigator.pop(ctx);
+            },
+            child: Text('Dismiss', style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 12)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              _isShowingSampleDialog = false;
+              Navigator.pop(ctx);
+              _triggerPurchase();
+            },
+            icon: const Icon(Icons.bolt_rounded, size: 16),
+            label: Text('BUY FULL E-BOOK', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _triggerPurchase() async {
+    final currentUser = ref.read(authStateProvider).user;
+    final customerName = currentUser?.name.isNotEmpty == true ? currentUser!.name : 'Bee Beyonnd Student';
+    final customerPhone = currentUser?.phone.isNotEmpty == true ? currentUser!.phone : '9876543210';
+    final customerEmail = currentUser?.email.isNotEmpty == true ? currentUser!.email : 'student@beebeyonnd.com';
+
+    final receiptId = 'REC-BOOK-${DateTime.now().millisecondsSinceEpoch}';
+
+    try {
+      final paymentRepo = ref.read(paymentRepositoryProvider);
+      final serverOrder = await paymentRepo.createServerOrder(
+        amount: widget.price,
+        currency: 'INR',
+        receiptId: receiptId,
+        items: [
+          {
+            'product_id': widget.bookId,
+            'quantity': 1,
+          }
+        ],
+      );
+
+      _razorpayService?.openCheckout(
+        keyId: serverOrder.keyId.isNotEmpty ? serverOrder.keyId : 'rzp_test_5S2JgG4M8K3n9x',
+        amountPaise: serverOrder.amountPaise > 0 ? serverOrder.amountPaise : (widget.price * 100).toInt(),
+        gatewayOrderId: serverOrder.gatewayOrderId,
+        name: 'Bee Beyonnd',
+        description: 'Digital E-Book Purchase - ${widget.title}',
+        contact: customerPhone,
+        email: customerEmail,
+        customerName: customerName,
+      );
+    } catch (_) {
+      // Fallback checkout mode
+      _razorpayService?.openCheckout(
+        keyId: 'rzp_test_5S2JgG4M8K3n9x',
+        amountPaise: (widget.price * 100).toInt(),
+        gatewayOrderId: '',
+        name: 'Bee Beyonnd',
+        description: 'Digital E-Book Purchase - ${widget.title}',
+        contact: customerPhone,
+        email: customerEmail,
+        customerName: customerName,
+      );
     }
   }
 
@@ -349,19 +441,19 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
 
             // HEADER CONTROL BAR
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFEF2F2),
+                      color: widget.isSampleMode ? const Color(0xFFFFFBEB) : const Color(0xFFEEF2FF),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
-                      Icons.picture_as_pdf_rounded,
-                      color: Color(0xFFEF4444),
-                      size: 22,
+                    child: Icon(
+                      widget.isSampleMode ? Icons.bookmark_border_rounded : Icons.menu_book_rounded,
+                      color: widget.isSampleMode ? Colors.amber.shade800 : AppColors.primary,
+                      size: 20,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -373,16 +465,18 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                           widget.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.primary,
+                          style: GoogleFonts.poppins(
+                            color: const Color(0xFF0F172A),
                             fontWeight: FontWeight.bold,
-                            fontSize: 14.5,
+                            fontSize: 14,
                           ),
                         ),
                         Text(
-                          widget.subtitle ?? 'Official Study Handbook & PDF Reader',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          widget.isSampleMode
+                              ? 'Free Sample Preview Mode'
+                              : (widget.subtitle ?? 'Official E-Book Reader'),
+                          style: GoogleFonts.poppins(
+                            color: widget.isSampleMode ? Colors.amber.shade800 : AppColors.textSecondary,
                             fontSize: 11,
                           ),
                         ),
@@ -405,7 +499,7 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                   ? _buildLoadingState()
                   : (_localFilePath != null
                       ? _buildPdfCanvas()
-                      : _buildErrorOrEmptyState()),
+                      : _buildErrorState()),
             ),
           ],
         ),
@@ -414,26 +508,18 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: Color(0xFFEF4444)),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(color: AppColors.primary),
+          const SizedBox(height: 16),
           Text(
-            'Opening Study PDF Reader...',
-            style: TextStyle(
+            widget.isSampleMode ? 'Opening Free Sample Preview...' : 'Opening E-Book Reader...',
+            style: GoogleFonts.poppins(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'Loading PDF document pages',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 11.5,
             ),
           ),
         ],
@@ -445,27 +531,25 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
     return RepaintBoundary(
       child: Stack(
         children: [
-          // HIGH-PERFORMANCE DIRECT PDF READER
+          // HORIZONTAL E-READER MODE
           SfPdfViewer.file(
             File(_localFilePath!),
             controller: _pdfViewerController,
+            scrollDirection: PdfScrollDirection.horizontal,
+            pageLayoutMode: PdfPageLayoutMode.single,
             canShowScrollHead: false,
             canShowScrollStatus: false,
             enableDoubleTapZooming: true,
             enableTextSelection: true,
-            pageSpacing: 4,
+            pageSpacing: 0,
             onPageChanged: (PdfPageChangedDetails details) {
-              if (widget.isPreviewMode && details.newPageNumber > 2) {
-                _pdfViewerController.jumpToPage(2);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Preview limit reached (Max 2 pages). Please purchase the book to unlock full reading access.'),
-                      backgroundColor: Colors.redAccent,
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                }
+              final total = _totalPagesNotifier.value;
+              final sampleLimit = _calculateSampleLimit(total);
+
+              if (widget.isSampleMode && details.newPageNumber > sampleLimit) {
+                _pdfViewerController.jumpToPage(sampleLimit);
+                _showSampleLimitReachedDialog(sampleLimit);
+                return;
               }
               _currentPageNotifier.value = details.newPageNumber;
             },
@@ -477,20 +561,13 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                 });
               }
             },
-            onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
-              if (mounted) {
-                setState(() {
-                  _isLoading = false;
-                  _errorMessage = 'Could not render PDF document: ${details.description}';
-                });
-              }
-            },
           ),
 
-          // FLOATING PAGE BADGE OVERLAY
+          // BOTTOM PROGRESS BAR
           Positioned(
-            top: 12,
-            right: 14,
+            bottom: 12,
+            left: 16,
+            right: 16,
             child: ValueListenableBuilder<int>(
               valueListenable: _totalPagesNotifier,
               builder: (context, totalPages, child) {
@@ -498,24 +575,39 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
                 return ValueListenableBuilder<int>(
                   valueListenable: _currentPageNotifier,
                   builder: (context, currentPage, child) {
+                    final sampleLimit = _calculateSampleLimit(totalPages);
                     final percent = ((currentPage / totalPages) * 100).toInt();
+
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.75),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white24, width: 0.8),
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(20),
                         boxShadow: const [
-                          BoxShadow(color: Color(0x40000000), blurRadius: 6, offset: Offset(0, 2))
+                          BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 2))
                         ],
                       ),
-                      child: Text(
-                        '$currentPage / $totalPages ($percent%)',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            widget.isSampleMode
+                                ? '${sampleLimit - currentPage} pages left in sample'
+                                : 'Page $currentPage of $totalPages',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
+                          ),
+                          Text(
+                            '$percent%',
+                            style: GoogleFonts.poppins(
+                              color: Colors.amberAccent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   },
@@ -528,102 +620,32 @@ class _AppPdfBookViewerState extends State<AppPdfBookViewer> {
     );
   }
 
-  Widget _buildErrorOrEmptyState() {
+  Widget _buildErrorState() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _accessErrorCode == 403
-                    ? const Color(0xFFFDF4FF)
-                    : const Color(0xFFFEF2F2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _accessErrorCode == 403
-                    ? Icons.stars_rounded
-                    : (_accessErrorCode == 401 ? Icons.lock_outline_rounded : Icons.picture_as_pdf_rounded),
-                color: _accessErrorCode == 403
-                    ? const Color(0xFF6E4F9A)
-                    : const Color(0xFFEF4444),
-                size: 48,
-              ),
-            ),
+            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
             const SizedBox(height: 16),
             Text(
               widget.title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 15.5,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
+              style: GoogleFonts.poppins(fontSize: 15.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 8),
             Text(
-              _errorMessage ?? 'PDF document could not be rendered automatically.',
+              _errorMessage ?? 'PDF document could not be rendered.',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12.5,
-              ),
+              style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 12.5),
             ),
             const SizedBox(height: 20),
-
-            if (_accessErrorCode == 403)
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6E4F9A),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.push(RoutePaths.membership);
-                },
-                icon: const Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 18),
-                label: const Text(
-                  'EXPLORE VIP MEMBERSHIP',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              )
-            else if (_accessErrorCode == 401)
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.push(RoutePaths.login);
-                },
-                icon: const Icon(Icons.login_rounded, color: Colors.white, size: 18),
-                label: const Text(
-                  'LOG IN AGAIN',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              )
-            else
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                ),
-                onPressed: () {
-                  _loadPdfDocument(widget.pdfUrl);
-                },
-                icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
-                label: const Text(
-                  'Retry Loading PDF',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ),
+            ElevatedButton.icon(
+              onPressed: () => _loadPdfDocument(widget.pdfUrl),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Retry Loading PDF'),
+            ),
           ],
         ),
       ),
