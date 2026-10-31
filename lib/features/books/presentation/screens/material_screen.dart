@@ -5,10 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_utils.dart';
-import '../../../../core/widgets/app_pdf_book_viewer.dart';
-import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/book_item.dart';
 import '../providers/books_provider.dart';
+import '../widgets/book_detail_sheet.dart';
+import 'category_books_view_all_screen.dart';
 
 class MaterialScreen extends ConsumerStatefulWidget {
   const MaterialScreen({super.key});
@@ -20,13 +20,15 @@ class MaterialScreen extends ConsumerStatefulWidget {
 class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  String _selectedCategory = 'All';
+  String _selectedCategoryFilter = 'All';
 
-  static const List<String> _categories = [
+  static const List<String> _categoryFilters = [
     'All',
-    'Bach Flower',
-    'Ayurveda',
-    'Vastu',
+    'Top selling',
+    'Ebooks for you',
+    'Ayurvedic & Healing',
+    'Vastu Manuals',
+    'Top free',
   ];
 
   @override
@@ -35,13 +37,8 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
     super.dispose();
   }
 
-  void _openBookPdf(BookItem book) {
-    AppPdfBookViewer.show(
-      context,
-      title: book.title,
-      pdfUrl: book.pdfUrl,
-      description: book.description,
-    );
+  void _onBookTapped(BookItem book) {
+    BookDetailSheet.show(context, book);
   }
 
   @override
@@ -49,202 +46,209 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
     final booksAsync = ref.watch(booksAndMaterialsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: const CustomAppBar(title: 'E-Books & Handbooks'),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(booksAndMaterialsProvider);
-        },
-        color: AppColors.primary,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // HEADER BANNER
-              _buildHeaderBanner(),
+      backgroundColor: const Color(0xFFF8FAFC), // Modern Light Theme
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(booksAndMaterialsProvider);
+          },
+          color: AppColors.primary,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
 
-              const SizedBox(height: 16),
+                // TOP SEARCH BAR (LIGHT THEME)
+                _buildPlayBooksSearchBar(),
 
-              // SEARCH BAR
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0A000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    style: GoogleFonts.poppins(fontSize: 13.5, color: AppColors.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Search books, authors, diagnostic guides...',
-                      hintStyle: GoogleFonts.poppins(color: AppColors.textHint, fontSize: 13),
-                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear_rounded, size: 18, color: AppColors.textHint),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _searchQuery = '';
-                                });
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(height: 14),
+
+                // GENRES & CATEGORIES FILTER CHIPS
+                _buildGenreFilterBar(),
+
+                const SizedBox(height: 16),
+
+                // BOOKS CONTENT
+                booksAsync.when(
+                  data: (allBooks) {
+                    final filteredBooks = allBooks.where((b) {
+                      if (_searchQuery.isEmpty) return true;
+                      return b.title.toLowerCase().contains(_searchQuery) ||
+                          b.author.toLowerCase().contains(_searchQuery) ||
+                          b.description.toLowerCase().contains(_searchQuery);
+                    }).toList();
+
+                    if (filteredBooks.isEmpty) {
+                      return _buildEmptyState();
+                    }
+
+                    // Group books by categories/sections
+                    final Map<String, List<BookItem>> sections = {};
+
+                    for (final book in filteredBooks) {
+                      final cat = book.category.isNotEmpty ? book.category : 'Featured Ebooks';
+                      sections.putIfAbsent(cat, () => []).add(book);
+                    }
+
+                    if (_searchQuery.isNotEmpty || _selectedCategoryFilter != 'All') {
+                      final activeList = _selectedCategoryFilter == 'All'
+                          ? filteredBooks
+                          : filteredBooks.where((b) => b.category.toLowerCase().contains(_selectedCategoryFilter.toLowerCase())).toList();
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Text(
+                              'Search Results (${activeList.length})',
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFF0F172A),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            itemCount: activeList.length,
+                            separatorBuilder: (ctx, i) => const SizedBox(height: 12),
+                            itemBuilder: (ctx, i) => _buildHorizontalCardTile(activeList[i]),
+                          ),
+                        ],
+                      );
+                    }
+
+                    // Sectional Layout
+                    return Column(
+                      children: sections.entries.map((entry) {
+                        return _buildSectionRow(
+                          title: entry.key,
+                          books: entry.value,
+                          allCategoryBooks: allBooks.where((b) => b.category == entry.key).toList(),
+                        );
+                      }).toList(),
+                    );
+                  },
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 80),
+                    child: Center(
+                      child: CircularProgressIndicator(color: AppColors.primary),
                     ),
-                    onChanged: (val) {
-                      setState(() {
-                        _searchQuery = val.trim().toLowerCase();
-                      });
-                    },
                   ),
+                  error: (err, stack) => _buildErrorState(err.toString()),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-              // CATEGORY CHIPS
-              _buildCategorySelector(),
-
-              const SizedBox(height: 20),
-
-              // BOOKS PRESENTATION
-              booksAsync.when(
-                data: (books) {
-                  final filtered = books.where((b) {
-                    final matchesSearch = _searchQuery.isEmpty ||
-                        b.title.toLowerCase().contains(_searchQuery) ||
-                        b.author.toLowerCase().contains(_searchQuery) ||
-                        b.description.toLowerCase().contains(_searchQuery);
-
-                    final matchesCat = _selectedCategory == 'All' ||
-                        b.category.toLowerCase().contains(_selectedCategory.toLowerCase());
-
-                    return matchesSearch && matchesCat;
-                  }).toList();
-
-                  if (filtered.isEmpty) {
-                    return _buildEmptyState();
-                  }
-
-                  return ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: filtered.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      return _buildBookCard(filtered[index]);
-                    },
-                  );
+  Widget _buildPlayBooksSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.borderSubtle, width: 1.2),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 8,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 16),
+            const Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                style: GoogleFonts.poppins(color: AppColors.textPrimary, fontSize: 13.5),
+                decoration: InputDecoration(
+                  hintText: 'Search Books & Handbooks',
+                  hintStyle: GoogleFonts.poppins(color: AppColors.textHint, fontSize: 13.5),
+                  border: InputBorder.none,
+                ),
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val.trim().toLowerCase();
+                  });
                 },
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 60),
-                  child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              ),
+            ),
+            if (_searchQuery.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.clear_rounded, color: AppColors.textSecondary, size: 18),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    _searchQuery = '';
+                  });
+                },
+              )
+            else ...[
+              const Icon(Icons.mic_none_rounded, color: AppColors.textSecondary, size: 20),
+              const SizedBox(width: 12),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
                 ),
-                error: (err, stack) => _buildErrorState(err.toString()),
+                child: const Center(
+                  child: Icon(Icons.auto_stories_rounded, color: Colors.white, size: 16),
+                ),
               ),
-
-              const SizedBox(height: 32),
+              const SizedBox(width: 8),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeaderBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF334155)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF10B981),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              'DIGITAL LIBRARY & HANDBOOKS',
-              style: GoogleFonts.poppins(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Official Study Handbooks & Manuals',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Access verified diagnostic reference books, clinical protocols, and PDF handbooks.',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: const Color(0xFFCBD5E1),
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategorySelector() {
+  Widget _buildGenreFilterBar() {
     return SizedBox(
-      height: 38,
+      height: 36,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        itemCount: _categories.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final cat = _categories[index];
-          final isSelected = _selectedCategory == cat;
+        itemCount: _categoryFilters.length,
+        separatorBuilder: (ctx, i) => const SizedBox(width: 8),
+        itemBuilder: (ctx, i) {
+          final filter = _categoryFilters[i];
+          final isSelected = _selectedCategoryFilter == filter;
 
           return ChoiceChip(
-            label: Text(cat),
+            label: Text(filter),
             selected: isSelected,
             onSelected: (val) {
               if (val) {
                 setState(() {
-                  _selectedCategory = cat;
+                  _selectedCategoryFilter = filter;
                 });
               }
             },
             selectedColor: AppColors.primary,
             backgroundColor: Colors.white,
             labelStyle: GoogleFonts.poppins(
-              fontSize: 12,
+              fontSize: 11.5,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
@@ -254,160 +258,267 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                 color: isSelected ? AppColors.primary : AppColors.borderSubtle,
               ),
             ),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
             elevation: isSelected ? 2 : 0,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
           );
         },
       ),
     );
   }
 
-  Widget _buildBookCard(BookItem book) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _openBookPdf(book),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // COVER IMAGE
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: book.coverUrl.startsWith('http')
-                      ? CachedNetworkImage(
-                          imageUrl: book.coverUrl,
-                          width: 80,
-                          height: 110,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            width: 80,
-                            height: 110,
-                            color: const Color(0xFFF1F5F9),
-                            child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            width: 80,
-                            height: 110,
-                            color: const Color(0xFF1E293B),
-                            child: const Icon(Icons.menu_book_rounded, color: Colors.amber, size: 36),
-                          ),
-                        )
-                      : Container(
-                          width: 80,
-                          height: 110,
-                          color: const Color(0xFF1E293B),
-                          child: const Icon(Icons.menu_book_rounded, color: Colors.amber, size: 36),
-                        ),
-                ),
-                const SizedBox(width: 14),
-
-                // DETAILS
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEEF2FF),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              book.category,
-                              style: GoogleFonts.poppins(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
-                          const SizedBox(width: 2),
-                          Text(
-                            '${book.rating}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        book.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                          height: 1.25,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Author: ${book.author} • ${book.pages} Pages',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            book.isPaid ? CurrencyUtils.formatINR(book.price) : 'FREE ACCESS',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w900,
-                              color: book.isPaid ? AppColors.primary : const Color(0xFF10B981),
-                            ),
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: () => _openBookPdf(book),
-                            icon: const Icon(Icons.picture_as_pdf_rounded, size: 14),
-                            label: Text(
-                              'Read PDF',
-                              style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+  Widget _buildSectionRow({
+    required String title,
+    required List<BookItem> books,
+    required List<BookItem> allCategoryBooks,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // SECTION TITLE & SEE ALL ARROW
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 18, 12, 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF0F172A),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.2,
                   ),
                 ),
+              ),
+              InkWell(
+                onTap: () => CategoryBooksViewAllScreen.navigate(
+                  context,
+                  title,
+                  allCategoryBooks.isNotEmpty ? allCategoryBooks : books,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: AppColors.primary,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // HORIZONTAL SCROLLING BOOKS LIST
+        SizedBox(
+          height: 220,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: books.length,
+            separatorBuilder: (ctx, i) => const SizedBox(width: 14),
+            itemBuilder: (ctx, i) {
+              return _buildVerticalBookCard(books[i]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerticalBookCard(BookItem book) {
+    return GestureDetector(
+      onTap: () => _onBookTapped(book),
+      child: SizedBox(
+        width: 110,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // COVER IMAGE
+            AspectRatio(
+              aspectRatio: 0.68,
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x18000000),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: CachedNetworkImage(
+                        imageUrl: book.coverUrl,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: const Color(0xFFF1F5F9),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: const Color(0xFF1E293B),
+                          child: const Icon(Icons.book_rounded, color: Colors.amberAccent, size: 32),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // OWNED BADGE
+                  if (book.isPurchased)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Icon(Icons.check_rounded, color: Colors.white, size: 10),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // TITLE
+            Text(
+              book.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF0F172A),
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                height: 1.2,
+              ),
+            ),
+
+            const SizedBox(height: 3),
+
+            // PRICES & RATING
+            Row(
+              children: [
+                Text(
+                  !book.isPaid
+                      ? 'Free'
+                      : (book.isPurchased ? 'Owned' : CurrencyUtils.formatINR(book.price)),
+                  style: GoogleFonts.poppins(
+                    color: AppColors.primary,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (book.isPaid && !book.isPurchased && book.mrp > book.price) ...[
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      CurrencyUtils.formatINR(book.mrp),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF94A3B8),
+                        fontSize: 9.5,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHorizontalCardTile(BookItem book) {
+    return GestureDetector(
+      onTap: () => _onBookTapped(book),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.borderSubtle, width: 1.2),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 8,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: CachedNetworkImage(
+                imageUrl: book.coverUrl,
+                width: 60,
+                height: 85,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    book.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(color: const Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${book.author} • ${book.pages} Pages',
+                    style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 11),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text(
+                        !book.isPaid
+                            ? 'Free'
+                            : (book.isPurchased ? 'Owned' : CurrencyUtils.formatINR(book.price)),
+                        style: GoogleFonts.poppins(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                      if (book.isPaid && !book.isPurchased && book.mrp > book.price) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          CurrencyUtils.formatINR(book.mrp),
+                          style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 10, decoration: TextDecoration.lineThrough),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -415,19 +526,19 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.menu_book_rounded, size: 56, color: AppColors.textHint),
+            const Icon(Icons.auto_stories_rounded, size: 56, color: AppColors.textHint),
             const SizedBox(height: 12),
             Text(
-              'No Handbooks Found',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              'No Books Found',
+              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 4),
             Text(
-              'Try adjusting your search query or category filters.',
+              'Try adjusting your search query or genre filters.',
               style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
@@ -439,15 +550,15 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
 
   Widget _buildErrorState(String message) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
       child: Center(
         child: Column(
           children: [
             const Icon(Icons.error_outline_rounded, size: 56, color: AppColors.error),
             const SizedBox(height: 12),
             Text(
-              'Failed to load study handbooks',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              'Failed to load books',
+              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 4),
             Text(
@@ -455,7 +566,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
               style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => ref.invalidate(booksAndMaterialsProvider),
               child: const Text('Retry'),
