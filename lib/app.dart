@@ -9,6 +9,7 @@ class BeeBeyondApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    debugPrint('[BOOT] 7. BeeBeyondApp.build() executed at ${DateTime.now().toIso8601String()}');
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
@@ -16,6 +17,10 @@ class BeeBeyondApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: router,
+      builder: (context, child) {
+        debugPrint('[BOOT] 8. MaterialApp.builder executed at ${DateTime.now().toIso8601String()}');
+        return child ?? const SizedBox();
+      },
     );
   }
 }

@@ -12,7 +12,6 @@ import '../../data/datasources/auth_remote_ds.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/auth_state.dart';
-import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
@@ -45,26 +44,20 @@ final StateNotifierProvider<AuthNotifier, AuthState> authStateProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
     ref.watch(authRepositoryProvider),
-    ref.watch(secureStorageProvider),
   );
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
-  final SecureStorageService _secureStorage;
 
-  AuthNotifier(this._repository, this._secureStorage) : super(AuthState.loading()) {
+  AuthNotifier(this._repository) : super(AuthState.loading()) {
     checkCurrentUser();
   }
 
   Future<void> checkCurrentUser() async {
     debugPrint('[AUTH] Authentication restoration started');
-    debugPrint('[AUTH] Authentication state: loading');
     try {
-      final prefs = await SharedPreferences.getInstance().timeout(
-        const Duration(seconds: 2),
-        onTimeout: () => throw TimeoutException('SharedPreferences timeout'),
-      );
+      final prefs = await SharedPreferences.getInstance();
       final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? true;
 
       final token = prefs.getString(StorageKeys.authToken);
@@ -88,7 +81,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
     } catch (e) {
       debugPrint('[AUTH ERROR] Restoration failed: $e');
-      debugPrint('[AUTH] Authentication state: unauthenticated');
       state = const AuthState(status: AuthStatus.unauthenticated, user: null, hasSeenOnboarding: true);
     }
   }

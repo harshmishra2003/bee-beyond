@@ -57,7 +57,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: RoutePaths.splash,
+    initialLocation: RoutePaths.home,
     refreshListenable: routerNotifier,
     redirect: routerNotifier.redirect,
     routes: [

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../routing/router_notifier.dart';
-import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -21,8 +20,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final AnimationController _lotusController;
   late final AnimationController _pulseController;
 
-  Timer? _navigationTimer;
-  Timer? _fallbackTimer;
+  Timer? _minDisplayTimer;
+  Timer? _safetyTimeoutTimer;
   Timer? _affirmationTimer;
   int _affirmationIndex = 0;
   bool _hasNavigated = false;
@@ -62,23 +61,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
     });
 
-    // Primary splash display timer (1000ms for smooth experience)
-    _navigationTimer = Timer(const Duration(milliseconds: 1000), () {
+    // Instantly finish splash to bypass splash wait
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _finishSplash();
-      }
-    });
-
-    // Fallback timer (1800ms) to guarantee splash screen NEVER gets stuck
-    _fallbackTimer = Timer(const Duration(milliseconds: 1800), () {
-      if (mounted && !_hasNavigated) {
-        _finishSplash();
-      }
-    });
-
-    // Listen to Auth state changes once in initState cleanly
-    ref.listenManual<AuthState>(authStateProvider, (previous, next) {
-      if (!_hasNavigated && next.status != AuthStatus.loading) {
         _finishSplash();
       }
     });
@@ -86,18 +71,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   void _finishSplash() {
     if (_hasNavigated || !mounted) return;
+    _hasNavigated = true;
 
     final authState = ref.read(authStateProvider);
+    debugPrint('[SPLASH] _finishSplash called. Auth status: ${authState.status}');
 
-    _hasNavigated = true;
-    debugPrint('[SPLASH] Splash timer completed with status: ${authState.status}. Notifying router.');
+    // Mark splash finished in RouterNotifier - triggers declarative GoRouter redirect
     ref.read(routerNotifierProvider).markSplashFinished();
   }
 
   @override
   void dispose() {
-    _navigationTimer?.cancel();
-    _fallbackTimer?.cancel();
+    _minDisplayTimer?.cancel();
+    _safetyTimeoutTimer?.cancel();
     _affirmationTimer?.cancel();
     _orbitController.dispose();
     _lotusController.dispose();
