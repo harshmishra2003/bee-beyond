@@ -42,12 +42,14 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
 
   int? _currentWorkshopOrderId;
   String? _currentRazorpayOrderId;
+  String? _lastPaymentSignature;
   String? _confirmedBookingNumber;
   String? _paymentId;
   String? _pendingMessage;
 
   late double _basePrice;
   late double _discount;
+  double? _authoritativePayableAmount;
 
   @override
   void initState() {
@@ -105,6 +107,9 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
   }
 
   double get _finalAmount {
+    if (_authoritativePayableAmount != null && _authoritativePayableAmount! > 0) {
+      return _authoritativePayableAmount!;
+    }
     final net = _basePrice - _discount;
     return net > 0 ? net : 0.0;
   }
@@ -176,6 +181,12 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
       _currentWorkshopOrderId = orderResult.workshopOrderId;
       _currentRazorpayOrderId = orderResult.razorpayOrderId;
 
+      if (orderResult.amount > 0) {
+        setState(() {
+          _authoritativePayableAmount = orderResult.amount / 100.0;
+        });
+      }
+
       final title = widget.workshopData?['title'] ?? 'Masterclass Booking';
 
       final options = {
@@ -228,6 +239,12 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
   Future<void> _handlePaymentSuccess(PaymentSuccessResponse response) async {
     if (!mounted) return;
 
+    _paymentId = response.paymentId;
+    _lastPaymentSignature = response.signature;
+    if (response.orderId != null && response.orderId!.isNotEmpty) {
+      _currentRazorpayOrderId = response.orderId;
+    }
+
     setState(() {
       _isProcessing = true;
       _processingMessage = 'Verifying payment with server...';
@@ -275,7 +292,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
           _paymentId = response.paymentId;
           _pendingMessage = verifyResult.message.isNotEmpty
               ? verifyResult.message
-              : 'Payment recorded, but server verification is taking longer than expected. Please do not re-pay.';
+              : 'Payment recorded, but server verification is taking longer than expected due to network connection. Please tap Retry Verification below.';
         });
       } else {
         setState(() {
@@ -299,6 +316,88 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
           _isPendingVerification = true;
           _paymentId = response.paymentId;
           _pendingMessage = 'Network error while verifying payment: $e';
+        });
+      }
+    }
+  }
+
+  Future<void> _retryVerification() async {
+    if (_isProcessing) return;
+
+    final orderIdToVerify = _currentWorkshopOrderId;
+    final paymentIdToVerify = _paymentId;
+
+    if (orderIdToVerify == null || orderIdToVerify == 0 || paymentIdToVerify == null || paymentIdToVerify.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Missing existing order or payment details to retry verification.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isProcessing = true;
+      _processingMessage = 'Retrying payment verification...';
+    });
+
+    try {
+      final repository = ref.read(workshopRepositoryProvider);
+      final verifyResult = await repository.verifyWorkshopPayment(
+        workshopOrderId: orderIdToVerify,
+        razorpayPaymentId: paymentIdToVerify,
+        razorpayOrderId: _currentRazorpayOrderId ?? '',
+        razorpaySignature: _lastPaymentSignature ?? '',
+      );
+
+      if (!mounted) return;
+
+      if (verifyResult.isConfirmed) {
+        setState(() {
+          _isProcessing = false;
+          _isSuccess = true;
+          _isPendingVerification = false;
+          _confirmedBookingNumber = verifyResult.bookingNumber.isNotEmpty
+              ? verifyResult.bookingNumber
+              : 'WS-$orderIdToVerify';
+        });
+      } else if (verifyResult.isNetworkError) {
+        setState(() {
+          _isProcessing = false;
+          _isPendingVerification = true;
+          _pendingMessage = verifyResult.message.isNotEmpty
+              ? verifyResult.message
+              : 'Verification is still pending due to network connection. Please tap Retry Verification again.';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Network error while verifying. Please tap Retry Verification again.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      } else {
+        setState(() {
+          _isProcessing = false;
+          _isPendingVerification = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              verifyResult.message.isNotEmpty
+                  ? verifyResult.message
+                  : 'Payment verification failed. Booking status: ${verifyResult.registrationStatus}',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _isPendingVerification = true;
+          _pendingMessage = 'Network error while retrying verification: $e';
         });
       }
     }
@@ -608,7 +707,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
           ),
           const SizedBox(height: 10),
           _buildSummaryLine('Base Tuition Fee', CurrencyUtils.formatINR(_basePrice)),
-          if (_discount > 0) ...[
+          if (_discount > 0 && _authoritativePayableAmount == null) ...[
             const SizedBox(height: 6),
             _buildSummaryLine('Special Discount Offer', '-${CurrencyUtils.formatINR(_discount)}', isDiscount: true),
           ],
@@ -618,9 +717,19 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Total Payable Amount',
-                style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Total Payable Amount',
+                    style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  ),
+                  if (_authoritativePayableAmount != null)
+                    Text(
+                      'Verified by backend order',
+                      style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF10B981), fontWeight: FontWeight.w600),
+                    ),
+                ],
               ),
               Text(
                 CurrencyUtils.formatINR(_finalAmount),
@@ -736,8 +845,15 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
               ),
-              if (_paymentId != null && _paymentId!.isNotEmpty) ...[
+              if (_currentWorkshopOrderId != null && _currentWorkshopOrderId! > 0) ...[
                 const SizedBox(height: 8),
+                Text(
+                  'Order ID: #$_currentWorkshopOrderId',
+                  style: GoogleFonts.poppins(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
+                ),
+              ],
+              if (_paymentId != null && _paymentId!.isNotEmpty) ...[
+                const SizedBox(height: 4),
                 Text(
                   'Payment ID: $_paymentId',
                   style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
@@ -746,22 +862,43 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
               const SizedBox(height: 16),
               Text(
                 _pendingMessage ??
-                    'Your payment was processed, but server verification is taking longer than expected due to network connection. Please check back shortly or contact support.',
+                    'Your payment was processed, but server verification is taking longer than expected due to network connection. Tap Retry Verification to re-check status.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () {
-                  context.go(RoutePaths.home);
-                },
+              ElevatedButton.icon(
+                onPressed: _isProcessing ? null : _retryVerification,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: Text('Back to Home', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold)),
+                icon: _isProcessing
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 20),
+                label: Text(
+                  _isProcessing ? _processingMessage : 'Retry Verification',
+                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () {
+                  context.go(RoutePaths.home);
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.borderSubtle),
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Back to Home', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
             ],
           ),
