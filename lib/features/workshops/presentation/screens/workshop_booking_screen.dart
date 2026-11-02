@@ -149,7 +149,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
               razorpayOrderId: razorpayOrderId,
               razorpaySignature: signature,
             )
-          : await repository.checkWorkshopOrderStatus(
+          : await repository.getWorkshopOrderStatus(
               workshopOrderId: orderId,
             );
 
