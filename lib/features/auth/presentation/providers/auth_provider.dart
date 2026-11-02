@@ -57,7 +57,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> checkCurrentUser() async {
     debugPrint('[AUTH] Authentication restoration started');
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => throw TimeoutException('SharedPreferences initialization timeout'),
+      );
       final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? true;
 
       final token = prefs.getString(StorageKeys.authToken);
@@ -80,7 +83,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       debugPrint('[AUTH] Authentication state: unauthenticated');
       state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
     } catch (e) {
-      debugPrint('[AUTH ERROR] Restoration failed: $e');
+      debugPrint('[AUTH ERROR] Restoration failed/timed out: $e');
       state = const AuthState(status: AuthStatus.unauthenticated, user: null, hasSeenOnboarding: true);
     }
   }
@@ -148,9 +151,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await prefs.remove('bee_active_vip_pass_v2');
     } catch (_) {}
 
-    final prefs = await SharedPreferences.getInstance();
-    final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? true;
-
-    state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool(StorageKeys.isOnboardingCompleted) ?? true;
+      state = AuthState.unauthenticated(hasSeenOnboarding: hasSeenOnboarding);
+    } catch (_) {
+      state = const AuthState(status: AuthStatus.unauthenticated, user: null, hasSeenOnboarding: true);
+    }
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../routing/router_notifier.dart';
+import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -24,6 +25,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Timer? _safetyTimeoutTimer;
   Timer? _affirmationTimer;
   int _affirmationIndex = 0;
+
+  bool _isMinDisplayTimePassed = false;
   bool _hasNavigated = false;
 
   final List<String> _affirmations = [
@@ -63,36 +66,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     // 2.5s brand display timer for smooth Dart-driven custom splash experience
     _minDisplayTimer = Timer(const Duration(milliseconds: 2500), () {
-      if (mounted) {
-        _finishSplash();
-      }
+      _isMinDisplayTimePassed = true;
+      _checkAndFinishSplash();
     });
 
-    // Safety fallback timer (3500ms max)
+    // Safety fallback timer (3500ms max) ensuring screen transition never hangs
     _safetyTimeoutTimer = Timer(const Duration(milliseconds: 3500), () {
-      if (mounted && !_hasNavigated) {
-        _finishSplash();
-      }
+      _checkAndFinishSplash(isForce: true);
     });
   }
 
-  void _finishSplash() {
+  void _checkAndFinishSplash({bool isForce = false}) {
     if (_hasNavigated || !mounted) return;
-    _hasNavigated = true;
-
-    // Stop animations immediately to free up UI thread for smooth transition
-    try {
-      _orbitController.stop();
-      _lotusController.stop();
-      _pulseController.stop();
-      _affirmationTimer?.cancel();
-    } catch (_) {}
 
     final authState = ref.read(authStateProvider);
-    debugPrint('[SPLASH] _finishSplash called. Auth status: ${authState.status}');
 
-    // Mark splash finished in RouterNotifier - triggers declarative GoRouter redirect
-    ref.read(routerNotifierProvider).markSplashFinished();
+    if (isForce || (_isMinDisplayTimePassed && authState.status != AuthStatus.loading)) {
+      _hasNavigated = true;
+
+      try {
+        _orbitController.stop();
+        _lotusController.stop();
+        _pulseController.stop();
+        _affirmationTimer?.cancel();
+        _minDisplayTimer?.cancel();
+        _safetyTimeoutTimer?.cancel();
+      } catch (_) {}
+
+      debugPrint('[SPLASH] _checkAndFinishSplash executing. Auth status: ${authState.status}');
+
+      // Mark splash finished in RouterNotifier - triggers GoRouter redirect
+      ref.read(routerNotifierProvider).markSplashFinished();
+    }
   }
 
   @override
@@ -108,6 +113,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authStateProvider, (previous, next) {
+      if (next.status != AuthStatus.loading && mounted) {
+        _checkAndFinishSplash();
+      }
+    });
+
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
