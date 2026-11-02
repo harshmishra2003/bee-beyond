@@ -18,6 +18,12 @@ class WorkshopItem extends Equatable {
   final List<String> upcomingDates;
   final bool isLive;
   final int views;
+  final bool isRegistered;
+  final int capacity;
+  final int availableSeats;
+  final int bookedSeats;
+  final bool isRegistrationOpen;
+  final bool isFull;
 
   const WorkshopItem({
     required this.id,
@@ -36,6 +42,12 @@ class WorkshopItem extends Equatable {
     required this.upcomingDates,
     required this.isLive,
     required this.views,
+    this.isRegistered = false,
+    this.capacity = 2000,
+    this.availableSeats = 2000,
+    this.bookedSeats = 0,
+    this.isRegistrationOpen = true,
+    this.isFull = false,
   });
 
   double get finalPrice {
@@ -65,6 +77,7 @@ class WorkshopItem extends Equatable {
   }
 
   String get categoryBadge {
+    if (isRegistered) return '✓ SEAT CONFIRMED';
     if (isLive) return '🔴 LIVE MASTERCLASS';
     return '📹 VIDEO WORKSHOP';
   }
@@ -147,6 +160,45 @@ class WorkshopItem extends Equatable {
         ? subcategoryStr
         : 'Accredited Wellness Masterclass';
 
+    final bool isReg = json['is_registered'] == true ||
+        json['is_registered'] == 1 ||
+        json['is_registered'] == '1' ||
+        json['isRegistered'] == true ||
+        json['is_booked'] == true ||
+        json['is_booked'] == 1 ||
+        json['is_booked'] == '1' ||
+        json['action'] == 'view' ||
+        json['action'] == 'view_details';
+
+    final int cap = int.tryParse(json['capacity']?.toString() ?? '2000') ?? 2000;
+    final int avail = int.tryParse(json['available_seats']?.toString() ?? json['availableSeats']?.toString() ?? '2000') ?? 2000;
+
+    final int explicitBooked = int.tryParse(
+      json['total_registered']?.toString() ??
+          json['booked_seats']?.toString() ??
+          json['bookedSeats']?.toString() ??
+          json['attendees']?.toString() ??
+          json['live_attendees']?.toString() ??
+          json['registered_count']?.toString() ??
+          '',
+    ) ?? -1;
+
+    final int calculatedBooked = explicitBooked >= 0
+        ? explicitBooked
+        : (cap > avail ? cap - avail : 0);
+
+    final bool isRegOpen = json['is_registration_open'] == true ||
+        json['is_registration_open'] == 1 ||
+        json['is_registration_open'] == '1' ||
+        json['isRegistrationOpen'] == true ||
+        json['action'] == 'book_now';
+
+    final bool isFullVal = json['is_full'] == true ||
+        json['is_full'] == 1 ||
+        json['is_full'] == '1' ||
+        json['isFull'] == true ||
+        avail <= 0;
+
     return WorkshopItem(
       id: json['id']?.toString() ?? json['workshop_id']?.toString() ?? 'ws_${DateTime.now().millisecondsSinceEpoch}',
       title: json['title']?.toString() ?? json['name']?.toString() ?? 'Holistic Masterclass',
@@ -163,7 +215,13 @@ class WorkshopItem extends Equatable {
       takeaways: parseList(json['takeaways'] ?? json['highlights']),
       upcomingDates: datesList,
       isLive: isLiveVal,
-      views: int.tryParse(json['available_seats']?.toString() ?? json['capacity']?.toString() ?? json['views']?.toString() ?? '100') ?? 100,
+      views: int.tryParse(json['views']?.toString() ?? '$avail') ?? avail,
+      isRegistered: isReg,
+      capacity: cap,
+      availableSeats: avail,
+      bookedSeats: calculatedBooked,
+      isRegistrationOpen: isRegOpen,
+      isFull: isFullVal,
     );
   }
 
@@ -185,6 +243,15 @@ class WorkshopItem extends Equatable {
       'upcomingDates': upcomingDates,
       'isLive': isLive,
       'views': views,
+      'isRegistered': isRegistered,
+      'is_registered': isRegistered,
+      'capacity': capacity,
+      'availableSeats': availableSeats,
+      'available_seats': availableSeats,
+      'bookedSeats': bookedSeats,
+      'total_registered': bookedSeats,
+      'isRegistrationOpen': isRegistrationOpen,
+      'isFull': isFull,
     };
   }
 
@@ -206,5 +273,11 @@ class WorkshopItem extends Equatable {
         upcomingDates,
         isLive,
         views,
+        isRegistered,
+        capacity,
+        availableSeats,
+        bookedSeats,
+        isRegistrationOpen,
+        isFull,
       ];
 }

@@ -257,9 +257,9 @@ class WorkshopDetailScreen extends ConsumerWidget {
                           children: [
                             _buildKpiItem(Icons.access_time_rounded, item.duration, 'Duration'),
                             _buildKpiDivider(),
-                            _buildKpiItem(Icons.remove_red_eye_outlined, '${item.views}+', 'Enrolled'),
+                            _buildKpiItem(Icons.groups_rounded, '${item.bookedSeats > 0 ? item.bookedSeats : item.views}+', 'Enrolled'),
                             _buildKpiDivider(),
-                            _buildKpiItem(Icons.verified_user_rounded, 'Accredited', 'Certification'),
+                            _buildKpiItem(Icons.event_seat_rounded, '${item.availableSeats}', 'Seats Left'),
                           ],
                         ),
                       ),
@@ -606,16 +606,25 @@ class WorkshopDetailScreen extends ConsumerWidget {
                       extra: item.toJson(),
                     );
                   },
-                  icon: const Icon(Icons.confirmation_number_rounded, size: 18),
+                  icon: Icon(
+                    item.isRegistered
+                        ? Icons.check_circle_rounded
+                        : (item.isFull ? Icons.event_seat_rounded : Icons.confirmation_number_rounded),
+                    size: 18,
+                  ),
                   label: Text(
-                    'Book Masterclass',
+                    item.isRegistered
+                        ? '✓ Seat Confirmed'
+                        : (item.isFull ? 'Capacity Full' : 'Book Masterclass'),
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: item.isRegistered
+                        ? const Color(0xFF10B981)
+                        : (item.isFull ? const Color(0xFF94A3B8) : AppColors.primary),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

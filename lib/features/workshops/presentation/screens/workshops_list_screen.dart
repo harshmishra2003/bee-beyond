@@ -419,13 +419,24 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Icon(Icons.remove_red_eye_outlined, size: 14, color: AppColors.textSecondary),
+                        const Icon(Icons.groups_rounded, size: 14, color: AppColors.textSecondary),
                         const SizedBox(width: 4),
                         Text(
-                          '${item.views} Attendees',
+                          '${item.bookedSeats > 0 ? item.bookedSeats : item.views} Enrolled',
                           style: GoogleFonts.poppins(
                             fontSize: 11.5,
                             color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(Icons.event_seat_rounded, size: 14, color: Color(0xFFD97706)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${item.availableSeats} Seats Left',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.5,
+                            color: const Color(0xFFD97706),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -468,7 +479,9 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: item.isRegistered
+                                ? const Color(0xFF10B981)
+                                : (item.isFull ? const Color(0xFF94A3B8) : AppColors.primary),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -477,7 +490,9 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                             elevation: 1,
                           ),
                           child: Text(
-                            'Book Now',
+                            item.isRegistered
+                                ? '✓ Booked'
+                                : (item.isFull ? 'Full' : 'Book Now'),
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
