@@ -44,7 +44,8 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
         options: Options(validateStatus: (status) => true),
       );
 
-      if (response.statusCode == 200 && response.data != null) {
+      final statusCode = response.statusCode ?? 500;
+      if (statusCode >= 200 && statusCode < 300 && response.data != null) {
         dynamic rawData = response.data;
         if (rawData is String) {
           rawData = jsonDecode(rawData);
@@ -80,7 +81,8 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
           options: Options(validateStatus: (status) => true),
         );
 
-        if (response.statusCode == 200 && response.data != null) {
+        final statusCode = response.statusCode ?? 500;
+        if (statusCode >= 200 && statusCode < 300 && response.data != null) {
           dynamic rawData = response.data;
           if (rawData is String) rawData = jsonDecode(rawData);
 
@@ -160,10 +162,13 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
 
         if (dataMap != null) {
           final entity = WorkshopOrderResponseEntity.fromJson(dataMap);
-          if (response.statusCode != null && response.statusCode! != 200) {
+          final statusCode = response.statusCode ?? 500;
+          final bool isSuccessStatus = statusCode >= 200 && statusCode < 300;
+
+          if (!isSuccessStatus) {
             final msg = entity.message.isNotEmpty
                 ? entity.message
-                : 'Server error (HTTP ${response.statusCode})';
+                : 'Server error (HTTP $statusCode)';
             return WorkshopOrderResponseEntity(
               success: false,
               message: msg,
@@ -282,11 +287,13 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
 
         if (dataMap != null) {
           final entity = WorkshopVerifyPaymentResponseEntity.fromJson(dataMap);
-          // HTTP error responses (e.g. 400, 409, 500) are server error responses, NOT network errors
-          if (response.statusCode != null && response.statusCode! != 200) {
+          final statusCode = response.statusCode ?? 500;
+          final bool isSuccessStatus = statusCode >= 200 && statusCode < 300;
+
+          if (!isSuccessStatus) {
             final msg = entity.message.isNotEmpty
                 ? entity.message
-                : 'Server error (HTTP ${response.statusCode})';
+                : 'Server error (HTTP $statusCode)';
             return WorkshopVerifyPaymentResponseEntity(
               success: false,
               registrationStatus: entity.registrationStatus.isNotEmpty ? entity.registrationStatus : 'failed',
@@ -331,7 +338,6 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
         'Network error during payment verification: ${e.message ?? e.toString()}',
       );
     } catch (e) {
-      // Unexpected parsing or processing exceptions are NOT network errors
       return WorkshopVerifyPaymentResponseEntity(
         success: false,
         registrationStatus: 'failed',
@@ -377,10 +383,13 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
 
         if (dataMap != null) {
           final entity = WorkshopVerifyPaymentResponseEntity.fromJson(dataMap);
-          if (response.statusCode != null && response.statusCode! != 200) {
+          final statusCode = response.statusCode ?? 500;
+          final bool isSuccessStatus = statusCode >= 200 && statusCode < 300;
+
+          if (!isSuccessStatus) {
             final msg = entity.message.isNotEmpty
                 ? entity.message
-                : 'Server error (HTTP ${response.statusCode})';
+                : 'Server error (HTTP $statusCode)';
             return WorkshopVerifyPaymentResponseEntity(
               success: false,
               registrationStatus: entity.registrationStatus.isNotEmpty ? entity.registrationStatus : 'failed',

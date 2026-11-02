@@ -399,6 +399,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
 
     final orderIdToVerify = _currentWorkshopOrderId;
     if (orderIdToVerify == null || orderIdToVerify == 0) {
+      if (!mounted) return;
       setState(() {
         _isProcessing = false;
       });
@@ -500,7 +501,6 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
       case WorkshopBookingViewState.pending:
         return _buildPendingVerificationScreen();
       case WorkshopBookingViewState.form:
-      default:
         return _buildFormScreen();
     }
   }
