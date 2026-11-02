@@ -9,7 +9,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../routing/route_paths.dart';
+import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/workshop_provider.dart';
 
 class WorkshopBookingScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? workshopData;
@@ -31,9 +33,18 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
   final _notesController = TextEditingController();
 
   Razorpay? _razorpay;
+
   bool _isProcessing = false;
+  String _processingMessage = 'Processing...';
+
   bool _isSuccess = false;
+  bool _isPendingVerification = false;
+
+  int? _currentWorkshopOrderId;
+  String? _currentRazorpayOrderId;
+  String? _confirmedBookingNumber;
   String? _paymentId;
+  String? _pendingMessage;
 
   late double _basePrice;
   late double _discount;
@@ -43,20 +54,36 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
     super.initState();
     _initRazorpay();
     _setupInitialData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthentication();
+    });
   }
 
   void _setupInitialData() {
-    final rawBase = widget.workshopData?['basePrice'] ?? widget.workshopData?['price'];
+    final rawBase = widget.workshopData?['basePrice'] ?? widget.workshopData?['price'] ?? widget.workshopData?['base_price'];
     final rawDiscount = widget.workshopData?['discount'];
 
     _basePrice = double.tryParse(rawBase?.toString() ?? '1499') ?? 1499.0;
-    _discount = double.tryParse(rawDiscount?.toString() ?? '300') ?? 300.0;
+    _discount = double.tryParse(rawDiscount?.toString() ?? '0') ?? 0.0;
+  }
 
-    final user = ref.read(authStateProvider).user;
-    if (user != null) {
-      _nameController.text = user.name;
-      _emailController.text = user.email;
-      _phoneController.text = user.phone;
+  void _checkAuthentication() {
+    final authState = ref.read(authStateProvider);
+    if (authState.status != AuthStatus.authenticated || authState.user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please log in to book a masterclass.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        context.push(RoutePaths.login);
+      }
+    } else {
+      final user = authState.user!;
+      if (_nameController.text.isEmpty) _nameController.text = user.name;
+      if (_emailController.text.isEmpty) _emailController.text = user.email;
+      if (_phoneController.text.isEmpty) _phoneController.text = user.phone;
     }
   }
 
@@ -82,13 +109,199 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
     return net > 0 ? net : 0.0;
   }
 
-  void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    if (!mounted) return;
+  Future<void> _startPaymentFlow() async {
+    if (_isProcessing) return;
+
+    final authState = ref.read(authStateProvider);
+    if (authState.status != AuthStatus.authenticated || authState.user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please log in to proceed with booking.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        context.push(RoutePaths.login);
+      }
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) return;
+
+    final rawId = widget.workshopData?['id'] ?? widget.workshopData?['workshop_id'];
+    final int workshopId = int.tryParse(rawId?.toString() ?? '') ?? 0;
+
+    if (workshopId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid workshop selected. Please try selecting the workshop again.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() {
-      _isProcessing = false;
-      _isSuccess = true;
-      _paymentId = response.paymentId ?? 'PAY_WS_${DateTime.now().millisecondsSinceEpoch}';
+      _isProcessing = true;
+      _processingMessage = 'Creating workshop order...';
     });
+
+    try {
+      final repository = ref.read(workshopRepositoryProvider);
+      final orderResult = await repository.createWorkshopOrder(
+        workshopId: workshopId,
+        attendeeName: _nameController.text.trim(),
+        attendeeEmail: _emailController.text.trim(),
+        attendeePhone: _phoneController.text.trim(),
+        specialNote: _notesController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (!orderResult.success || orderResult.razorpayOrderId.isEmpty) {
+        setState(() {
+          _isProcessing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              orderResult.message.isNotEmpty ? orderResult.message : 'Could not create booking order. Please try again.',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      _currentWorkshopOrderId = orderResult.workshopOrderId;
+      _currentRazorpayOrderId = orderResult.razorpayOrderId;
+
+      final title = widget.workshopData?['title'] ?? 'Masterclass Booking';
+
+      final options = {
+        'key': orderResult.razorpayKeyId,
+        'amount': orderResult.amount,
+        'order_id': orderResult.razorpayOrderId,
+        'currency': orderResult.currency.isNotEmpty ? orderResult.currency : 'INR',
+        'name': 'Bee Beyonnd Wellness',
+        'description': 'Booking for $title',
+        'prefill': {
+          'contact': _phoneController.text.trim(),
+          'email': _emailController.text.trim(),
+          'name': _nameController.text.trim(),
+        },
+        'theme': {
+          'color': '#312E81',
+        }
+      };
+
+      try {
+        _razorpay?.open(options);
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to open payment Gateway: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An unexpected error occurred: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    if (!mounted) return;
+
+    setState(() {
+      _isProcessing = true;
+      _processingMessage = 'Verifying payment with server...';
+    });
+
+    final orderIdToVerify = _currentWorkshopOrderId;
+    if (orderIdToVerify == null || orderIdToVerify == 0) {
+      setState(() {
+        _isProcessing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to verify payment: missing order reference.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final repository = ref.read(workshopRepositoryProvider);
+      final verifyResult = await repository.verifyWorkshopPayment(
+        workshopOrderId: orderIdToVerify,
+        razorpayPaymentId: response.paymentId ?? '',
+        razorpayOrderId: response.orderId ?? _currentRazorpayOrderId ?? '',
+        razorpaySignature: response.signature ?? '',
+      );
+
+      if (!mounted) return;
+
+      if (verifyResult.isConfirmed) {
+        setState(() {
+          _isProcessing = false;
+          _isSuccess = true;
+          _isPendingVerification = false;
+          _paymentId = response.paymentId ?? 'PAY_${DateTime.now().millisecondsSinceEpoch}';
+          _confirmedBookingNumber = verifyResult.bookingNumber.isNotEmpty
+              ? verifyResult.bookingNumber
+              : 'WS-$orderIdToVerify';
+        });
+      } else if (verifyResult.isNetworkError) {
+        setState(() {
+          _isProcessing = false;
+          _isPendingVerification = true;
+          _paymentId = response.paymentId;
+          _pendingMessage = verifyResult.message.isNotEmpty
+              ? verifyResult.message
+              : 'Payment recorded, but server verification is taking longer than expected. Please do not re-pay.';
+        });
+      } else {
+        setState(() {
+          _isProcessing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              verifyResult.message.isNotEmpty
+                  ? verifyResult.message
+                  : 'Payment verification failed. Booking status: ${verifyResult.registrationStatus}',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _isPendingVerification = true;
+          _paymentId = response.paymentId;
+          _pendingMessage = 'Network error while verifying payment: $e';
+        });
+      }
+    }
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -111,173 +324,155 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
     });
   }
 
-  void _startPaymentFlow() {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isProcessing = true;
-    });
-
-    final title = widget.workshopData?['title'] ?? 'Certified Masterclass';
-    final amountInPaise = (_finalAmount * 100).toInt();
-
-    final options = {
-      'key': 'rzp_test_placeholder',
-      'amount': amountInPaise,
-      'name': 'Bee Beyonnd Wellness',
-      'description': 'Booking for $title',
-      'prefill': {
-        'contact': _phoneController.text.trim(),
-        'email': _emailController.text.trim(),
-        'name': _nameController.text.trim(),
-      },
-      'theme': {
-        'color': '#312E81',
-      }
-    };
-
-    try {
-      _razorpay?.open(options);
-    } catch (_) {
-      // Fallback test confirmation if SDK fails in demo env
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() {
-            _isProcessing = false;
-            _isSuccess = true;
-            _paymentId = 'PAY_WS_DEMO_${DateTime.now().millisecondsSinceEpoch}';
-          });
-        }
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isSuccess) {
       return _buildSuccessScreen();
     }
 
-    final title = widget.workshopData?['title'] ?? 'Certified Holistic Masterclass';
+    if (_isPendingVerification) {
+      return _buildPendingVerificationScreen();
+    }
+
+    final title = widget.workshopData?['title'] ?? 'Certified Masterclass';
     final instructor = widget.workshopData?['instructor'] ?? 'Acharya Devraj';
     final image = widget.workshopData?['thumbnailUrl'] ?? widget.workshopData?['image'] ?? '';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: const CustomAppBar(title: 'Book Masterclass'),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              physics: const BouncingScrollPhysics(),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // WORKSHOP SUMMARY CARD
-                    _buildWorkshopSummaryCard(title, instructor, image),
+          Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  physics: const BouncingScrollPhysics(),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // WORKSHOP SUMMARY CARD
+                        _buildWorkshopSummaryCard(title, instructor, image),
 
-                    const SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
-                    // ATTENDEE FORM
-                    Text(
-                      'Attendee Information',
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
+                        // ATTENDEE FORM
+                        Text(
+                          'Attendee Information',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        _buildTextField(
+                          controller: _nameController,
+                          label: 'Full Name',
+                          hint: 'Enter your full name',
+                          icon: Icons.person_outline_rounded,
+                          validator: (val) => val == null || val.trim().isEmpty ? 'Name is required' : null,
+                        ),
+                        const SizedBox(height: 12),
+
+                        _buildTextField(
+                          controller: _emailController,
+                          label: 'Email Address',
+                          hint: 'Enter your email for pass receipt',
+                          icon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (val) => val == null || !val.contains('@') ? 'Valid email required' : null,
+                        ),
+                        const SizedBox(height: 12),
+
+                        _buildTextField(
+                          controller: _phoneController,
+                          label: 'Phone / WhatsApp Number',
+                          hint: 'Enter contact number',
+                          icon: Icons.phone_outlined,
+                          keyboardType: TextInputType.phone,
+                          validator: (val) => val == null || val.trim().length < 10 ? 'Valid phone number required' : null,
+                        ),
+                        const SizedBox(height: 12),
+
+                        _buildTextField(
+                          controller: _notesController,
+                          label: 'Special Note / Question (Optional)',
+                          hint: 'Anything you wish to ask mentor beforehand',
+                          icon: Icons.chat_bubble_outline_rounded,
+                          maxLines: 2,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // PRICE BREAKDOWN CARD
+                        _buildPriceBreakdownCard(),
+                      ],
                     ),
-                    const SizedBox(height: 12),
+                  ),
+                ),
+              ),
 
-                    _buildTextField(
-                      controller: _nameController,
-                      label: 'Full Name',
-                      hint: 'Enter your full name',
-                      icon: Icons.person_outline_rounded,
-                      validator: (val) => val == null || val.trim().isEmpty ? 'Name is required' : null,
+              // BOTTOM PAYMENT ACTION
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x1A000000),
+                      blurRadius: 10,
+                      offset: Offset(0, -3),
                     ),
-                    const SizedBox(height: 12),
-
-                    _buildTextField(
-                      controller: _emailController,
-                      label: 'Email Address',
-                      hint: 'Enter your email for pass receipt',
-                      icon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (val) => val == null || !val.contains('@') ? 'Valid email required' : null,
-                    ),
-                    const SizedBox(height: 12),
-
-                    _buildTextField(
-                      controller: _phoneController,
-                      label: 'Phone / WhatsApp Number',
-                      hint: 'Enter contact number',
-                      icon: Icons.phone_outlined,
-                      keyboardType: TextInputType.phone,
-                      validator: (val) => val == null || val.length < 10 ? 'Valid phone number required' : null,
-                    ),
-                    const SizedBox(height: 12),
-
-                    _buildTextField(
-                      controller: _notesController,
-                      label: 'Special Note / Question (Optional)',
-                      hint: 'Anything you wish to ask mentor beforehand',
-                      icon: Icons.chat_bubble_outline_rounded,
-                      maxLines: 2,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // PRICE BREAKDOWN CARD
-                    _buildPriceBreakdownCard(),
                   ],
                 ),
-              ),
-            ),
-          ),
-
-          // BOTTOM PAYMENT ACTION
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 10,
-                  offset: Offset(0, -3),
+                child: SafeArea(
+                  top: false,
+                  child: ElevatedButton(
+                    onPressed: _isProcessing ? null : _startPaymentFlow,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: _isProcessing
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                _processingMessage,
+                                style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          )
+                        : Text(
+                            'Proceed to Pay ${CurrencyUtils.formatINR(_finalAmount)}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
                 ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: ElevatedButton(
-                onPressed: _isProcessing ? null : _startPaymentFlow,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: _isProcessing
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                      )
-                    : Text(
-                        'Proceed to Pay ${CurrencyUtils.formatINR(_finalAmount)}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
               ),
-            ),
+            ],
           ),
+          if (_isProcessing)
+            ModalBarrier(
+              dismissible: false,
+              color: Colors.black.withOpacity(0.3),
+            ),
         ],
       ),
     );
@@ -478,14 +673,80 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Payment ID: $_paymentId',
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-              ),
+              if (_confirmedBookingNumber != null && _confirmedBookingNumber!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Booking #: $_confirmedBookingNumber',
+                  style: GoogleFonts.poppins(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.bold),
+                ),
+              ],
+              if (_paymentId != null && _paymentId!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Payment ID: $_paymentId',
+                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                ),
+              ],
               const SizedBox(height: 16),
               Text(
                 'Thank you for enrolling. Access instructions and calendar invite have been dispatched to your email.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: () {
+                  context.go(RoutePaths.home);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Back to Home', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPendingVerificationScreen() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFFBEB),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 72),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Payment Verification Pending',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+              ),
+              if (_paymentId != null && _paymentId!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Payment ID: $_paymentId',
+                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                _pendingMessage ??
+                    'Your payment was processed, but server verification is taking longer than expected due to network connection. Please check back shortly or contact support.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
               ),

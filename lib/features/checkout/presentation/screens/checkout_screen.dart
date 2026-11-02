@@ -40,7 +40,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _cityController = TextEditingController();
   final _pincodeController = TextEditingController();
 
-  String _paymentCategory = 'upi'; // 'upi', 'card', 'netbanking', 'cod'
+  final String _paymentCategory = 'upi'; // 'upi', 'card', 'netbanking', 'cod'
   final _vpaController = TextEditingController();
 
   final _cardHolderNameController = TextEditingController();
@@ -238,7 +238,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               StatusDialog.show(
                 context,
                 title: 'Payment Verification Failed',
-                description: verification.message ?? 'Payment status in database is not successful.',
+                description: verification.message.isNotEmpty ? verification.message : 'Payment status in database is not successful.',
                 isSuccess: false,
                 onAction: () {},
                 actionText: 'CLOSE',
@@ -685,44 +685,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           const SizedBox(height: 14),
           ...children,
         ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentCategoryOption({
-    required String id,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-  }) {
-    final isSelected = _paymentCategory == id;
-    return InkWell(
-      onTap: () => setState(() => _paymentCategory = id),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFF5F3FF) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0), width: isSelected ? 1.6 : 1.0),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: isSelected ? AppColors.primary : AppColors.textSecondary, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isSelected ? AppColors.primary : AppColors.textPrimary)),
-                  Text(subtitle, style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary)),
-                ],
-              ),
-            ),
-            Icon(isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: isSelected ? AppColors.primary : const Color(0xFF94A3B8), size: 20),
-          ],
-        ),
       ),
     );
   }

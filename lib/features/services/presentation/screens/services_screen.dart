@@ -36,10 +36,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
   String _selectedCategory = 'All';
   RazorpayService? _razorpayService;
 
-  bool _isLottieActive = true;
-  DateTime? _dataResponseTime;
-  Timer? _postResponseTimer;
-
   @override
   void initState() {
     super.initState();
@@ -48,7 +44,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 
   @override
   void dispose() {
-    _postResponseTimer?.cancel();
     _razorpayService?.dispose();
     super.dispose();
   }
@@ -183,7 +178,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
               StatusDialog.show(
                 context,
                 title: 'Payment Verification Failed',
-                description: verification.message ?? 'Payment status in database is not successful.',
+                description: verification.message.isNotEmpty ? verification.message : 'Payment status in database is not successful.',
                 isSuccess: false,
                 onAction: () {},
                 actionText: 'CLOSE',
@@ -210,9 +205,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
       _razorpayService?.onError = (response) {
         if (!mounted) return;
 
-        final failureResp = response is PaymentFailureResponse ? response : null;
-        final int? code = failureResp?.code;
-        final String? msg = failureResp?.message;
+        final int? code = response.code;
+        final String? msg = response.message;
 
         final isCancelled = code == Razorpay.PAYMENT_CANCELLED ||
             (msg?.toLowerCase().contains('cancel') ?? false) ||
@@ -1427,7 +1421,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     itemCount: weekDays.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    separatorBuilder: (context, index) => const SizedBox(width: 8),
                     itemBuilder: (context, index) {
                       final dayDate = weekDays[index];
                       final isSelected = isSameDay(dayDate, selectedDate);

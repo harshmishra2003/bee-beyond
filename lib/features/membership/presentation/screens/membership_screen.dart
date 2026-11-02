@@ -27,10 +27,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _shimmerController;
   RazorpayService? _razorpayService;
-
-  bool _isLottieActive = true;
-  DateTime? _dataResponseTime;
-  Timer? _postResponseTimer;
+  final bool _isLottieActive = false;
 
   @override
   void initState() {
@@ -40,91 +37,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
       vsync: this,
       duration: const Duration(milliseconds: 4500),
     )..repeat(reverse: true);
-
-    _postResponseTimer = Timer(const Duration(milliseconds: 800), () {
-      if (mounted) {
-        setState(() {
-          _isLottieActive = false;
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
-    _postResponseTimer?.cancel();
     _razorpayService?.dispose();
     _shimmerController.dispose();
     super.dispose();
-  }
-
-  void _openMembershipCheckoutModal(MembershipPlanEntity plan) {
-    context.push('${RoutePaths.membershipDetail}?id=${plan.id}', extra: plan);
-  }
-
-  Widget _buildPaymentOptionTile({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
-            width: isSelected ? 1.8 : 1.0,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : const Color(0xFF94A3B8),
-                  width: isSelected ? 6.0 : 1.5,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Icon(icon, color: AppColors.primary, size: 22),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildMembershipLottieLoadingOverlay() {

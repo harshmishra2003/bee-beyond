@@ -3,10 +3,25 @@ import 'package:dio/dio.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../domain/entities/workshop_item.dart';
+import '../../domain/entities/workshop_order_response_entity.dart';
+import '../../domain/entities/workshop_verify_payment_response_entity.dart';
 
 abstract class WorkshopRemoteDataSource {
   Future<List<WorkshopItem>> getWorkshops();
   Future<WorkshopItem?> getWorkshopDetail(String id);
+  Future<WorkshopOrderResponseEntity> createWorkshopOrder({
+    required int workshopId,
+    required String attendeeName,
+    required String attendeeEmail,
+    required String attendeePhone,
+    String? specialNote,
+  });
+  Future<WorkshopVerifyPaymentResponseEntity> verifyWorkshopPayment({
+    required int workshopOrderId,
+    required String razorpayPaymentId,
+    required String razorpayOrderId,
+    required String razorpaySignature,
+  });
 }
 
 class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
@@ -86,6 +101,129 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
       );
     } catch (_) {
       return list.isNotEmpty ? list.first : null;
+    }
+  }
+
+  @override
+  Future<WorkshopOrderResponseEntity> createWorkshopOrder({
+    required int workshopId,
+    required String attendeeName,
+    required String attendeeEmail,
+    required String attendeePhone,
+    String? specialNote,
+  }) async {
+    final client = _dioClient;
+    if (client == null) {
+      return const WorkshopOrderResponseEntity(
+        success: false,
+        message: 'Network client not available.',
+        workshopOrderId: 0,
+        registrationId: 0,
+        bookingNumber: '',
+        amount: 0,
+        currency: 'INR',
+        razorpayOrderId: '',
+        razorpayKeyId: '',
+      );
+    }
+
+    try {
+      final response = await client.post(
+        ApiEndpoints.workshopCreateOrder,
+        data: {
+          'workshop_id': workshopId,
+          'attendee_name': attendeeName,
+          'attendee_email': attendeeEmail,
+          'attendee_phone': attendeePhone,
+          'special_note': specialNote ?? '',
+        },
+      );
+
+      if (response.data != null) {
+        dynamic rawData = response.data;
+        if (rawData is String) {
+          rawData = jsonDecode(rawData);
+        }
+
+        if (rawData is Map<String, dynamic>) {
+          return WorkshopOrderResponseEntity.fromJson(rawData);
+        } else if (rawData is Map) {
+          return WorkshopOrderResponseEntity.fromJson(Map<String, dynamic>.from(rawData));
+        }
+      }
+
+      return WorkshopOrderResponseEntity(
+        success: false,
+        message: 'Server responded with status ${response.statusCode}',
+        workshopOrderId: 0,
+        registrationId: 0,
+        bookingNumber: '',
+        amount: 0,
+        currency: 'INR',
+        razorpayOrderId: '',
+        razorpayKeyId: '',
+      );
+    } catch (e) {
+      return WorkshopOrderResponseEntity(
+        success: false,
+        message: 'Failed to create workshop order: ${e.toString()}',
+        workshopOrderId: 0,
+        registrationId: 0,
+        bookingNumber: '',
+        amount: 0,
+        currency: 'INR',
+        razorpayOrderId: '',
+        razorpayKeyId: '',
+      );
+    }
+  }
+
+  @override
+  Future<WorkshopVerifyPaymentResponseEntity> verifyWorkshopPayment({
+    required int workshopOrderId,
+    required String razorpayPaymentId,
+    required String razorpayOrderId,
+    required String razorpaySignature,
+  }) async {
+    final client = _dioClient;
+    if (client == null) {
+      return WorkshopVerifyPaymentResponseEntity.networkError('Network client not available.');
+    }
+
+    try {
+      final response = await client.post(
+        ApiEndpoints.workshopVerifyPayment,
+        data: {
+          'workshop_order_id': workshopOrderId,
+          'razorpay_payment_id': razorpayPaymentId,
+          'razorpay_order_id': razorpayOrderId,
+          'razorpay_signature': razorpaySignature,
+        },
+      );
+
+      if (response.data != null) {
+        dynamic rawData = response.data;
+        if (rawData is String) {
+          rawData = jsonDecode(rawData);
+        }
+
+        if (rawData is Map<String, dynamic>) {
+          return WorkshopVerifyPaymentResponseEntity.fromJson(rawData);
+        } else if (rawData is Map) {
+          return WorkshopVerifyPaymentResponseEntity.fromJson(Map<String, dynamic>.from(rawData));
+        }
+      }
+
+      return WorkshopVerifyPaymentResponseEntity(
+        success: false,
+        registrationStatus: 'failed',
+        bookingNumber: '',
+        message: 'Server responded with status ${response.statusCode}',
+      );
+    } catch (e) {
+      return WorkshopVerifyPaymentResponseEntity.networkError(
+        'Network exception during payment verification: ${e.toString()}',
+      );
     }
   }
 }

@@ -8,6 +8,7 @@ import 'route_paths.dart';
 
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
+  bool _isSplashFinished = false;
 
   RouterNotifier(this._ref) {
     debugPrint('[ROUTER] RouterNotifier constructed');
@@ -20,10 +21,14 @@ class RouterNotifier extends ChangeNotifier {
     );
   }
 
-  bool get isSplashFinished => true;
+  bool get isSplashFinished => _isSplashFinished;
 
   void markSplashFinished() {
-    notifyListeners();
+    if (!_isSplashFinished) {
+      _isSplashFinished = true;
+      debugPrint('[ROUTER] markSplashFinished() called.');
+      notifyListeners();
+    }
   }
 
   String? redirect(BuildContext context, GoRouterState state) {
@@ -32,11 +37,24 @@ class RouterNotifier extends ChangeNotifier {
     final status = authState.status;
     final hasSeenOnboarding = authState.hasSeenOnboarding;
 
-    debugPrint('[ROUTER] redirect eval: loc=$location, status=$status');
+    debugPrint('[ROUTER] redirect eval: loc=$location, splashFinished=$_isSplashFinished, status=$status');
 
-    // If Auth restoration is still in progress, remain on current screen
-    if (status == AuthStatus.loading) {
-      return null;
+    // While 2.5s Dart splash timer is active or Auth is loading, remain on splash
+    if (!_isSplashFinished || status == AuthStatus.loading) {
+      if (location == RoutePaths.splash) {
+        return null;
+      }
+      return RoutePaths.splash;
+    }
+
+    if (location == RoutePaths.splash) {
+      if (status == AuthStatus.authenticated) {
+        return RoutePaths.home;
+      }
+      if (status == AuthStatus.unauthenticated && !hasSeenOnboarding) {
+        return RoutePaths.onboarding;
+      }
+      return RoutePaths.login;
     }
 
     // 1) Unauthenticated State -> Auth Stack or Onboarding

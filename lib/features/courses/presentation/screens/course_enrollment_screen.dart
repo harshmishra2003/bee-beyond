@@ -588,26 +588,28 @@ class _CourseEnrollmentScreenState extends ConsumerState<CourseEnrollmentScreen>
                     studentName: studentName,
                   );
 
-              context.push(
-                RoutePaths.enrollmentReceipt,
-                extra: {
-                  'enrollmentId': enrollmentId,
-                  'studentName': studentName,
-                  'courseTitle': course.title,
-                  'courseCategory': course.category,
-                  'coursePrice': course.price,
-                  'email': email,
-                  'phone': phone,
-                  'address': address,
-                  'profilePic': _selectedProfilePic,
-                  'date': DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()),
-                },
-              );
+              if (mounted) {
+                context.push(
+                  RoutePaths.enrollmentReceipt,
+                  extra: {
+                    'enrollmentId': enrollmentId,
+                    'studentName': studentName,
+                    'courseTitle': course.title,
+                    'courseCategory': course.category,
+                    'coursePrice': course.price,
+                    'email': email,
+                    'phone': phone,
+                    'address': address,
+                    'profilePic': _selectedProfilePic,
+                    'date': DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()),
+                  },
+                );
+              }
             } else {
               StatusDialog.show(
                 context,
                 title: 'Payment Verification Failed',
-                description: verification.message ?? 'Payment status in database is not successful.',
+                description: verification.message.isNotEmpty ? verification.message : 'Payment status in database is not successful.',
                 isSuccess: false,
                 onAction: () {},
                 actionText: 'CLOSE',

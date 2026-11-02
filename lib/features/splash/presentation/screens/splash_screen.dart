@@ -61,9 +61,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
     });
 
-    // Instantly finish splash to bypass splash wait
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // 2.5s brand display timer for smooth Dart-driven custom splash experience
+    _minDisplayTimer = Timer(const Duration(milliseconds: 2500), () {
       if (mounted) {
+        _finishSplash();
+      }
+    });
+
+    // Safety fallback timer (3500ms max)
+    _safetyTimeoutTimer = Timer(const Duration(milliseconds: 3500), () {
+      if (mounted && !_hasNavigated) {
         _finishSplash();
       }
     });
@@ -72,6 +79,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void _finishSplash() {
     if (_hasNavigated || !mounted) return;
     _hasNavigated = true;
+
+    // Stop animations immediately to free up UI thread for smooth transition
+    try {
+      _orbitController.stop();
+      _lotusController.stop();
+      _pulseController.stop();
+      _affirmationTimer?.cancel();
+    } catch (_) {}
 
     final authState = ref.read(authStateProvider);
     debugPrint('[SPLASH] _finishSplash called. Auth status: ${authState.status}');
