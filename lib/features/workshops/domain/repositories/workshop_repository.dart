@@ -20,4 +20,8 @@ abstract class WorkshopRepository {
     required String razorpayOrderId,
     required String razorpaySignature,
   });
+
+  Future<WorkshopVerifyPaymentResponseEntity> getWorkshopOrderStatus({
+    required int workshopOrderId,
+  });
 }

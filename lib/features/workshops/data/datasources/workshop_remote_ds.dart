@@ -22,6 +22,9 @@ abstract class WorkshopRemoteDataSource {
     required String razorpayOrderId,
     required String razorpaySignature,
   });
+  Future<WorkshopVerifyPaymentResponseEntity> getWorkshopOrderStatus({
+    required int workshopOrderId,
+  });
 }
 
 class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
@@ -279,7 +282,7 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
 
         if (dataMap != null) {
           final entity = WorkshopVerifyPaymentResponseEntity.fromJson(dataMap);
-          // HTTP error responses (e.g. 400, 409, 500) are server responses, NOT network connection errors
+          // HTTP error responses (e.g. 400, 409, 500) are server error responses, NOT network errors
           if (response.statusCode != null && response.statusCode! != 200) {
             final msg = entity.message.isNotEmpty
                 ? entity.message
@@ -306,7 +309,6 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
       );
     } on DioException catch (e) {
       if (e.response != null) {
-        // The server responded with an HTTP status code (400, 409, 500, etc.)
         dynamic rawData = e.response!.data;
         if (rawData is String) {
           try {
@@ -325,13 +327,110 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
           isNetworkError: false,
         );
       }
-      // No HTTP response was received -> true network connectivity exception
       return WorkshopVerifyPaymentResponseEntity.networkError(
         'Network error during payment verification: ${e.message ?? e.toString()}',
       );
     } catch (e) {
+      // Unexpected parsing or processing exceptions are NOT network errors
+      return WorkshopVerifyPaymentResponseEntity(
+        success: false,
+        registrationStatus: 'failed',
+        bookingNumber: '',
+        message: 'Unexpected parsing or response processing error: ${e.toString()}',
+        isNetworkError: false,
+      );
+    }
+  }
+
+  @override
+  Future<WorkshopVerifyPaymentResponseEntity> getWorkshopOrderStatus({
+    required int workshopOrderId,
+  }) async {
+    final client = _dioClient;
+    if (client == null) {
+      return WorkshopVerifyPaymentResponseEntity.networkError('Network client not available.');
+    }
+
+    try {
+      final response = await client.post(
+        ApiEndpoints.workshopOrderStatus,
+        data: {
+          'workshop_order_id': workshopOrderId,
+        },
+        options: Options(validateStatus: (status) => true),
+      );
+
+      if (response.data != null) {
+        dynamic rawData = response.data;
+        if (rawData is String) {
+          try {
+            rawData = jsonDecode(rawData);
+          } catch (_) {}
+        }
+
+        Map<String, dynamic>? dataMap;
+        if (rawData is Map<String, dynamic>) {
+          dataMap = rawData;
+        } else if (rawData is Map) {
+          dataMap = Map<String, dynamic>.from(rawData);
+        }
+
+        if (dataMap != null) {
+          final entity = WorkshopVerifyPaymentResponseEntity.fromJson(dataMap);
+          if (response.statusCode != null && response.statusCode! != 200) {
+            final msg = entity.message.isNotEmpty
+                ? entity.message
+                : 'Server error (HTTP ${response.statusCode})';
+            return WorkshopVerifyPaymentResponseEntity(
+              success: false,
+              registrationStatus: entity.registrationStatus.isNotEmpty ? entity.registrationStatus : 'failed',
+              bookingNumber: entity.bookingNumber,
+              message: msg,
+              isNetworkError: false,
+            );
+          }
+          return entity;
+        }
+      }
+
+      final statusCode = response.statusCode ?? 500;
+      return WorkshopVerifyPaymentResponseEntity(
+        success: false,
+        registrationStatus: 'failed',
+        bookingNumber: '',
+        message: 'Server error (HTTP $statusCode)',
+        isNetworkError: false,
+      );
+    } on DioException catch (e) {
+      if (e.response != null) {
+        dynamic rawData = e.response!.data;
+        if (rawData is String) {
+          try {
+            rawData = jsonDecode(rawData);
+          } catch (_) {}
+        }
+        final message = (rawData is Map && rawData['message'] != null)
+            ? rawData['message'].toString()
+            : 'Status check failed (HTTP ${e.response?.statusCode})';
+
+        return WorkshopVerifyPaymentResponseEntity(
+          success: false,
+          registrationStatus: 'failed',
+          bookingNumber: '',
+          message: message,
+          isNetworkError: false,
+        );
+      }
       return WorkshopVerifyPaymentResponseEntity.networkError(
-        'Network error during payment verification: ${e.toString()}',
+        'Network error during status check: ${e.message ?? e.toString()}',
+      );
+    } catch (e) {
+      return WorkshopVerifyPaymentResponseEntity(
+        success: false,
+        registrationStatus: 'failed',
+        bookingNumber: '',
+        message: 'Unexpected error during status check: ${e.toString()}',
+        isNetworkError: false,
       );
     }
   }

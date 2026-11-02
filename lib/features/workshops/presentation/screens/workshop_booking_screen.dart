@@ -11,7 +11,16 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/datasources/workshop_booking_storage.dart';
 import '../providers/workshop_provider.dart';
+
+enum WorkshopBookingViewState {
+  form,
+  success,
+  pending,
+  failed,
+  refundReview,
+}
 
 class WorkshopBookingScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? workshopData;
@@ -32,20 +41,20 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
 
+  final _bookingStorage = WorkshopBookingStorage();
   Razorpay? _razorpay;
+
+  WorkshopBookingViewState _viewState = WorkshopBookingViewState.form;
 
   bool _isProcessing = false;
   String _processingMessage = 'Processing...';
-
-  bool _isSuccess = false;
-  bool _isPendingVerification = false;
 
   int? _currentWorkshopOrderId;
   String? _currentRazorpayOrderId;
   String? _lastPaymentSignature;
   String? _confirmedBookingNumber;
   String? _paymentId;
-  String? _pendingMessage;
+  String? _statusMessage;
 
   late double _basePrice;
   late double _discount;
@@ -57,7 +66,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
     _initRazorpay();
     _setupInitialData();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAuthentication();
+      _checkAuthAndRecoverPendingBooking();
     });
   }
 
@@ -69,7 +78,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
     _discount = double.tryParse(rawDiscount?.toString() ?? '0') ?? 0.0;
   }
 
-  void _checkAuthentication() {
+  Future<void> _checkAuthAndRecoverPendingBooking() async {
     final authState = ref.read(authStateProvider);
     if (authState.status != AuthStatus.authenticated || authState.user == null) {
       if (mounted) {
@@ -81,11 +90,115 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
         );
         context.push(RoutePaths.login);
       }
-    } else {
-      final user = authState.user!;
-      if (_nameController.text.isEmpty) _nameController.text = user.name;
-      if (_emailController.text.isEmpty) _emailController.text = user.email;
-      if (_phoneController.text.isEmpty) _phoneController.text = user.phone;
+      return;
+    }
+
+    final user = authState.user!;
+    if (_nameController.text.isEmpty) _nameController.text = user.name;
+    if (_emailController.text.isEmpty) _emailController.text = user.email;
+    if (_phoneController.text.isEmpty) _phoneController.text = user.phone;
+
+    final rawId = widget.workshopData?['id'] ?? widget.workshopData?['workshop_id'];
+    final int workshopId = int.tryParse(rawId?.toString() ?? '') ?? 0;
+
+    if (workshopId <= 0) return;
+
+    final pendingData = await _bookingStorage.getPendingBooking(workshopId);
+    if (pendingData != null && pendingData['workshop_order_id'] != null) {
+      final orderId = (pendingData['workshop_order_id'] as num).toInt();
+      final rzpOrderId = pendingData['razorpay_order_id']?.toString() ?? '';
+      final pId = pendingData['razorpay_payment_id']?.toString() ?? '';
+      final sig = pendingData['razorpay_signature']?.toString() ?? '';
+      final amt = (pendingData['amount'] as num?)?.toDouble();
+
+      setState(() {
+        _currentWorkshopOrderId = orderId;
+        _currentRazorpayOrderId = rzpOrderId;
+        _paymentId = pId.isNotEmpty ? pId : null;
+        _lastPaymentSignature = sig.isNotEmpty ? sig : null;
+        if (amt != null && amt > 0) {
+          _authoritativePayableAmount = amt / 100.0;
+        }
+        _isProcessing = true;
+        _processingMessage = 'Checking existing booking status...';
+      });
+
+      await _verifyExistingOrder(
+        orderId: orderId,
+        paymentId: pId,
+        razorpayOrderId: rzpOrderId,
+        signature: sig,
+        workshopId: workshopId,
+      );
+    }
+  }
+
+  Future<void> _verifyExistingOrder({
+    required int orderId,
+    required String paymentId,
+    required String razorpayOrderId,
+    required String signature,
+    required int workshopId,
+  }) async {
+    try {
+      final repository = ref.read(workshopRepositoryProvider);
+      final verifyResult = paymentId.isNotEmpty
+          ? await repository.verifyWorkshopPayment(
+              workshopOrderId: orderId,
+              razorpayPaymentId: paymentId,
+              razorpayOrderId: razorpayOrderId,
+              razorpaySignature: signature,
+            )
+          : await repository.checkWorkshopOrderStatus(
+              workshopOrderId: orderId,
+            );
+
+      if (!mounted) return;
+
+      if (verifyResult.isConfirmed) {
+        await _bookingStorage.clearPendingBooking(workshopId);
+        setState(() {
+          _isProcessing = false;
+          _viewState = WorkshopBookingViewState.success;
+          _confirmedBookingNumber = verifyResult.bookingNumber.isNotEmpty
+              ? verifyResult.bookingNumber
+              : 'WS-$orderId';
+        });
+      } else if (verifyResult.isDefinitivelyFailed) {
+        await _bookingStorage.clearPendingBooking(workshopId);
+        setState(() {
+          _isProcessing = false;
+          _viewState = WorkshopBookingViewState.failed;
+          _statusMessage = verifyResult.message.isNotEmpty
+              ? verifyResult.message
+              : 'Payment was not completed or failed permanently.';
+        });
+      } else if (verifyResult.isRefundReview) {
+        setState(() {
+          _isProcessing = false;
+          _viewState = WorkshopBookingViewState.refundReview;
+          _statusMessage = verifyResult.message.isNotEmpty
+              ? verifyResult.message
+              : 'Your payment was captured, but registration requires manual review. Please contact support.';
+        });
+      } else {
+        // Pending or Network Error -> Keep on Pending Status Screen with Retry
+        setState(() {
+          _isProcessing = false;
+          _viewState = WorkshopBookingViewState.pending;
+          _statusMessage = verifyResult.message.isNotEmpty
+              ? verifyResult.message
+              : 'Payment recorded, but status verification is pending due to connection delays.';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _viewState = WorkshopBookingViewState.pending;
+          _statusMessage = 'Network error checking existing booking: $e';
+        });
+      }
     }
   }
 
@@ -116,6 +229,17 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
 
   Future<void> _startPaymentFlow() async {
     if (_isProcessing) return;
+
+    if (_viewState == WorkshopBookingViewState.pending ||
+        _viewState == WorkshopBookingViewState.refundReview) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You have an unresolved payment. Please complete status verification before starting a new booking.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
 
     final authState = ref.read(authStateProvider);
     if (authState.status != AuthStatus.authenticated || authState.user == null) {
@@ -187,6 +311,14 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
         });
       }
 
+      await _bookingStorage.savePendingBooking(
+        workshopId: workshopId,
+        workshopOrderId: orderResult.workshopOrderId,
+        razorpayOrderId: orderResult.razorpayOrderId,
+        amount: orderResult.amount.toDouble(),
+        attendeeName: _nameController.text.trim(),
+      );
+
       final title = widget.workshopData?['title'] ?? 'Masterclass Booking';
 
       final options = {
@@ -245,6 +377,21 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
       _currentRazorpayOrderId = response.orderId;
     }
 
+    final rawId = widget.workshopData?['id'] ?? widget.workshopData?['workshop_id'];
+    final int workshopId = int.tryParse(rawId?.toString() ?? '') ?? 0;
+
+    if (workshopId > 0 && _currentWorkshopOrderId != null) {
+      await _bookingStorage.savePendingBooking(
+        workshopId: workshopId,
+        workshopOrderId: _currentWorkshopOrderId!,
+        razorpayOrderId: _currentRazorpayOrderId ?? '',
+        razorpayPaymentId: response.paymentId,
+        razorpaySignature: response.signature,
+        amount: (_finalAmount * 100),
+        attendeeName: _nameController.text.trim(),
+      );
+    }
+
     setState(() {
       _isProcessing = true;
       _processingMessage = 'Verifying payment with server...';
@@ -264,73 +411,26 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
       return;
     }
 
-    try {
-      final repository = ref.read(workshopRepositoryProvider);
-      final verifyResult = await repository.verifyWorkshopPayment(
-        workshopOrderId: orderIdToVerify,
-        razorpayPaymentId: response.paymentId ?? '',
-        razorpayOrderId: response.orderId ?? _currentRazorpayOrderId ?? '',
-        razorpaySignature: response.signature ?? '',
-      );
-
-      if (!mounted) return;
-
-      if (verifyResult.isConfirmed) {
-        setState(() {
-          _isProcessing = false;
-          _isSuccess = true;
-          _isPendingVerification = false;
-          _paymentId = response.paymentId ?? 'PAY_${DateTime.now().millisecondsSinceEpoch}';
-          _confirmedBookingNumber = verifyResult.bookingNumber.isNotEmpty
-              ? verifyResult.bookingNumber
-              : 'WS-$orderIdToVerify';
-        });
-      } else if (verifyResult.isNetworkError) {
-        setState(() {
-          _isProcessing = false;
-          _isPendingVerification = true;
-          _paymentId = response.paymentId;
-          _pendingMessage = verifyResult.message.isNotEmpty
-              ? verifyResult.message
-              : 'Payment recorded, but server verification is taking longer than expected due to network connection. Please tap Retry Verification below.';
-        });
-      } else {
-        setState(() {
-          _isProcessing = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              verifyResult.message.isNotEmpty
-                  ? verifyResult.message
-                  : 'Payment verification failed. Booking status: ${verifyResult.registrationStatus}',
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-          _isPendingVerification = true;
-          _paymentId = response.paymentId;
-          _pendingMessage = 'Network error while verifying payment: $e';
-        });
-      }
-    }
+    await _verifyExistingOrder(
+      orderId: orderIdToVerify,
+      paymentId: response.paymentId ?? '',
+      razorpayOrderId: response.orderId ?? _currentRazorpayOrderId ?? '',
+      signature: response.signature ?? '',
+      workshopId: workshopId,
+    );
   }
 
   Future<void> _retryVerification() async {
     if (_isProcessing) return;
 
     final orderIdToVerify = _currentWorkshopOrderId;
-    final paymentIdToVerify = _paymentId;
+    final rawId = widget.workshopData?['id'] ?? widget.workshopData?['workshop_id'];
+    final int workshopId = int.tryParse(rawId?.toString() ?? '') ?? 0;
 
-    if (orderIdToVerify == null || orderIdToVerify == 0 || paymentIdToVerify == null || paymentIdToVerify.isEmpty) {
+    if (orderIdToVerify == null || orderIdToVerify == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Missing existing order or payment details to retry verification.'),
+          content: Text('Missing order details to retry verification.'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -342,65 +442,13 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
       _processingMessage = 'Retrying payment verification...';
     });
 
-    try {
-      final repository = ref.read(workshopRepositoryProvider);
-      final verifyResult = await repository.verifyWorkshopPayment(
-        workshopOrderId: orderIdToVerify,
-        razorpayPaymentId: paymentIdToVerify,
-        razorpayOrderId: _currentRazorpayOrderId ?? '',
-        razorpaySignature: _lastPaymentSignature ?? '',
-      );
-
-      if (!mounted) return;
-
-      if (verifyResult.isConfirmed) {
-        setState(() {
-          _isProcessing = false;
-          _isSuccess = true;
-          _isPendingVerification = false;
-          _confirmedBookingNumber = verifyResult.bookingNumber.isNotEmpty
-              ? verifyResult.bookingNumber
-              : 'WS-$orderIdToVerify';
-        });
-      } else if (verifyResult.isNetworkError) {
-        setState(() {
-          _isProcessing = false;
-          _isPendingVerification = true;
-          _pendingMessage = verifyResult.message.isNotEmpty
-              ? verifyResult.message
-              : 'Verification is still pending due to network connection. Please tap Retry Verification again.';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Network error while verifying. Please tap Retry Verification again.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      } else {
-        setState(() {
-          _isProcessing = false;
-          _isPendingVerification = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              verifyResult.message.isNotEmpty
-                  ? verifyResult.message
-                  : 'Payment verification failed. Booking status: ${verifyResult.registrationStatus}',
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-          _isPendingVerification = true;
-          _pendingMessage = 'Network error while retrying verification: $e';
-        });
-      }
-    }
+    await _verifyExistingOrder(
+      orderId: orderIdToVerify,
+      paymentId: _paymentId ?? '',
+      razorpayOrderId: _currentRazorpayOrderId ?? '',
+      signature: _lastPaymentSignature ?? '',
+      workshopId: workshopId,
+    );
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -423,16 +471,41 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
     });
   }
 
+  Future<void> _resetToNewBooking() async {
+    final rawId = widget.workshopData?['id'] ?? widget.workshopData?['workshop_id'];
+    final int workshopId = int.tryParse(rawId?.toString() ?? '') ?? 0;
+    if (workshopId > 0) {
+      await _bookingStorage.clearPendingBooking(workshopId);
+    }
+    setState(() {
+      _viewState = WorkshopBookingViewState.form;
+      _currentWorkshopOrderId = null;
+      _currentRazorpayOrderId = null;
+      _paymentId = null;
+      _lastPaymentSignature = null;
+      _statusMessage = null;
+      _authoritativePayableAmount = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_isSuccess) {
-      return _buildSuccessScreen();
+    switch (_viewState) {
+      case WorkshopBookingViewState.success:
+        return _buildSuccessScreen();
+      case WorkshopBookingViewState.failed:
+        return _buildDefinitivelyFailedScreen();
+      case WorkshopBookingViewState.refundReview:
+        return _buildRefundReviewScreen();
+      case WorkshopBookingViewState.pending:
+        return _buildPendingVerificationScreen();
+      case WorkshopBookingViewState.form:
+      default:
+        return _buildFormScreen();
     }
+  }
 
-    if (_isPendingVerification) {
-      return _buildPendingVerificationScreen();
-    }
-
+  Widget _buildFormScreen() {
     final title = widget.workshopData?['title'] ?? 'Certified Masterclass';
     final instructor = widget.workshopData?['instructor'] ?? 'Acharya Devraj';
     final image = widget.workshopData?['thumbnailUrl'] ?? widget.workshopData?['image'] ?? '';
@@ -453,12 +526,8 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // WORKSHOP SUMMARY CARD
                         _buildWorkshopSummaryCard(title, instructor, image),
-
                         const SizedBox(height: 20),
-
-                        // ATTENDEE FORM
                         Text(
                           'Attendee Information',
                           style: GoogleFonts.poppins(
@@ -468,7 +537,6 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-
                         _buildTextField(
                           controller: _nameController,
                           label: 'Full Name',
@@ -477,7 +545,6 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                           validator: (val) => val == null || val.trim().isEmpty ? 'Name is required' : null,
                         ),
                         const SizedBox(height: 12),
-
                         _buildTextField(
                           controller: _emailController,
                           label: 'Email Address',
@@ -487,7 +554,6 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                           validator: (val) => val == null || !val.contains('@') ? 'Valid email required' : null,
                         ),
                         const SizedBox(height: 12),
-
                         _buildTextField(
                           controller: _phoneController,
                           label: 'Phone / WhatsApp Number',
@@ -497,7 +563,6 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                           validator: (val) => val == null || val.trim().length < 10 ? 'Valid phone number required' : null,
                         ),
                         const SizedBox(height: 12),
-
                         _buildTextField(
                           controller: _notesController,
                           label: 'Special Note / Question (Optional)',
@@ -505,18 +570,13 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                           icon: Icons.chat_bubble_outline_rounded,
                           maxLines: 2,
                         ),
-
                         const SizedBox(height: 24),
-
-                        // PRICE BREAKDOWN CARD
                         _buildPriceBreakdownCard(),
                       ],
                     ),
                   ),
                 ),
               ),
-
-              // BOTTOM PAYMENT ACTION
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
@@ -570,7 +630,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
           if (_isProcessing)
             ModalBarrier(
               dismissible: false,
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
             ),
         ],
       ),
@@ -861,8 +921,8 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
               ],
               const SizedBox(height: 16),
               Text(
-                _pendingMessage ??
-                    'Your payment was processed, but server verification is taking longer than expected due to network connection. Tap Retry Verification to re-check status.',
+                _statusMessage ??
+                    'Your payment was processed, but server verification is taking longer than expected. Tap Retry Verification to check the latest status.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
               ),
@@ -886,6 +946,160 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                   _isProcessing ? _processingMessage : 'Retry Verification',
                   style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () {
+                  context.push(RoutePaths.support);
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.borderSubtle),
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Contact Support', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  context.go(RoutePaths.home);
+                },
+                child: Text('Back to Home', style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRefundReviewScreen() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEFF6FF),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.info_outline_rounded, color: Color(0xFF3B82F6), size: 72),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Payment Under Review',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+              ),
+              if (_currentWorkshopOrderId != null && _currentWorkshopOrderId! > 0) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Order ID: #$_currentWorkshopOrderId',
+                  style: GoogleFonts.poppins(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
+                ),
+              ],
+              if (_paymentId != null && _paymentId!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Payment ID: $_paymentId',
+                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                _statusMessage ??
+                    'Your payment was received, but the registration is under manual review or refund processing. Please contact support before starting another booking.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () {
+                  context.push(RoutePaths.support);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.support_agent_rounded, size: 20),
+                label: Text('Contact Support Team', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () {
+                  context.go(RoutePaths.home);
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.borderSubtle),
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Back to Home', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDefinitivelyFailedScreen() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFEF2F2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.cancel_outlined, color: AppColors.error, size: 72),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Booking Unsuccessful',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+              ),
+              if (_currentWorkshopOrderId != null && _currentWorkshopOrderId! > 0) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Order ID: #$_currentWorkshopOrderId',
+                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                _statusMessage ??
+                    'Payment was cancelled or failed permanently. You may attempt a new booking.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: _resetToNewBooking,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.refresh_rounded, size: 20),
+                label: Text('Start New Booking', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 12),
               OutlinedButton(

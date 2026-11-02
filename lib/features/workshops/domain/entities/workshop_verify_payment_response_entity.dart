@@ -17,6 +17,19 @@ class WorkshopVerifyPaymentResponseEntity extends Equatable {
 
   bool get isConfirmed => success && registrationStatus.toLowerCase() == 'confirmed';
 
+  bool get isDefinitivelyFailed {
+    final status = registrationStatus.toLowerCase();
+    return status == 'failed' || status == 'cancelled' || status == 'rejected';
+  }
+
+  bool get isRefundReview {
+    final status = registrationStatus.toLowerCase();
+    return status == 'refund_pending' ||
+        status == 'under_review' ||
+        status == 'refund_initiated' ||
+        status == 'refund_review';
+  }
+
   factory WorkshopVerifyPaymentResponseEntity.fromJson(Map<String, dynamic> json) {
     final bool isSuccess = json['success'] == true || json['status'] == 'success';
 

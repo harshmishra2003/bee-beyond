@@ -23,6 +23,7 @@ class ApiEndpoints {
   static const String workshopDetail = '/workshop_details.php';
   static const String workshopCreateOrder = '/workshop_create_order.php';
   static const String workshopVerifyPayment = '/workshop_verify_payment.php';
+  static const String workshopOrderStatus = '/workshop_order_status.php';
 
   // Books, Music & Video
   static const String books = '/books.php';

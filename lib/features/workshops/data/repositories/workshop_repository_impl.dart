@@ -50,4 +50,13 @@ class WorkshopRepositoryImpl implements WorkshopRepository {
       razorpaySignature: razorpaySignature,
     );
   }
+
+  @override
+  Future<WorkshopVerifyPaymentResponseEntity> getWorkshopOrderStatus({
+    required int workshopOrderId,
+  }) async {
+    return await remoteDataSource.getWorkshopOrderStatus(
+      workshopOrderId: workshopOrderId,
+    );
+  }
 }
