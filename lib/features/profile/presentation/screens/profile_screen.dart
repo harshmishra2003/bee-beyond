@@ -164,6 +164,14 @@ class ProfileScreen extends ConsumerWidget {
                           onTap: () => context.push(RoutePaths.joinedCourses),
                         ),
                         _SettingsItem(
+                          icon: Icons.confirmation_number_rounded,
+                          iconColor: const Color(0xFF0891B2),
+                          iconBgColor: const Color(0xFFCFFAFE),
+                          title: 'My Workshop Bookings',
+                          subtitle: 'View masterclasses & booking status',
+                          onTap: () => context.push(RoutePaths.workshops),
+                        ),
+                        _SettingsItem(
                           icon: Icons.shopping_bag_rounded,
                           iconColor: const Color(0xFF059669),
                           iconBgColor: const Color(0xFFECFDF5),

@@ -5,6 +5,10 @@ class WorkshopVerifyPaymentResponseEntity extends Equatable {
   final String registrationStatus;
   final String bookingNumber;
   final String message;
+  final String paymentStatus;
+  final String orderStatus;
+  final double amount;
+  final String currency;
   final bool isNetworkError;
 
   const WorkshopVerifyPaymentResponseEntity({
@@ -12,6 +16,10 @@ class WorkshopVerifyPaymentResponseEntity extends Equatable {
     required this.registrationStatus,
     required this.bookingNumber,
     required this.message,
+    this.paymentStatus = '',
+    this.orderStatus = '',
+    this.amount = 0.0,
+    this.currency = 'INR',
     this.isNetworkError = false,
   });
 
@@ -45,11 +53,22 @@ class WorkshopVerifyPaymentResponseEntity extends Equatable {
         .toLowerCase()
         .trim();
 
+    final pStatus = (dataMap['payment_status'] ?? json['payment_status'] ?? '').toString();
+    final oStatus = (dataMap['order_status'] ?? json['order_status'] ?? '').toString();
+    final rawAmt = dataMap['amount'] ?? json['amount'];
+    final parsedAmt = (rawAmt as num?)?.toDouble() ?? 0.0;
+    final curr = (dataMap['currency'] ?? json['currency'] ?? 'INR').toString();
+    final msg = (dataMap['message'] ?? json['message'] ?? '').toString();
+
     return WorkshopVerifyPaymentResponseEntity(
       success: isSuccess,
       registrationStatus: statusStr,
       bookingNumber: (dataMap['booking_number'] ?? json['booking_number'] ?? '').toString(),
-      message: (json['message'] ?? dataMap['message'] ?? '').toString(),
+      message: msg,
+      paymentStatus: pStatus,
+      orderStatus: oStatus,
+      amount: parsedAmt,
+      currency: curr,
       isNetworkError: false,
     );
   }
@@ -70,6 +89,10 @@ class WorkshopVerifyPaymentResponseEntity extends Equatable {
         registrationStatus,
         bookingNumber,
         message,
+        paymentStatus,
+        orderStatus,
+        amount,
+        currency,
         isNetworkError,
       ];
 }

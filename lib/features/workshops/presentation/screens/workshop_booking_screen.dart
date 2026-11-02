@@ -55,6 +55,8 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
   String? _confirmedBookingNumber;
   String? _paymentId;
   String? _statusMessage;
+  String? _registrationStatusStr;
+  String? _orderStatusStr;
 
   late double _basePrice;
   late double _discount;
@@ -117,7 +119,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
         _paymentId = pId.isNotEmpty ? pId : null;
         _lastPaymentSignature = sig.isNotEmpty ? sig : null;
         if (amt != null && amt > 0) {
-          _authoritativePayableAmount = amt / 100.0;
+          _authoritativePayableAmount = amt > 1000 ? (amt / 100.0) : amt;
         }
         _isProcessing = true;
         _processingMessage = 'Checking existing booking status...';
@@ -154,6 +156,12 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
             );
 
       if (!mounted) return;
+
+      _registrationStatusStr = verifyResult.registrationStatus;
+      _orderStatusStr = verifyResult.orderStatus;
+      if (verifyResult.amount > 0) {
+        _authoritativePayableAmount = verifyResult.amount;
+      }
 
       if (verifyResult.isConfirmed) {
         await _bookingStorage.clearPendingBooking(workshopId);
@@ -822,9 +830,11 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
   Widget _buildSuccessScreen() {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: const CustomAppBar(title: 'Booking Details'),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
+          physics: const BouncingScrollPhysics(),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -842,20 +852,39 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
               ),
-              if (_confirmedBookingNumber != null && _confirmedBookingNumber!.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Booking #: $_confirmedBookingNumber',
-                  style: GoogleFonts.poppins(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.bold),
+              const SizedBox(height: 16),
+
+              // DETAILED ORDER & REGISTRATION STATUS CARD FROM BACKEND
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.borderSubtle, width: 1.2),
                 ),
-              ],
-              if (_paymentId != null && _paymentId!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'Payment ID: $_paymentId',
-                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Booking & Order Details',
+                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 12),
+                    if (_currentWorkshopOrderId != null)
+                      _buildDetailRow('Order ID', '#$_currentWorkshopOrderId'),
+                    if (_confirmedBookingNumber != null && _confirmedBookingNumber!.isNotEmpty)
+                      _buildDetailRow('Booking Number', _confirmedBookingNumber!),
+                    _buildDetailRow('Registration Status', (_registrationStatusStr ?? 'confirmed').toUpperCase(), isHighlight: true),
+                    if (_orderStatusStr != null && _orderStatusStr!.isNotEmpty)
+                      _buildDetailRow('Order Status', _orderStatusStr!.toUpperCase()),
+                    _buildDetailRow('Amount Paid', CurrencyUtils.formatINR(_finalAmount)),
+                    if (_paymentId != null && _paymentId!.isNotEmpty)
+                      _buildDetailRow('Payment Reference', _paymentId!),
+                  ],
                 ),
-              ],
+              ),
+
               const SizedBox(height: 16),
               Text(
                 'Thank you for enrolling. Access instructions and calendar invite have been dispatched to your email.',
@@ -882,9 +911,33 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
     );
   }
 
+  Widget _buildDetailRow(String label, String value, {bool isHighlight = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary)),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.poppins(
+                fontSize: 12.5,
+                fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
+                color: isHighlight ? const Color(0xFF10B981) : AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPendingVerificationScreen() {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: const CustomAppBar(title: 'Order Status'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -977,6 +1030,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
   Widget _buildRefundReviewScreen() {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: const CustomAppBar(title: 'Order Status'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -1055,6 +1109,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
   Widget _buildDefinitivelyFailedScreen() {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: const CustomAppBar(title: 'Order Status'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
