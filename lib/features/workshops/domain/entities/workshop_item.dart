@@ -215,7 +215,7 @@ class WorkshopItem extends Equatable {
       takeaways: parseList(json['takeaways'] ?? json['highlights']),
       upcomingDates: datesList,
       isLive: isLiveVal,
-      views: int.tryParse(json['views']?.toString() ?? '$avail') ?? avail,
+      views: int.tryParse(json['views']?.toString() ?? '0') ?? 0,
       isRegistered: isReg,
       capacity: cap,
       availableSeats: avail,
