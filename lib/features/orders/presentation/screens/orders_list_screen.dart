@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_alert_manager.dart';
@@ -182,12 +181,12 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                               ),
                             ),
                             const SizedBox(width: 5),
-                            Text(
+                            const Text(
                               'BEE BEYONND WELLNESS',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w800,
-                                color: const Color(0xFF6845C4),
+                                color: Color(0xFF6845C4),
                                 letterSpacing: 0.8,
                               ),
                             ),
@@ -202,12 +201,12 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                             ),
                           ],
                         ),
-                        Text(
+                        const Text(
                           'My Orders & Transactions',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF0F172A),
+                            color: Color(0xFF0F172A),
                           ),
                         ),
                       ],
@@ -296,13 +295,13 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                                 _searchQuery = val.trim();
                               });
                             },
-                            style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF0F172A)),
-                            decoration: InputDecoration(
+                            style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
+                            decoration: const InputDecoration(
                               hintText: 'Search orders, courses, remedies...',
-                              hintStyle: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF94A3B8)),
+                              hintStyle: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
                               border: InputBorder.none,
                               isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                              contentPadding: EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
                         ),
@@ -409,7 +408,7 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                                   ),
                                 Text(
                                   filter,
-                                  style: GoogleFonts.poppins(
+                                  style: TextStyle(
                                     color: isSelected ? Colors.white : const Color(0xFF475569),
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                                     fontSize: 12,
@@ -426,7 +425,7 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                                   ),
                                   child: Text(
                                     '$count',
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                       color: isSelected ? Colors.white : const Color(0xFF64748B),
@@ -465,12 +464,12 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                           child: const Icon(Icons.hive_rounded, color: Colors.white, size: 18),
                         ),
                         const SizedBox(width: 10),
-                        Text(
+                        const Text(
                           'Bee Nectar',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF78350F),
+                            color: Color(0xFF78350F),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -480,9 +479,9 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                             color: const Color(0xFFF59E0B),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(
+                          child: const Text(
                             '850 Pts',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -501,12 +500,12 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                               accentColor: const Color(0xFFF59E0B),
                             );
                           },
-                          child: Text(
+                          child: const Text(
                             'Redeem >',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFFB45309),
+                              color: Color(0xFFB45309),
                             ),
                           ),
                         ),
@@ -522,12 +521,12 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                     children: [
                       Row(
                         children: [
-                          Text(
+                          const Text(
                             'Orders History',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0F172A),
+                              color: Color(0xFF0F172A),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -539,10 +538,10 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                             ),
                             child: Text(
                               '${filteredOrders.length}',
-                              style: GoogleFonts.poppins(
+                              style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF6845C4),
+                                color: Color(0xFF6845C4),
                               ),
                             ),
                           ),
@@ -555,20 +554,20 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: const Color(0xFFA7F3D0)),
                         ),
-                        child: Row(
+                        child: const Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.local_shipping_rounded,
                               color: Color(0xFF059669),
                               size: 13,
                             ),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text(
                               'Live Courier Sync',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF059669),
+                                color: Color(0xFF059669),
                               ),
                             ),
                           ],
@@ -720,10 +719,10 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                       children: [
                         Text(
                           order.orderId,
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF64748B),
+                            color: Color(0xFF64748B),
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -756,7 +755,7 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                           ],
                           Text(
                             statusDisplay,
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 9.5,
                               fontWeight: FontWeight.w800,
                               color: statusBadgeText,
@@ -790,10 +789,10 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                             },
                             child: Text(
                               itemTitle,
-                              style: GoogleFonts.poppins(
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF0F172A),
+                                color: Color(0xFF0F172A),
                                 height: 1.25,
                               ),
                               maxLines: 2,
@@ -803,9 +802,9 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                           const SizedBox(height: 3),
                           Text(
                             'Placed: $formattedDate • Qty: ${order.totalItems}',
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               fontSize: 11,
-                              color: const Color(0xFF64748B),
+                              color: Color(0xFF64748B),
                             ),
                           ),
                         ],
@@ -825,10 +824,10 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                       children: [
                         Text(
                           CurrencyUtils.formatINR(order.totalAmount),
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w900,
-                            color: const Color(0xFF0F172A),
+                            color: Color(0xFF0F172A),
                           ),
                         ),
                         Container(
@@ -839,10 +838,10 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                           ),
                           child: Text(
                             'Payment: ${order.paymentStatus}',
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               fontSize: 9.5,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF166534),
+                              color: Color(0xFF166534),
                             ),
                           ),
                         ),
@@ -863,12 +862,12 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: Text(
+                          child: const Text(
                             'Invoice',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF475569),
+                              color: Color(0xFF475569),
                             ),
                           ),
                         ),
@@ -893,7 +892,7 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                             children: [
                               Text(
                                 isExpanded ? 'Hide Details' : 'Details',
-                                style: GoogleFonts.poppins(
+                                style: const TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -933,12 +932,12 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            const Text(
                               'ORDER BREAKDOWN & BILLING',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: const Color(0xFF64748B),
+                                color: Color(0xFF64748B),
                                 letterSpacing: 0.8,
                               ),
                             ),
@@ -964,7 +963,7 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                                   const SizedBox(width: 4),
                                   Text(
                                     order.paymentStatus,
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.bold,
                                       color: order.paymentStatus.contains('PAID')
@@ -1033,10 +1032,10 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                               Expanded(
                                 child: Text(
                                   'Payment via ${order.paymentMethod}',
-                                  style: GoogleFonts.poppins(
+                                  style: const TextStyle(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF475569),
+                                    color: Color(0xFF475569),
                                   ),
                                 ),
                               ),
@@ -1081,7 +1080,7 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: isBold ? 12 : 11.5,
               fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
               color: isBold ? const Color(0xFF0F172A) : const Color(0xFF64748B),
@@ -1089,7 +1088,7 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
           ),
           Text(
             value,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: isBold ? 13 : 11.5,
               fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
               color: valueColor ?? (isBold ? const Color(0xFF0F172A) : const Color(0xFF334155)),
@@ -1122,21 +1121,21 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                   size: 44, color: Color(0xFF6845C4)),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'No Orders Found',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
+                color: Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 6),
-            Text(
+            const Text(
               'Your completed course enrollments, VIP membership subscriptions, and product orders will appear here dynamically.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 12.5,
-                color: const Color(0xFF64748B),
+                color: Color(0xFF64748B),
                 height: 1.4,
               ),
             ),
@@ -1153,9 +1152,9 @@ class _OrdersListScreenState extends ConsumerState<OrdersListScreen> {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
-              child: Text(
+              child: const Text(
                 'Explore Courses & Remedies →',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
