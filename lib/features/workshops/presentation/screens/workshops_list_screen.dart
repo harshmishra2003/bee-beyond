@@ -338,12 +338,24 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
-          onTap: () {
-            context.push(
-              RoutePaths.workshopDetail,
-              extra: item,
-            );
-          },
+          onTap: item.isRegistered
+              ? null
+              : () {
+                  if (item.isFull) {
+                    AppAlertManager.showFloatingToast(
+                      context,
+                      title: 'Capacity Full',
+                      message: 'This masterclass is currently at full capacity.',
+                      icon: Icons.event_seat_rounded,
+                      accentColor: const Color(0xFFF59E0B),
+                    );
+                  } else {
+                    context.push(
+                      RoutePaths.workshopBooking,
+                      extra: item.toJson(),
+                    );
+                  }
+                },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
