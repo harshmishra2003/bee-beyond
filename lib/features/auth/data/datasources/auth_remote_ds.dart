@@ -28,43 +28,50 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> login(String email, String password) async {
-    final response = await dioClient.post(
-      ApiEndpoints.login,
-      data: {
-        'email': email,
-        'password': password,
-      },
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
+    try {
+      final response = await dioClient.post(
+        ApiEndpoints.login,
+        data: {
+          'email': email,
+          'password': password,
         },
-      ),
-    );
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
       final rawData = response.data;
-      final Map<String, dynamic> data = rawData is String 
-          ? jsonDecode(rawData) 
+      final Map<String, dynamic> data = rawData is String
+          ? jsonDecode(rawData)
           : Map<String, dynamic>.from(rawData);
 
-      final isSuccess = data['success'] == true || 
-                        data['status'] == 'success' || 
-                        data['status'] == true;
+      final isSuccess = data['success'] == true || data['status'] == 'success' || data['status'] == true;
 
       if (isSuccess && data['data'] != null) {
-        final userData = data['data']?['user'] ?? data['user'] ?? data['data'];
-        
-        final token = data['data']?['token'] ?? data['token'];
-        if (token != null && token.toString().isNotEmpty) {
-          await secureStorage.saveAuthToken(token.toString());
+        final payload = Map<String, dynamic>.from(data['data']);
+        final userData = payload['user'] ?? payload;
+        final token = payload['token'] ?? data['token'];
+
+        if (token != null && token.toString().trim().isNotEmpty) {
+          await secureStorage.saveAuthToken(token.toString().trim());
         }
 
         return UserModel.fromJson(Map<String, dynamic>.from(userData));
       } else {
-        throw ServerFailure(data['message'] ?? 'Login failed');
+        throw AuthFailure(data['message']?.toString() ?? 'Login failed.');
       }
-    } else {
-      throw ServerFailure('Failed to connect to the server');
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final rawData = e.response!.data;
+        final Map<String, dynamic> data = rawData is String
+            ? jsonDecode(rawData)
+            : Map<String, dynamic>.from(rawData);
+        final message = data['message']?.toString() ?? 'Invalid email or password.';
+        throw AuthFailure(message);
+      }
+      rethrow;
     }
   }
 
@@ -77,102 +84,118 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String? dob,
     String? gender,
   }) async {
-    final response = await dioClient.post(
-      ApiEndpoints.register,
-      data: {
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'password': password,
-        if (dob != null && dob.isNotEmpty) 'dob': dob,
-        if (gender != null && gender.isNotEmpty) 'gender': gender,
-      },
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
+    try {
+      final response = await dioClient.post(
+        ApiEndpoints.register,
+        data: {
+          'name': name,
+          'email': email,
+          'phone': phone,
+          'password': password,
+          if (dob != null && dob.isNotEmpty) 'dob': dob,
+          if (gender != null && gender.isNotEmpty) 'gender': gender,
         },
-      ),
-    );
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
       final rawData = response.data;
-      final Map<String, dynamic> data = rawData is String 
-          ? jsonDecode(rawData) 
+      final Map<String, dynamic> data = rawData is String
+          ? jsonDecode(rawData)
           : Map<String, dynamic>.from(rawData);
 
-      final isSuccess = data['success'] == true || 
-                        data['status'] == 'success' || 
-                        data['status'] == true;
+      final isSuccess = data['success'] == true || data['status'] == 'success' || data['status'] == true;
 
       if (isSuccess && data['data'] != null) {
-        final userData = data['data']?['user'] ?? data['user'] ?? data['data'];
+        final payload = Map<String, dynamic>.from(data['data']);
+        final userData = payload['user'] ?? payload;
+        final token = payload['token'] ?? data['token'];
 
-        final token = data['data']?['token'] ?? data['token'];
-        if (token != null && token.toString().isNotEmpty) {
-          await secureStorage.saveAuthToken(token.toString());
+        if (token != null && token.toString().trim().isNotEmpty) {
+          await secureStorage.saveAuthToken(token.toString().trim());
         }
 
         return UserModel.fromJson(Map<String, dynamic>.from(userData));
       } else {
-        throw ServerFailure(data['message'] ?? 'Registration failed');
+        throw AuthFailure(data['message']?.toString() ?? 'Registration failed.');
       }
-    } else {
-      throw ServerFailure('Failed to connect to the server');
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final rawData = e.response!.data;
+        final Map<String, dynamic> data = rawData is String
+            ? jsonDecode(rawData)
+            : Map<String, dynamic>.from(rawData);
+        final message = data['message']?.toString() ?? 'Registration failed.';
+        throw AuthFailure(message);
+      }
+      rethrow;
     }
   }
 
   @override
   Future<void> forgotPassword(String email) async {
-    final response = await dioClient.post(
-      ApiEndpoints.forgotPassword,
-      data: {
-        'email': email,
-      },
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
+    try {
+      final response = await dioClient.post(
+        ApiEndpoints.forgotPassword,
+        data: {
+          'email': email,
         },
-      ),
-    );
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
       final rawData = response.data;
-      final Map<String, dynamic> data = rawData is String 
-          ? jsonDecode(rawData) 
+      final Map<String, dynamic> data = rawData is String
+          ? jsonDecode(rawData)
           : Map<String, dynamic>.from(rawData);
 
       if (data['success'] == true || data['status'] == 'success' || data['status'] == true) {
-        return; // Success
+        return;
       } else {
-        throw ServerFailure(data['message'] ?? 'Failed to send reset link');
+        throw AuthFailure(data['message']?.toString() ?? 'Failed to send reset link');
       }
-    } else {
-      throw ServerFailure('Failed to connect to the server');
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final rawData = e.response!.data;
+        final Map<String, dynamic> data = rawData is String
+            ? jsonDecode(rawData)
+            : Map<String, dynamic>.from(rawData);
+        throw AuthFailure(data['message']?.toString() ?? 'Failed to send reset link.');
+      }
+      rethrow;
     }
   }
 
   @override
   Future<bool> verifyOtp(String phone, String otp) async {
-    final response = await dioClient.post(
-      ApiEndpoints.verifyOtp,
-      data: {
-        'phone': phone,
-        'otp': otp,
-      },
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
+    try {
+      final response = await dioClient.post(
+        ApiEndpoints.verifyOtp,
+        data: {
+          'phone': phone,
+          'otp': otp,
         },
-      ),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
       final rawData = response.data;
-      final Map<String, dynamic> data = rawData is String 
-          ? jsonDecode(rawData) 
+      final Map<String, dynamic> data = rawData is String
+          ? jsonDecode(rawData)
           : Map<String, dynamic>.from(rawData);
 
       return data['success'] == true || data['status'] == 'success';
+    } catch (_) {
+      return false;
     }
-    return false;
   }
 }
