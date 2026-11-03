@@ -1,16 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/video_lecture_item.dart';
 
-/// Central Provider strictly fetching live videos from Bee Beyonnd Official YouTube Channel (@beebeyonndofficial).
-/// No fallback lists or dummy static data. Returns [] if no videos are returned from YouTube.
+/// Central Provider strictly fetching live videos from Bee Beyonnd Official YouTube Channel (@beebeyonndofficial)
 final videoLecturesProvider = FutureProvider<List<VideoLectureItem>>((ref) async {
-  final dioClient = ref.watch(dioClientProvider);
-
   try {
-    final channelVideos = await _fetchYouTubeChannelVideos(dioClient.instance);
+    final channelVideos = await _fetchYouTubeChannelVideos();
     return channelVideos;
   } catch (e) {
     debugPrint('[YOUTUBE PROVIDER] YouTube channel fetch error: $e');
@@ -18,11 +14,18 @@ final videoLecturesProvider = FutureProvider<List<VideoLectureItem>>((ref) async
   }
 });
 
-/// Fetches videos directly from YouTube for @beebeyonndofficial by resolving real Channel ID or parsing channel HTML
-Future<List<VideoLectureItem>> _fetchYouTubeChannelVideos(Dio dio) async {
+/// Fetches videos directly from YouTube for @beebeyonndofficial using a clean standalone Dio client (no API auth headers)
+Future<List<VideoLectureItem>> _fetchYouTubeChannelVideos() async {
+  final cleanDio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 8),
+    ),
+  );
+
   try {
     // Fetch handle page HTML to resolve real UC... Channel ID
-    final channelResponse = await dio.get(
+    final channelResponse = await cleanDio.get(
       'https://www.youtube.com/@beebeyonndofficial/videos',
       options: Options(
         responseType: ResponseType.plain,
@@ -47,7 +50,7 @@ Future<List<VideoLectureItem>> _fetchYouTubeChannelVideos(Dio dio) async {
         debugPrint('[YOUTUBE] Resolved real Channel ID: $realChannelId');
 
         // Query official YouTube RSS feed using the resolved UC... Channel ID
-        final rssResponse = await dio.get(
+        final rssResponse = await cleanDio.get(
           'https://www.youtube.com/feeds/videos.xml?channel_id=$realChannelId',
           options: Options(
             responseType: ResponseType.plain,
@@ -73,6 +76,8 @@ Future<List<VideoLectureItem>> _fetchYouTubeChannelVideos(Dio dio) async {
     }
   } catch (e) {
     debugPrint('[YOUTUBE] Error resolving channel videos: $e');
+  } finally {
+    cleanDio.close();
   }
 
   return [];
