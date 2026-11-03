@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -69,10 +68,10 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                   ),
                   child: TextField(
                     controller: _searchController,
-                    style: GoogleFonts.poppins(fontSize: 13.5, color: AppColors.textPrimary),
+                    style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       hintText: 'Search workshops, mentors, topics...',
-                      hintStyle: GoogleFonts.poppins(color: AppColors.textHint, fontSize: 13),
+                      hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 13),
                       prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
@@ -143,9 +142,9 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
+                              const Text(
                                 'LIVE Interactive Masterclasses',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
@@ -172,13 +171,13 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                       if (videoWorkshops.isNotEmpty) ...[
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
+                          child: const Row(
                             children: [
-                              const Icon(Icons.ondemand_video_rounded, color: Color(0xFF6366F1), size: 20),
-                              const SizedBox(width: 8),
+                              Icon(Icons.ondemand_video_rounded, color: Color(0xFF6366F1), size: 20),
+                              SizedBox(width: 8),
                               Text(
                                 'Guided Video Workshops',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
@@ -239,9 +238,9 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                   color: Colors.amber,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(
+                child: const Text(
                   'ACCREDITED MASTERCLASSES',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w900,
                     color: Colors.black,
@@ -252,9 +251,9 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Transformative Holistic Workshops',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w900,
               color: Colors.white,
@@ -262,11 +261,11 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
+          const Text(
             'Immersive live & recorded certified workshops led by revered masters in Sound Frequency, Vastu, Ayurveda & Life Coaching.',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 12,
-              color: const Color(0xFFC7D2FE),
+              color: Color(0xFFC7D2FE),
               height: 1.4,
             ),
           ),
@@ -306,7 +305,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
             },
             selectedColor: AppColors.primary,
             backgroundColor: Colors.white,
-            labelStyle: GoogleFonts.poppins(
+            labelStyle: TextStyle(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               color: isSelected ? Colors.white : AppColors.textSecondary,
@@ -379,7 +378,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                   children: [
                     Text(
                       item.title,
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
@@ -396,7 +395,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                             '${item.instructor} • ${item.lineage}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               fontSize: 11.5,
                               color: AppColors.textSecondary,
                               fontWeight: FontWeight.w500,
@@ -412,7 +411,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                         const SizedBox(width: 4),
                         Text(
                           item.duration,
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             fontSize: 11.5,
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -423,7 +422,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                         const SizedBox(width: 4),
                         Text(
                           '${item.bookedSeats > 0 ? item.bookedSeats : item.views} Enrolled',
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             fontSize: 11.5,
                             color: AppColors.textSecondary,
                           ),
@@ -433,9 +432,9 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                         const SizedBox(width: 4),
                         Text(
                           '${item.availableSeats} Seats Left',
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             fontSize: 11.5,
-                            color: const Color(0xFFD97706),
+                            color: Color(0xFFD97706),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -455,7 +454,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                             if (item.discount > 0)
                               Text(
                                 CurrencyUtils.formatINR(item.basePrice),
-                                style: GoogleFonts.poppins(
+                                style: const TextStyle(
                                   fontSize: 11,
                                   color: AppColors.textHint,
                                   decoration: TextDecoration.lineThrough,
@@ -463,7 +462,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                               ),
                             Text(
                               CurrencyUtils.formatINR(item.finalPrice),
-                              style: GoogleFonts.poppins(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
                                 color: AppColors.primary,
@@ -493,7 +492,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                             item.isRegistered
                                 ? '✓ Booked'
                                 : (item.isFull ? 'Full' : 'Book Now'),
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -511,21 +510,21 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.search_off_rounded, size: 56, color: AppColors.textHint),
-            const SizedBox(height: 12),
+            Icon(Icons.search_off_rounded, size: 56, color: AppColors.textHint),
+            SizedBox(height: 12),
             Text(
               'No Workshops Found',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               'Try adjusting your search query or category filters.',
-              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -542,14 +541,14 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
           children: [
             const Icon(Icons.error_outline_rounded, size: 56, color: AppColors.error),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Failed to load workshops',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 4),
             Text(
               message,
-              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
