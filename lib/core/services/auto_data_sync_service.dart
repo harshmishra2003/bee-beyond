@@ -68,10 +68,10 @@ class AutoDataSyncService with WidgetsBindingObserver {
     _startPeriodicSync();
   }
 
-  /// Start background polling every 20 seconds
+  /// Start background polling every 60 seconds
   void _startPeriodicSync() {
     _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+    _syncTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       syncAllDataSilently();
     });
   }
