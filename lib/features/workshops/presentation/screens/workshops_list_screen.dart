@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../routing/route_paths.dart';
@@ -328,46 +329,108 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF2E1B5B), width: 1.8),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0C000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            color: Color(0x1F2E1B5B),
+            blurRadius: 14,
+            spreadRadius: 1,
+            offset: Offset(0, 5),
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-              // THUMBNAIL
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: item.thumbnailUrl.startsWith('http')
-                    ? CachedNetworkImage(
-                        imageUrl: item.thumbnailUrl,
-                        height: 170,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          height: 170,
-                          color: const Color(0xFFF1F5F9),
-                          child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        child: InkWell(
+          onTap: () {
+            context.push(
+              RoutePaths.workshopDetail,
+              extra: item,
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // THUMBNAIL WITH BEAUTIFUL AMBIENT BACKDROP (NO CROPPING)
+              Stack(
+                children: [
+                  Container(
+                    height: 185,
+                    width: double.infinity,
+                    color: const Color(0xFF0F0C20),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (item.thumbnailUrl.startsWith('http'))
+                          Opacity(
+                            opacity: 0.30,
+                            child: CachedNetworkImage(
+                              imageUrl: item.thumbnailUrl,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        Center(
+                          child: item.thumbnailUrl.startsWith('http')
+                              ? CachedNetworkImage(
+                                  imageUrl: item.thumbnailUrl,
+                                  fit: BoxFit.contain,
+                                  height: 185,
+                                  placeholder: (context, url) => const Center(
+                                    child: CircularProgressIndicator(color: AppColors.primary),
+                                  ),
+                                  errorWidget: (context, url, error) => const Icon(
+                                    Icons.workspace_premium_rounded,
+                                    size: 52,
+                                    color: Colors.amber,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.workspace_premium_rounded,
+                                  size: 52,
+                                  color: Colors.amber,
+                                ),
                         ),
-                        errorWidget: (context, url, error) => Container(
-                          height: 170,
-                          color: const Color(0xFF1E1B4B),
-                          child: const Icon(Icons.workspace_premium_rounded, size: 48, color: Colors.amber),
+                      ],
+                    ),
+                  ),
+
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: item.categoryColor.withValues(alpha: 0.6),
+                          width: 1.0,
                         ),
-                      )
-                    : Container(
-                        height: 170,
-                        color: const Color(0xFF1E1B4B),
-                        child: const Icon(Icons.workspace_premium_rounded, size: 48, color: Colors.amber),
                       ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            item.isLive ? Icons.sensors_rounded : Icons.play_circle_fill_rounded,
+                            size: 13,
+                            color: item.categoryColor,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            item.category.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               // CONTENT
@@ -379,7 +442,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                     Text(
                       item.title,
                       style: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 15.5,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                         height: 1.3,
@@ -388,32 +451,48 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.person_outline_rounded, size: 15, color: AppColors.textSecondary),
+                        const Icon(Icons.person_outline_rounded, size: 15, color: AppColors.primary),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            '${item.instructor} • ${item.lineage}',
+                            'Mentor: ${item.instructor}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 11.5,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+
+                    if (item.description.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        item.description.trim(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF475569),
+                          height: 1.4,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 10),
                     Row(
                       children: [
-                        const Icon(Icons.access_time_rounded, size: 14, color: AppColors.primary),
+                        const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
                         const SizedBox(width: 4),
                         Text(
                           item.duration,
                           style: const TextStyle(
                             fontSize: 11.5,
-                            color: AppColors.primary,
+                            color: AppColors.textSecondary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -435,13 +514,13 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                           style: const TextStyle(
                             fontSize: 11.5,
                             color: Color(0xFFD97706),
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Divider(height: 1),
+                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
                     const SizedBox(height: 12),
 
                     // PRICE & ACTION BUTTONS
@@ -463,7 +542,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                             Text(
                               CurrencyUtils.formatINR(item.finalPrice),
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 16.5,
                                 fontWeight: FontWeight.w900,
                                 color: AppColors.primary,
                               ),
@@ -471,22 +550,36 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                           ],
                         ),
                         ElevatedButton(
-                          onPressed: () {
-                            context.push(
-                              RoutePaths.workshopBooking,
-                              extra: item.toJson(),
-                            );
-                          },
+                          onPressed: item.isRegistered
+                              ? null
+                              : () {
+                                  if (item.isFull) {
+                                    AppAlertManager.showFloatingToast(
+                                      context,
+                                      title: 'Capacity Full',
+                                      message: 'This masterclass is currently at full capacity.',
+                                      icon: Icons.event_seat_rounded,
+                                      accentColor: const Color(0xFFF59E0B),
+                                    );
+                                  } else {
+                                    context.push(
+                                      RoutePaths.workshopBooking,
+                                      extra: item.toJson(),
+                                    );
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: item.isRegistered
                                 ? const Color(0xFF10B981)
                                 : (item.isFull ? const Color(0xFF94A3B8) : AppColors.primary),
+                            disabledBackgroundColor: const Color(0xFF10B981),
+                            disabledForegroundColor: Colors.white,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            elevation: 1,
+                            elevation: item.isRegistered ? 0 : 1,
                           ),
                           child: Text(
                             item.isRegistered
@@ -506,7 +599,8 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
             ],
           ),
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildEmptyState() {
