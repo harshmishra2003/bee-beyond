@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 
 class OnboardingPageFour extends StatefulWidget {
@@ -48,23 +47,24 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
 
           // Main Headline
           Center(
-            child: RichText(
+            child: Text.rich(
               textAlign: TextAlign.center,
-              text: TextSpan(
+              TextSpan(
                 text: 'Ready to Begin Your ',
-                style: GoogleFonts.poppins(
+                style: const TextStyle(
                   fontSize: 23,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F172A),
+                  color: Color(0xFF0F172A),
                   height: 1.25,
                 ),
                 children: [
                   TextSpan(
                     text: 'Journey',
-                    style: GoogleFonts.playfairDisplay(
+                    style: TextStyle(
                       fontSize: 23,
                       fontWeight: FontWeight.bold,
                       fontStyle: FontStyle.italic,
+                      fontFamily: 'serif',
                       foreground: Paint()
                         ..shader = const LinearGradient(
                           colors: [
@@ -75,12 +75,12 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
                         ).createShader(const Rect.fromLTWH(0, 0, 200, 20)),
                     ),
                   ),
-                  TextSpan(
+                  const TextSpan(
                     text: '?',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 23,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0F172A),
+                      color: Color(0xFF0F172A),
                     ),
                   ),
                 ],
@@ -90,12 +90,12 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
 
           const SizedBox(height: 8),
 
-          Text(
+          const Text(
             'Bee Beyonnd is your personal sanctuary gently guiding you towards holistic physical, mental & spiritual balance.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 12.5,
-              color: const Color(0xFF475569),
+              color: Color(0xFF475569),
               height: 1.5,
             ),
           ),
@@ -210,12 +210,12 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'YOUR THREE PILLARS OF GROWTH',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF64748B),
+                  color: Color(0xFF64748B),
                   letterSpacing: 0.8,
                 ),
               ),
@@ -226,20 +226,20 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFB6E8C0)),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.check_circle_rounded,
                       color: Color(0xFF006A37),
                       size: 13,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       'Holistic Care',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF006A37),
+                        color: Color(0xFF006A37),
                       ),
                     ),
                   ],
@@ -323,27 +323,28 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         "TODAY'S INTENTION",
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF006A37),
+                          color: Color(0xFF006A37),
                           letterSpacing: 0.8,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         '"One small mindful step each day blossoms into a lifetime of radiant health and inner stillness."',
-                        style: GoogleFonts.playfairDisplay(
+                        style: TextStyle(
                           fontSize: 12,
                           fontStyle: FontStyle.italic,
+                          fontFamily: 'serif',
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF334155),
+                          color: Color(0xFF334155),
                           height: 1.4,
                         ),
                       ),
@@ -388,10 +389,10 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
           const SizedBox(width: 5),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: const TextStyle(
               fontSize: 10.5,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E293B),
+              color: Color(0xFF1E293B),
             ),
           ),
         ],
@@ -444,10 +445,10 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0F172A),
+                        color: Color(0xFF0F172A),
                       ),
                     ),
                     Container(
@@ -458,7 +459,7 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
                       ),
                       child: Text(
                         badgeText,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.bold,
                           color: badgeColor,
@@ -470,9 +471,9 @@ class _OnboardingPageFourState extends State<OnboardingPageFour>
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 11,
-                    color: const Color(0xFF64748B),
+                    color: Color(0xFF64748B),
                   ),
                 ),
               ],
