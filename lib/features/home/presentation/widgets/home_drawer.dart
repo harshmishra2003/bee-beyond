@@ -315,7 +315,11 @@ class HomeDrawer extends ConsumerWidget {
                   textColor: const Color(0xFFEF4444),
                   onTap: () {
                     Navigator.pop(context);
-                    showSignOutConfirmationDialog(context, ref: ref);
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (context.mounted) {
+                        showSignOutConfirmationDialog(context, ref: ref);
+                      }
+                    });
                   },
                 ),
               ],
