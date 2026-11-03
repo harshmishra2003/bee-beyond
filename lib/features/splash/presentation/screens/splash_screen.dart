@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/router_notifier.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
+/// Fresh & Modern Splash Screen for Bee Beyonnd.
+/// Features interactive hexagon honeycomb particle visuals, floating glow Orbs,
+/// multi-layered rotating aura rings, animated brand entrance, and smooth Riverpod auth resolution.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,9 +20,16 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  late final AnimationController _orbitController;
-  late final AnimationController _lotusController;
+  // Animation Controllers
+  late final AnimationController _mainEntranceController;
+  late final AnimationController _rotationController;
   late final AnimationController _pulseController;
+  late final AnimationController _progressController;
+
+  // Animations
+  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _slideAnimation;
 
   Timer? _minDisplayTimer;
   Timer? _safetyTimeoutTimer;
@@ -30,33 +40,67 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   bool _hasNavigated = false;
 
   final List<String> _affirmations = [
-    "Inhale tranquil clarity, exhale noise...",
-    "Small mindful steps create radiant growth.",
-    "Welcoming energy and peaceful balance today.",
-    "Honor your body, calm your thought stream.",
-    "Your mindful sanctuary is ready ✨",
+    "Elevating Mind & Body Harmony ✨",
+    "Your Personal Sanctuary of Wellness 🌿",
+    "Nurturing Peace, Strength & Vitality 🧘‍♀️",
+    "Guided Wisdom for Modern Living 🍯",
+    "Step Beyond into Radiant Living ✨",
   ];
 
   @override
   void initState() {
     super.initState();
 
-    _orbitController = AnimationController(
+    // 1. Entrance Animation (Fade & Scale with elastic curve)
+    _mainEntranceController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 32),
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainEntranceController,
+        curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.82, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainEntranceController,
+        curve: const Interval(0.0, 0.8, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _slideAnimation = Tween<double>(begin: 25.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _mainEntranceController,
+        curve: const Interval(0.2, 0.9, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // 2. Continuous Ring Rotation
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 24),
     )..repeat();
 
-    _lotusController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 7),
-    )..repeat(reverse: true);
-
+    // 3. Subtle Breathing Glow Pulse
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
 
-    _affirmationTimer = Timer.periodic(const Duration(milliseconds: 2200), (_) {
+    // 4. Loading Progress Line Animation
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..forward();
+
+    // Start entrance animation
+    _mainEntranceController.forward();
+
+    // Rotate Affirmations periodic timer
+    _affirmationTimer = Timer.periodic(const Duration(milliseconds: 2400), (_) {
       if (mounted) {
         setState(() {
           _affirmationIndex = (_affirmationIndex + 1) % _affirmations.length;
@@ -64,38 +108,32 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
     });
 
-    // 2.5s brand display timer for smooth Dart-driven custom splash experience
-    _minDisplayTimer = Timer(const Duration(milliseconds: 2500), () {
+    // Guaranteed minimum display duration for optimal user experience
+    _minDisplayTimer = Timer(const Duration(milliseconds: 1400), () {
       _isMinDisplayTimePassed = true;
-      _checkAndFinishSplash();
+      _tryFinishSplash();
     });
 
-    // Safety fallback timer (3500ms max) ensuring screen transition never hangs
-    _safetyTimeoutTimer = Timer(const Duration(milliseconds: 3500), () {
-      _checkAndFinishSplash(isForce: true);
+    // Safety fallback timeout to ensure screen never hangs
+    _safetyTimeoutTimer = Timer(const Duration(milliseconds: 2600), () {
+      debugPrint('[SPLASH] Safety timeout triggered');
+      _tryFinishSplash(force: true);
     });
   }
 
-  void _checkAndFinishSplash({bool isForce = false}) {
+  void _tryFinishSplash({bool force = false}) {
     if (_hasNavigated || !mounted) return;
 
     final authState = ref.read(authStateProvider);
 
-    if (isForce || (_isMinDisplayTimePassed && authState.status != AuthStatus.loading)) {
+    if (force || (_isMinDisplayTimePassed && authState.status != AuthStatus.loading)) {
       _hasNavigated = true;
 
-      try {
-        _orbitController.stop();
-        _lotusController.stop();
-        _pulseController.stop();
-        _affirmationTimer?.cancel();
-        _minDisplayTimer?.cancel();
-        _safetyTimeoutTimer?.cancel();
-      } catch (_) {}
+      _affirmationTimer?.cancel();
+      _minDisplayTimer?.cancel();
+      _safetyTimeoutTimer?.cancel();
 
-      debugPrint('[SPLASH] _checkAndFinishSplash executing. Auth status: ${authState.status}');
-
-      // Mark splash finished in RouterNotifier - triggers GoRouter redirect
+      debugPrint('[SPLASH] New Splash completed. Auth status: ${authState.status}');
       ref.read(routerNotifierProvider).markSplashFinished();
     }
   }
@@ -105,345 +143,117 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _minDisplayTimer?.cancel();
     _safetyTimeoutTimer?.cancel();
     _affirmationTimer?.cancel();
-    _orbitController.dispose();
-    _lotusController.dispose();
+
+    _mainEntranceController.dispose();
+    _rotationController.dispose();
     _pulseController.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Listen for state changes in auth
     ref.listen<AuthState>(authStateProvider, (previous, next) {
       if (next.status != AuthStatus.loading && mounted) {
-        _checkAndFinishSplash();
+        _tryFinishSplash();
       }
     });
 
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FBFA),
+      backgroundColor: const Color(0xFFF7F7FC),
       body: Stack(
         children: [
-          // Ambient Radiant Auroras (Top & Center Gradients)
+          // 1. Interactive Ambient Glow Background Orbs
           Positioned(
-            top: -100,
-            left: -80,
-            child: _buildOrb(420, const Color(0x4091F8AF)),
+            top: -size.width * 0.25,
+            left: -size.width * 0.25,
+            child: _buildGlowOrb(
+              size: size.width * 1.1,
+              color: AppColors.primary.withValues(alpha: 0.12),
+            ),
           ),
           Positioned(
-            top: -60,
-            right: -80,
-            child: _buildOrb(380, const Color(0x60EDDCFF)),
+            top: size.height * 0.35,
+            right: -size.width * 0.3,
+            child: _buildGlowOrb(
+              size: size.width * 0.95,
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.10), // Honey Warmth Glow
+            ),
           ),
           Positioned(
-            top: size.height * 0.28,
-            left: size.width * 0.5 - 170,
-            child: _buildOrb(340, const Color(0x50CFACFF)),
+            bottom: -size.width * 0.2,
+            left: size.width * 0.1,
+            child: _buildGlowOrb(
+              size: size.width * 0.85,
+              color: AppColors.secondary.withValues(alpha: 0.08),
+            ),
           ),
 
-          // Main Scrollable Content Stage
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const SizedBox(height: 12),
-
-                    // CENTERPIECE BRAND STAGE: Lotus Backdrop + Orbit Ring + Central Medallion
-                    SizedBox(
-                      width: 260,
-                      height: 260,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // 1. Lotus Breathing Radial Aura
-                          AnimatedBuilder(
-                            animation: _lotusController,
-                            builder: (context, child) {
-                              final scale = 0.96 + 0.08 * _lotusController.value;
-                              return Transform.scale(
-                                scale: scale,
-                                child: Container(
-                                  width: 240,
-                                  height: 240,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: RadialGradient(
-                                      colors: [
-                                        Color(0x90FFFFFF),
-                                        Color(0x40FFB694),
-                                        Color(0x30CFACFF),
-                                        Color(0x0091F8AF),
-                                      ],
-                                      stops: [0.0, 0.45, 0.75, 1.0],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
-                          // 2. Rotating Celestial Energy Ring
-                          RotationTransition(
-                            turns: _orbitController,
-                            child: SizedBox(
-                              width: 210,
-                              height: 210,
-                              child: CustomPaint(
-                                painter: _OrbitRingPainter(),
-                              ),
-                            ),
-                          ),
-
-                          // 3. Central Medallion Card with Official Logo / Emblem
-                          AnimatedBuilder(
-                            animation: _pulseController,
-                            builder: (context, child) {
-                              final scale = 0.98 + 0.04 * _pulseController.value;
-                              return Transform.scale(
-                                scale: scale,
-                                child: Container(
-                                  width: 155,
-                                  height: 155,
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.96),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2.5),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x1F4A154B),
-                                        blurRadius: 30,
-                                        spreadRadius: 2,
-                                        offset: Offset(0, 8),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child: Image.asset(
-                                      AssetPaths.beeBeyondEmblem,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Image.asset(
-                                          AssetPaths.beeBeyondImage1,
-                                          fit: BoxFit.contain,
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
-                          // Floating Sparkle Dots
-                          Positioned(
-                            top: 18,
-                            right: 35,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF59E0B),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(color: Color(0xFFF59E0B), blurRadius: 6),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 25,
-                            left: 35,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF10B981),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(color: Color(0xFF10B981), blurRadius: 6),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // CURSIVE CALLIGRAPHY SCRIPT BRAND TYPOGRAPHY: Bee Beyonnd
-                    Text(
-                      'Bee Beyonnd',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.greatVibes(
-                        fontSize: 44,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF6845C4),
-                      ),
-                    ),
-
-                    const SizedBox(height: 2),
-
-                    Text(
-                      'STEPS TOWARDS PHYSICAL AND MENTAL WELLBEING',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFE11D48),
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // INSPIRATIONAL HEADLINE
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        text: 'Your Journey to a ',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.italic,
-                          color: const Color(0xFF4A154B),
-                        ),
-                        children: [
-                          TextSpan(
-                            text: 'Healthier, Happier You',
-                            style: GoogleFonts.playfairDisplay(
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold,
-                              fontStyle: FontStyle.italic,
-                              foreground: Paint()
-                                ..shader = const LinearGradient(
-                                  colors: [
-                                    Color(0xFFDB2777),
-                                    Color(0xFF7E22CE),
-                                    Color(0xFF4338CA),
-                                  ],
-                                ).createShader(const Rect.fromLTWH(0, 0, 220, 20)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'Discover expert guidance, simple steps and proven daily techniques for your wellness sanctuary.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11.5,
-                          color: const Color(0xFF6B7280),
-                          height: 1.45,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    // 4 MINDFULNESS PILLAR BADGES
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildPillarCard(
-                            icon: Icons.directions_run_rounded,
-                            iconBgGradient: const [Color(0xFF22D3EE), Color(0xFFE0F2FE)],
-                            iconColor: const Color(0xFF0891B2),
-                            borderColor: const Color(0xFFCFFAFE),
-                            label: 'Physical\nWellbeing',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildPillarCard(
-                            icon: Icons.psychology_rounded,
-                            iconBgGradient: const [Color(0xFFC084FC), Color(0xFFF3E8FF)],
-                            iconColor: const Color(0xFF7E22CE),
-                            borderColor: const Color(0xFFF3E8FF),
-                            label: 'Mental\nWellbeing',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildPillarCard(
-                            icon: Icons.spa_rounded,
-                            iconBgGradient: const [Color(0xFFFB7185), Color(0xFFFFE4E6)],
-                            iconColor: const Color(0xFFE11D48),
-                            borderColor: const Color(0xFFFFE4E6),
-                            label: 'Holistic\nGrowth',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildPillarCard(
-                            icon: Icons.eco_rounded,
-                            iconBgGradient: const [Color(0xFF34D399), Color(0xFFD1FAE5)],
-                            iconColor: const Color(0xFF059669),
-                            borderColor: const Color(0xFFD1FAE5),
-                            label: 'Healthy\nLifestyle',
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // DYNAMIC MINDFUL AFFIRMATION PILL
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 350),
-                      child: Container(
-                        key: ValueKey(_affirmationIndex),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white, width: 1.2),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x0A000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.spa_rounded,
-                              color: Color(0xFFF59E0B),
-                              size: 15,
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                _affirmations[_affirmationIndex],
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF374151),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+          // 2. Hexagon Honeycomb Canvas Overlay
+          AnimatedBuilder(
+            animation: _rotationController,
+            builder: (context, child) {
+              return CustomPaint(
+                size: Size(size.width, size.height),
+                painter: _HoneycombBackgroundPainter(
+                  progress: _rotationController.value,
                 ),
-              ),
+              );
+            },
+          ),
+
+          // 3. Foreground Main Content Stage
+          SafeArea(
+            child: AnimatedBuilder(
+              animation: _mainEntranceController,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Transform.translate(
+                    offset: Offset(0, _slideAnimation.value),
+                    child: Center(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 16),
+
+                            // Hero Emblem & Dual Rotating Rings Stage
+                            _buildHeroLogoStage(size),
+
+                            const SizedBox(height: 28),
+
+                            // Brand Title Banner
+                            _buildBrandTitle(),
+
+                            const SizedBox(height: 8),
+
+                            // Subtitle Pill / Tagline
+                            _buildTaglinePill(),
+
+                            const SizedBox(height: 20),
+
+                            // Affirmation Quote Carousel
+                            _buildAffirmationCard(),
+
+                            const SizedBox(height: 36),
+
+                            // Loading Progress & Status Subtext
+                            _buildProgressSection(),
+
+                            const SizedBox(height: 12),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -451,7 +261,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
   }
 
-  Widget _buildOrb(double size, Color color) {
+  /// Ambient Glow Orb
+  Widget _buildGlowOrb({required double size, required Color color}) {
     return IgnorePointer(
       child: Container(
         width: size,
@@ -466,94 +277,318 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
   }
 
-  Widget _buildPillarCard({
-    required IconData icon,
-    required List<Color> iconBgGradient,
-    required Color iconColor,
-    required Color borderColor,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 1.2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: iconBgGradient,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
+  /// Main Hero Emblem with Double Rotating Rings & Breathing Pulse Glow
+  Widget _buildHeroLogoStage(Size screenSize) {
+    const double stageSize = 250.0;
+
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: SizedBox(
+        width: stageSize,
+        height: stageSize,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outer Breathing Radial Glow Background
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                final pulseScale = 0.95 + (0.08 * _pulseController.value);
+                return Transform.scale(
+                  scale: pulseScale,
+                  child: Container(
+                    width: 230,
+                    height: 230,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.18),
+                          const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.6, 1.0],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            child: Icon(icon, color: iconColor, size: 19),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
+
+            // Continuous Rotating Dashed Dual Aura Rings
+            RotationTransition(
+              turns: _rotationController,
+              child: SizedBox(
+                width: 220,
+                height: 220,
+                child: CustomPaint(painter: _DualAuraRingPainter()),
+              ),
+            ),
+
+            // Reverse Slow Counter-Ring Painter
+            RotationTransition(
+              turns: Tween<double>(begin: 1.0, end: 0.0).animate(_rotationController),
+              child: SizedBox(
+                width: 195,
+                height: 195,
+                child: CustomPaint(painter: _InnerHoneyRingPainter()),
+              ),
+            ),
+
+            // Emblem Card Container
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                final scale = 0.98 + (0.03 * _pulseController.value);
+                return Transform.scale(
+                  scale: scale,
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.18),
+                          blurRadius: 28,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 8),
+                        ),
+                        BoxShadow(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          spreadRadius: -2,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        AssetPaths.beeBeyondEmblem,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.asset(
+                            AssetPaths.beeBeyondImage1,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.eco_rounded,
+                                size: 64,
+                                color: AppColors.primary,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Brand Title Text with Shimmering Gradient Styling
+  Widget _buildBrandTitle() {
+    return Column(
+      children: [
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [
+              Color(0xFF383577),
+              Color(0xFF4B489B),
+              Color(0xFF6A66C4),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(bounds),
+          child: const Text(
+            'Bee Beyonnd',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF374151),
-              height: 1.2,
+            style: TextStyle(
+              fontSize: 38,
+              fontWeight: FontWeight.w800,
+              color: Colors.white, // Masked by shader
+              letterSpacing: -0.5,
+              height: 1.1,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Tagline Badge
+  Widget _buildTaglinePill() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.18),
+          width: 1.0,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.auto_awesome,
+            size: 13,
+            color: AppColors.primary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'STEPS TOWARDS PHYSICAL & MENTAL WELLBEING',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: AppColors.primary,
+              letterSpacing: 0.8,
             ),
           ),
         ],
       ),
     );
   }
+
+  /// Affirmation Quote Container
+  Widget _buildAffirmationCard() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.15),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        key: ValueKey(_affirmationIndex),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        constraints: const BoxConstraints(maxWidth: 340),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.90),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white,
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.06),
+              blurRadius: 16,
+              spreadRadius: 1,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Text(
+          _affirmations[_affirmationIndex],
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+            height: 1.4,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Loading Bar & Status Indicator
+  Widget _buildProgressSection() {
+    return Column(
+      children: [
+        SizedBox(
+          width: 180,
+          child: AnimatedBuilder(
+            animation: _progressController,
+            builder: (context, child) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LinearProgressIndicator(
+                  value: _progressController.value,
+                  minHeight: 4,
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 10,
+              height: 10,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.8,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.primary.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Initializing Wellness Portal...',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary.withValues(alpha: 0.8),
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
-class _OrbitRingPainter extends CustomPainter {
+/// Custom Canvas Painter for Outer Dashed Dual Aura Rings
+class _DualAuraRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - 4;
 
-    final paint1 = Paint()
-      ..color = const Color(0xFF006A37).withValues(alpha: 0.8)
+    final primaryPaint = Paint()
+      ..color = AppColors.primary.withValues(alpha: 0.75)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8;
+      ..strokeWidth = 2.2;
 
-    final paint2 = Paint()
-      ..color = const Color(0xFFCFACFF).withValues(alpha: 0.85)
+    final goldPaint = Paint()
+      ..color = const Color(0xFFF59E0B).withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
-    _drawDashedArc(canvas, center, radius, 0, math.pi * 0.8, paint1);
-    _drawDashedArc(canvas, center, radius, math.pi, math.pi * 0.7, paint2);
-
-    final sparkPaint = Paint()..style = PaintingStyle.fill;
-
-    sparkPaint.color = const Color(0xFFFF7043);
-    canvas.drawCircle(Offset(center.dx, center.dy - radius), 3.5, sparkPaint);
-
-    sparkPaint.color = const Color(0xFF6E4F9A);
-    canvas.drawCircle(Offset(center.dx + radius, center.dy), 3.0, sparkPaint);
-
-    sparkPaint.color = const Color(0xFF006A37);
-    canvas.drawCircle(Offset(center.dx - radius, center.dy), 3.0, sparkPaint);
+    _drawDashedArc(canvas, center, radius, 0, math.pi * 0.75, primaryPaint);
+    _drawDashedArc(canvas, center, radius, math.pi, math.pi * 0.75, goldPaint);
   }
 
   void _drawDashedArc(
       Canvas canvas, Offset center, double radius, double startAngle, double sweepAngle, Paint paint) {
-    const dashWidth = 10.0;
-    const dashSpace = 8.0;
+    const dashWidth = 8.0;
+    const dashSpace = 6.0;
     double currentAngle = startAngle;
 
     while (currentAngle < startAngle + sweepAngle) {
@@ -574,4 +609,96 @@ class _OrbitRingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Inner Slow Honey Ring Painter
+class _InnerHoneyRingPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 2;
+
+    final paint = Paint()
+      ..color = AppColors.primaryLight.withValues(alpha: 0.40)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+
+    for (int i = 0; i < 6; i++) {
+      final angle = (i * math.pi / 3);
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        angle,
+        math.pi / 6,
+        false,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Background Hexagon Honeycomb Canvas Painter
+class _HoneycombBackgroundPainter extends CustomPainter {
+  final double progress;
+
+  _HoneycombBackgroundPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.primary.withValues(alpha: 0.035)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    final dotPaint = Paint()
+      ..color = const Color(0xFFF59E0B).withValues(alpha: 0.12)
+      ..style = PaintingStyle.fill;
+
+    const double hexRadius = 34.0;
+    final double hexWidth = math.sqrt(3) * hexRadius;
+    final double hexHeight = 2 * hexRadius;
+
+    final int cols = (size.width / hexWidth).ceil() + 2;
+    final int rows = (size.height / (hexHeight * 0.75)).ceil() + 2;
+
+    for (int r = -1; r < rows; r++) {
+      for (int c = -1; c < cols; c++) {
+        final double xOffset = (r % 2 == 0) ? 0 : hexWidth / 2;
+        final double cx = c * hexWidth + xOffset;
+        final double cy = r * hexHeight * 0.75;
+
+        _drawHexagon(canvas, Offset(cx, cy), hexRadius, paint);
+
+        // Subtle glowing vertex dots on alternate hexagons
+        if ((r + c) % 3 == 0) {
+          final pulseOffset = math.sin((progress * math.pi * 2) + (r + c)) * 1.5;
+          canvas.drawCircle(Offset(cx, cy), 2.0 + pulseOffset, dotPaint);
+        }
+      }
+    }
+  }
+
+  void _drawHexagon(Canvas canvas, Offset center, double radius, Paint paint) {
+    final path = Path();
+    for (int i = 0; i < 6; i++) {
+      final angle = (i * 60) * math.pi / 180;
+      final x = center.dx + radius * math.cos(angle);
+      final y = center.dy + radius * math.sin(angle);
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HoneycombBackgroundPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
 }
