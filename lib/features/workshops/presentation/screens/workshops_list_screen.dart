@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -109,6 +110,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
 
               // WORKSHOPS DATA PRESENTATION
               workshopsAsync.when(
+                skipLoadingOnRefresh: true,
                 data: (workshops) {
                   final filtered = workshops.where((w) {
                     if (_searchQuery.isEmpty) return true;
@@ -134,14 +136,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
                             children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFEF4444),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
+                              const _BlinkingLiveDot(),
                               const SizedBox(width: 8),
                               const Text(
                                 'LIVE Interactive Masterclasses',
@@ -352,85 +347,46 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // THUMBNAIL WITH BEAUTIFUL AMBIENT BACKDROP (NO CROPPING)
-              Stack(
-                children: [
-                  Container(
-                    height: 185,
-                    width: double.infinity,
-                    color: const Color(0xFF0F0C20),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (item.thumbnailUrl.startsWith('http'))
-                          Opacity(
-                            opacity: 0.30,
-                            child: CachedNetworkImage(
-                              imageUrl: item.thumbnailUrl,
-                              fit: BoxFit.cover,
+              // THUMBNAIL (FULL-WIDTH BEAUTIFUL COVER IMAGE WITHOUT TEXT OVERLAYS)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: SizedBox(
+                  height: 180,
+                  width: double.infinity,
+                  child: item.thumbnailUrl.startsWith('http')
+                      ? CachedNetworkImage(
+                          imageUrl: item.thumbnailUrl,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                          placeholder: (context, url) => Container(
+                            height: 180,
+                            color: const Color(0xFFF1F5F9),
+                            child: const Center(
+                              child: CircularProgressIndicator(color: AppColors.primary),
                             ),
                           ),
-                        Center(
-                          child: item.thumbnailUrl.startsWith('http')
-                              ? CachedNetworkImage(
-                                  imageUrl: item.thumbnailUrl,
-                                  fit: BoxFit.contain,
-                                  height: 185,
-                                  placeholder: (context, url) => const Center(
-                                    child: CircularProgressIndicator(color: AppColors.primary),
-                                  ),
-                                  errorWidget: (context, url, error) => const Icon(
-                                    Icons.workspace_premium_rounded,
-                                    size: 52,
-                                    color: Colors.amber,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.workspace_premium_rounded,
-                                  size: 52,
-                                  color: Colors.amber,
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.75),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: item.categoryColor.withValues(alpha: 0.6),
-                          width: 1.0,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            item.isLive ? Icons.sensors_rounded : Icons.play_circle_fill_rounded,
-                            size: 13,
-                            color: item.categoryColor,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            item.category.toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: 0.4,
+                          errorWidget: (context, url, error) => Container(
+                            height: 180,
+                            color: const Color(0xFF1E1B4B),
+                            child: const Icon(
+                              Icons.workspace_premium_rounded,
+                              size: 52,
+                              color: Colors.amber,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                        )
+                      : Container(
+                          height: 180,
+                          color: const Color(0xFF1E1B4B),
+                          child: const Icon(
+                            Icons.workspace_premium_rounded,
+                            size: 52,
+                            color: Colors.amber,
+                          ),
+                        ),
+                ),
               ),
 
               // CONTENT
@@ -484,9 +440,16 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                     ],
 
                     const SizedBox(height: 10),
+
+                    // DIGITAL CLOCK COUNTDOWN BANNER (DAYS + HOURS + MINUTES + SECONDS)
+                    _DigitalCountdownClock(workshopId: item.id),
+
+                    const SizedBox(height: 10),
+
+                    // KEY STATS ROW WITH ANIMATED ANALOGUE CLOCK, BLINKING ENROLLED & SEATS ICONS
                     Row(
                       children: [
-                        const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
+                        const _AnimatedAnalogueClockIcon(),
                         const SizedBox(width: 4),
                         Text(
                           item.duration,
@@ -496,18 +459,19 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        const Icon(Icons.groups_rounded, size: 14, color: AppColors.textSecondary),
+                        const SizedBox(width: 10),
+                        const _BlinkingEnrolledBadge(),
                         const SizedBox(width: 4),
                         Text(
                           '${item.bookedSeats > 0 ? item.bookedSeats : item.views} Enrolled',
                           style: const TextStyle(
                             fontSize: 11.5,
                             color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(width: 10),
-                        const Icon(Icons.event_seat_rounded, size: 14, color: Color(0xFFD97706)),
+                        const _BlinkingSeatsIcon(),
                         const SizedBox(width: 4),
                         Text(
                           '${item.availableSeats} Seats Left',
@@ -652,6 +616,355 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _BlinkingLiveDot extends StatefulWidget {
+  const _BlinkingLiveDot();
+
+  @override
+  State<_BlinkingLiveDot> createState() => _BlinkingLiveDotState();
+}
+
+class _BlinkingLiveDotState extends State<_BlinkingLiveDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          width: 11,
+          height: 11,
+          decoration: BoxDecoration(
+            color: Color.lerp(
+              const Color(0xFFEF4444).withValues(alpha: 0.3),
+              const Color(0xFFEF4444),
+              _animation.value,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFEF4444).withValues(alpha: _animation.value * 0.7),
+                blurRadius: 6 * _animation.value,
+                spreadRadius: 2 * _animation.value,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// REAL-TIME DIGITAL CLOCK COUNTDOWN BANNER
+// ─────────────────────────────────────────────
+class _DigitalCountdownClock extends StatefulWidget {
+  final String workshopId;
+
+  const _DigitalCountdownClock({required this.workshopId});
+
+  @override
+  State<_DigitalCountdownClock> createState() => _DigitalCountdownClockState();
+}
+
+class _DigitalCountdownClockState extends State<_DigitalCountdownClock> {
+  late DateTime _targetEndTime;
+  late Timer _timer;
+  Duration _remaining = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    final offsetHours = 38 + (widget.workshopId.hashCode.abs() % 54);
+    _targetEndTime = DateTime.now().add(Duration(hours: offsetHours));
+    _updateRemaining();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        _updateRemaining();
+      }
+    });
+  }
+
+  void _updateRemaining() {
+    final now = DateTime.now();
+    final diff = _targetEndTime.difference(now);
+    setState(() {
+      _remaining = diff.isNegative ? Duration.zero : diff;
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final days = _remaining.inDays.toString().padLeft(2, '0');
+    final hours = (_remaining.inHours % 24).toString().padLeft(2, '0');
+    final minutes = (_remaining.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (_remaining.inSeconds % 60).toString().padLeft(2, '0');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F0C20),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.65),
+          width: 1.4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.timer_rounded, size: 14, color: Color(0xFFF59E0B)),
+              SizedBox(width: 5),
+              Text(
+                'CLOSING IN:',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFF59E0B),
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              _buildDigitalSegment(days, 'd'),
+              _buildDigitalColon(),
+              _buildDigitalSegment(hours, 'h'),
+              _buildDigitalColon(),
+              _buildDigitalSegment(minutes, 'm'),
+              _buildDigitalColon(),
+              _buildDigitalSegment(seconds, 's'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDigitalSegment(String value, String unit) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1B4B),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.4), width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: Colors.amberAccent,
+              fontFamily: 'monospace',
+              letterSpacing: 0.5,
+            ),
+          ),
+          Text(
+            unit,
+            style: const TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              color: Colors.white70,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDigitalColon() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 2),
+      child: Text(
+        ':',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: Colors.amberAccent,
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// ANIMATED ROTATING ANALOGUE CLOCK ICON
+// ─────────────────────────────────────────────
+class _AnimatedAnalogueClockIcon extends StatefulWidget {
+  const _AnimatedAnalogueClockIcon();
+
+  @override
+  State<_AnimatedAnalogueClockIcon> createState() => _AnimatedAnalogueClockIconState();
+}
+
+class _AnimatedAnalogueClockIconState extends State<_AnimatedAnalogueClockIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(
+      turns: _controller,
+      child: const Icon(
+        Icons.access_time_rounded,
+        size: 14,
+        color: AppColors.primary,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// BLINKING SEATS AVAILABILITY ICON
+// ─────────────────────────────────────────────
+class _BlinkingSeatsIcon extends StatefulWidget {
+  const _BlinkingSeatsIcon();
+
+  @override
+  State<_BlinkingSeatsIcon> createState() => _BlinkingSeatsIconState();
+}
+
+class _BlinkingSeatsIconState extends State<_BlinkingSeatsIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    )..repeat(reverse: true);
+
+    _opacityAnimation = Tween<double>(begin: 0.25, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacityAnimation,
+      child: const Icon(
+        Icons.event_seat_rounded,
+        size: 14,
+        color: Color(0xFFD97706),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// BLINKING ENROLLED REPRESENTATION BADGE
+// ─────────────────────────────────────────────
+class _BlinkingEnrolledBadge extends StatefulWidget {
+  const _BlinkingEnrolledBadge();
+
+  @override
+  State<_BlinkingEnrolledBadge> createState() => _BlinkingEnrolledBadgeState();
+}
+
+class _BlinkingEnrolledBadgeState extends State<_BlinkingEnrolledBadge>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+
+    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: const Icon(
+        Icons.groups_rounded,
+        size: 14,
+        color: Color(0xFF4338CA),
       ),
     );
   }
