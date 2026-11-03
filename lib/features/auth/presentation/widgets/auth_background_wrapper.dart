@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/route_paths.dart';
@@ -234,25 +233,26 @@ class _AuthBackgroundWrapperState extends State<AuthBackgroundWrapper>
                     const SizedBox(height: 6),
 
                     // Cursive Calligraphy Script Brand Title
-                    Text(
+                    const Text(
                       'Bee Beyonnd',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.greatVibes(
+                      style: TextStyle(
                         fontSize: 42,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF6845C4),
+                        color: Color(0xFF6845C4),
+                        fontFamily: 'serif',
                       ),
                     ),
 
                     const SizedBox(height: 2),
 
-                    Text(
+                    const Text(
                       'STEPS TOWARDS PHYSICAL AND MENTAL WELLBEING',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFFE82574),
+                        color: Color(0xFFE82574),
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -265,21 +265,21 @@ class _AuthBackgroundWrapperState extends State<AuthBackgroundWrapper>
                     const SizedBox(height: 16),
 
                     // Reassurance Privacy Footer
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.verified_user_outlined,
                           color: Color(0xFF059669),
                           size: 14,
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           'Protected with holistic privacy encryption',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF94A3B8),
+                            color: Color(0xFF94A3B8),
                           ),
                         ),
                       ],
