@@ -475,7 +475,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                         const _BlinkingEnrolledBadge(),
                         const SizedBox(width: 4),
                         Text(
-                          '${item.bookedSeats > 0 ? item.bookedSeats : item.views} Enrolled',
+                          '${item.bookedSeats} Enrolled',
                           style: const TextStyle(
                             fontSize: 11.5,
                             color: AppColors.textSecondary,
