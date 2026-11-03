@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'membership_screen.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../../core/services/razorpay_service.dart';
@@ -337,12 +336,12 @@ class _MembershipPlanDetailScreenState
                     color: const Color(0xFFF3E8FF),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
+                  child: const Text(
                     'MONTHLY VIP PASS',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF6845C4),
+                      color: Color(0xFF6845C4),
                     ),
                   ),
                 ),
@@ -358,18 +357,18 @@ class _MembershipPlanDetailScreenState
 
             Text(
               '${plan.displayName} (Monthly)',
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
+                color: Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 4),
-            Text(
+            const Text(
               'Flexible monthly subscription with full VIP perks',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 12.5,
-                color: const Color(0xFF64748B),
+                color: Color(0xFF64748B),
               ),
             ),
 
@@ -388,38 +387,38 @@ class _MembershipPlanDetailScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'Monthly Billing Plan',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF475569),
+                          color: Color(0xFF475569),
                         ),
                       ),
                       Text(
                         '$formattedPrice / Month',
-                        style: GoogleFonts.poppins(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFF6845C4),
+                          color: Color(0xFF6845C4),
                         ),
                       ),
                     ],
                   ),
                   const Divider(height: 16, color: Color(0xFFE2E8F0)),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Recurring Auto-Renew', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
-                      Text('Monthly Cycle', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+                      Text('Recurring Auto-Renew', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                      Text('Monthly Cycle', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Taxes & Charges', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
-                      Text('Included', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                      Text('Taxes & Charges', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                      Text('Included', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
                     ],
                   ),
                 ],
@@ -452,7 +451,7 @@ class _MembershipPlanDetailScreenState
                     const SizedBox(width: 8),
                     Text(
                       'Pay $formattedPrice Monthly →',
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
@@ -508,12 +507,12 @@ class _MembershipPlanDetailScreenState
                     color: const Color(0xFFFEF3C7),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
+                  child: const Text(
                     '🌟 ANNUAL VIP PASS (BEST VALUE)',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFFB45309),
+                      color: Color(0xFFB45309),
                     ),
                   ),
                 ),
@@ -529,18 +528,18 @@ class _MembershipPlanDetailScreenState
 
             Text(
               '${plan.displayName} (Annual)',
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
+                color: Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 4),
-            Text(
+            const Text(
               '365 Days Uninterrupted VIP Access with Maximum Savings',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 12.5,
-                color: const Color(0xFF64748B),
+                color: Color(0xFF64748B),
               ),
             ),
 
@@ -554,17 +553,17 @@ class _MembershipPlanDetailScreenState
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFA7F3D0)),
               ),
-              child: Row(
+              child: const Row(
                 children: [
-                  const Icon(Icons.auto_awesome_rounded, color: Color(0xFF059669), size: 16),
-                  const SizedBox(width: 8),
+                  Icon(Icons.auto_awesome_rounded, color: Color(0xFF059669), size: 16),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Annual Savings: ₹389 (16.3% OFF) vs monthly billing',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF047857),
+                        color: Color(0xFF047857),
                       ),
                     ),
                   ),
@@ -587,38 +586,38 @@ class _MembershipPlanDetailScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'Annual Subscription',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF475569),
+                          color: Color(0xFF475569),
                         ),
                       ),
                       Text(
                         '$formattedPrice / Year',
-                        style: GoogleFonts.poppins(
+                        style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFF059669),
+                          color: Color(0xFF059669),
                         ),
                       ),
                     ],
                   ),
                   const Divider(height: 16, color: Color(0xFFE2E8F0)),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Access Validity', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
-                      Text('1 Year (365 Days)', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+                      Text('Access Validity', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                      Text('1 Year (365 Days)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Taxes & Gateway Fees', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
-                      Text('Included', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                      Text('Taxes & Gateway Fees', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                      Text('Included', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
                     ],
                   ),
                 ],
@@ -651,7 +650,7 @@ class _MembershipPlanDetailScreenState
                     const SizedBox(width: 8),
                     Text(
                       'Pay $formattedPrice Annually →',
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
@@ -743,16 +742,16 @@ class _MembershipPlanDetailScreenState
                 // PLAN TITLE & TAGLINE
                 Text(
                   plan.displayName,
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF0F172A),
+                    color: Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   plan.displayTagline,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                     color: plan.cardThemeColor,
@@ -770,9 +769,9 @@ class _MembershipPlanDetailScreenState
                     ),
                     child: Text(
                       plan.description,
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: const Color(0xFF475569),
+                        color: Color(0xFF475569),
                         height: 1.4,
                       ),
                     ),
@@ -782,12 +781,12 @@ class _MembershipPlanDetailScreenState
                 const SizedBox(height: 20),
 
                 // 2. BILLING PERIOD SELECTOR TABS (MONTHLY VS YEARLY)
-                Text(
+                const Text(
                   'SELECT BILLING PERIOD',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF64748B),
+                    color: Color(0xFF64748B),
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -833,12 +832,12 @@ class _MembershipPlanDetailScreenState
                                         : const Color(0xFF94A3B8),
                                   ),
                                   const SizedBox(width: 6),
-                                  Text(
+                                  const Text(
                                     'Monthly',
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF0F172A),
+                                      color: Color(0xFF0F172A),
                                     ),
                                   ),
                                 ],
@@ -846,17 +845,17 @@ class _MembershipPlanDetailScreenState
                               const SizedBox(height: 8),
                               Text(
                                 CurrencyUtils.formatINR(plan.monthlyPrice),
-                                style: GoogleFonts.poppins(
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF6845C4),
+                                  color: Color(0xFF6845C4),
                                 ),
                               ),
-                              Text(
+                              const Text(
                                 '/ Month',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 10.5,
-                                  color: const Color(0xFF64748B),
+                                  color: Color(0xFF64748B),
                                 ),
                               ),
                             ],
@@ -905,12 +904,12 @@ class _MembershipPlanDetailScreenState
                                         : const Color(0xFF94A3B8),
                                   ),
                                   const SizedBox(width: 6),
-                                  Text(
+                                  const Text(
                                     'Annual',
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF0F172A),
+                                      color: Color(0xFF0F172A),
                                     ),
                                   ),
                                   const Spacer(),
@@ -920,9 +919,9 @@ class _MembershipPlanDetailScreenState
                                       color: const Color(0xFF059669),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Text(
+                                    child: const Text(
                                       '16.3% OFF',
-                                      style: GoogleFonts.poppins(
+                                      style: TextStyle(
                                         fontSize: 8.5,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
@@ -934,18 +933,18 @@ class _MembershipPlanDetailScreenState
                               const SizedBox(height: 8),
                               Text(
                                 CurrencyUtils.formatINR(plan.annualPrice),
-                                style: GoogleFonts.poppins(
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF059669),
+                                  color: Color(0xFF059669),
                                 ),
                               ),
-                              Text(
+                              const Text(
                                 '/ Year (Save ₹389)',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF047857),
+                                  color: Color(0xFF047857),
                                 ),
                               ),
                             ],
@@ -959,12 +958,12 @@ class _MembershipPlanDetailScreenState
                 const SizedBox(height: 22),
 
                 // 3. FEATURES LIST
-                Text(
+                const Text(
                   'PLAN BENEFITS & PRIVILEGES',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF64748B),
+                    color: Color(0xFF64748B),
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -1004,7 +1003,7 @@ class _MembershipPlanDetailScreenState
                             Expanded(
                               child: Text(
                                 feat,
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: isSavings ? FontWeight.bold : FontWeight.w500,
                                   color: isSavings ? const Color(0xFF047857) : const Color(0xFF334155),
@@ -1022,12 +1021,12 @@ class _MembershipPlanDetailScreenState
                 const SizedBox(height: 20),
 
                 // 4. INCLUDED DIGITAL VAULT ACCESS & SPECIFIC CONTENTS
-                Text(
+                const Text(
                   'INCLUDED DIGITAL VAULT ACCESS',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF64748B),
+                    color: Color(0xFF64748B),
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -1064,17 +1063,17 @@ class _MembershipPlanDetailScreenState
                                 children: [
                                   Text(
                                     item.displayTitle,
-                                    style: GoogleFonts.poppins(
+                                    style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF0F172A),
+                                      color: Color(0xFF0F172A),
                                     ),
                                   ),
                                   Text(
                                     'Access: ${item.accessType.toUpperCase()} • ${item.contentType.toUpperCase()}',
-                                    style: GoogleFonts.poppins(
+                                    style: const TextStyle(
                                       fontSize: 10.5,
-                                      color: const Color(0xFF64748B),
+                                      color: Color(0xFF64748B),
                                     ),
                                   ),
                                 ],
@@ -1086,12 +1085,12 @@ class _MembershipPlanDetailScreenState
                                 color: const Color(0xFFDCFCE7),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(
+                              child: const Text(
                                 'INCLUDED',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF15803D),
+                                  color: Color(0xFF15803D),
                                 ),
                               ),
                             ),
@@ -1141,15 +1140,15 @@ class _MembershipPlanDetailScreenState
                     _selectedBillingPeriod == BillingPeriod.monthly
                         ? CurrencyUtils.formatINR(plan.monthlyPrice)
                         : CurrencyUtils.formatINR(plan.annualPrice),
-                    style: GoogleFonts.poppins(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
-                      color: const Color(0xFF0F172A),
+                      color: Color(0xFF0F172A),
                     ),
                   ),
                   Text(
                     _selectedBillingPeriod == BillingPeriod.monthly ? 'Billed Monthly' : 'Save 16.3% Annually',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: _selectedBillingPeriod == BillingPeriod.monthly ? const Color(0xFF6845C4) : const Color(0xFF059669),
@@ -1202,7 +1201,7 @@ class _MembershipPlanDetailScreenState
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
               color: color,
@@ -1361,7 +1360,7 @@ class __ShiningFlippablePlanBannerState
                   const SizedBox(width: 4),
                   Text(
                     widget.plan.displayBadgeText,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       color: widget.plan.cardThemeColor,
@@ -1382,13 +1381,13 @@ class __ShiningFlippablePlanBannerState
                 color: Colors.black.withValues(alpha: 0.65),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
+              child: const Row(
                 children: [
-                  const Icon(Icons.threed_rotation_rounded, color: Colors.white, size: 13),
-                  const SizedBox(width: 4),
+                  Icon(Icons.threed_rotation_rounded, color: Colors.white, size: 13),
+                  SizedBox(width: 4),
                   Text(
                     'Tap to Flip 3D',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -1440,7 +1439,7 @@ class __ShiningFlippablePlanBannerState
           const SizedBox(height: 12),
           Text(
             widget.plan.displayName,
-            style: GoogleFonts.poppins(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w900,
               color: Colors.white,
@@ -1448,16 +1447,16 @@ class __ShiningFlippablePlanBannerState
           ),
           Text(
             widget.plan.displayTagline,
-            style: GoogleFonts.poppins(
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Colors.amberAccent,
             ),
           ),
           const Divider(height: 20, color: Colors.white30),
-          Text(
+          const Text(
             '⭐ VIP ACCESS UNLOCKED ⭐',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -1468,7 +1467,7 @@ class __ShiningFlippablePlanBannerState
           Text(
             'Enjoy unlimited access to digital e-books, binaural music tracks, HD video workshops & priority doctor support.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 11.5,
               color: Colors.white.withValues(alpha: 0.9),
               height: 1.4,
@@ -1534,7 +1533,7 @@ class _ShiningSubscribeButtonState extends State<_ShiningSubscribeButton>
             child: Center(
               child: Text(
                 widget.text,
-                style: GoogleFonts.poppins(
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
