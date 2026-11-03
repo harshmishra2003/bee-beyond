@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../routing/route_paths.dart';
 import '../providers/auth_provider.dart';
@@ -88,25 +87,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header Title & Subtitle
-              Center(
+              const Center(
                 child: Column(
                   children: [
                     Text(
                       'Welcome Back',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0F172A),
+                        color: Color(0xFF0F172A),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       'Login to continue your journey towards better health and happiness',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color: const Color(0xFF64748B),
+                        color: Color(0xFF64748B),
                         height: 1.4,
                       ),
                     ),
@@ -196,11 +195,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        const Text(
                           'Remember Me',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: const Color(0xFF475569),
+                            color: Color(0xFF475569),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -211,11 +210,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onTap: () {
                       context.push(RoutePaths.forgotPassword);
                     },
-                    child: Text(
+                    child: const Text(
                       'Forgot Password?',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: const Color(0xFF6845C4),
+                        color: Color(0xFF6845C4),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -238,26 +237,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       "Don't have an account? ",
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: const Color(0xFF64748B),
+                        color: Color(0xFF64748B),
                       ),
                     ),
                     GestureDetector(
                       onTap: () => context.push(RoutePaths.register),
-                      child: Row(
+                      child: const Row(
                         children: [
                           Text(
                             'Sign Up ',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF4C3592),
+                              color: Color(0xFF4C3592),
                             ),
                           ),
-                          const Icon(
+                          Icon(
                             Icons.arrow_forward_rounded,
                             size: 14,
                             color: Color(0xFF4C3592),
@@ -278,10 +277,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildFieldLabel(String label) {
     return Text(
       label,
-      style: GoogleFonts.poppins(
+      style: const TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF475569),
+        color: Color(0xFF475569),
       ),
     );
   }
@@ -300,10 +299,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF0F172A)),
+      style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF94A3B8)),
+        hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
         prefixIcon: Icon(prefixIcon, color: const Color(0xFF94A3B8), size: 19),
         suffixIcon: suffixIcon,
         filled: true,
@@ -439,7 +438,7 @@ class _Shining3DLoginButtonState extends State<_Shining3DLoginButton>
                   children: [
                     Text(
                       widget.text,
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
