@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import '../../../../core/network/dio_client.dart';
-import '../../../../core/constants/api_endpoints.dart';
-import '../../../../core/errors/failures.dart';
-import '../../../../core/services/secure_storage_service.dart';
-import '../models/user_model.dart';
+import 'package:bee_beeyond/core/network/dio_client.dart';
+import 'package:bee_beeyond/core/constants/api_endpoints.dart';
+import 'package:bee_beeyond/core/errors/failures.dart';
+import 'package:bee_beeyond/core/services/secure_storage_service.dart';
+import 'package:bee_beeyond/features/auth/data/models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
