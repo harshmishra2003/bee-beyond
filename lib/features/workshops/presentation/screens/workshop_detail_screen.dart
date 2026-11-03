@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -61,15 +60,15 @@ class WorkshopDetailScreen extends ConsumerWidget {
                 children: [
                   const Icon(Icons.error_outline_rounded, size: 56, color: AppColors.error),
                   const SizedBox(height: 12),
-                  Text(
+                  const Text(
                     'Failed to load masterclass details',
-                    style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     err.toString(),
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
@@ -159,7 +158,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                         ),
                         child: Text(
                           item.categoryBadge,
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
@@ -185,7 +184,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Text(
                               '${item.rating}',
-                              style: GoogleFonts.poppins(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -209,9 +208,9 @@ class WorkshopDetailScreen extends ConsumerWidget {
                             }
                           },
                           icon: const Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 20),
-                          label: Text(
+                          label: const Text(
                             'Watch Video Preview',
-                            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFEF4444),
@@ -234,7 +233,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                       // TITLE
                       Text(
                         item.title,
-                        style: GoogleFonts.poppins(
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                           color: AppColors.textPrimary,
@@ -296,7 +295,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                                     children: [
                                       Text(
                                         item.instructor,
-                                        style: GoogleFonts.poppins(
+                                        style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.textPrimary,
@@ -308,7 +307,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                                   ),
                                   Text(
                                     item.lineage,
-                                    style: GoogleFonts.poppins(
+                                    style: const TextStyle(
                                       fontSize: 11.5,
                                       color: AppColors.textSecondary,
                                       fontWeight: FontWeight.w500,
@@ -323,12 +322,12 @@ class WorkshopDetailScreen extends ConsumerWidget {
                                 color: const Color(0xFFECFDF5),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(
+                              child: const Text(
                                 'VERIFIED MENTOR',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF047857),
+                                  color: Color(0xFF047857),
                                 ),
                               ),
                             ),
@@ -339,12 +338,12 @@ class WorkshopDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 22),
 
                       // 3. OVERVIEW & DESCRIPTION
-                      Text(
+                      const Text(
                         'MASTERCLASS OVERVIEW',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF64748B),
+                          color: Color(0xFF64748B),
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -362,9 +361,9 @@ class WorkshopDetailScreen extends ConsumerWidget {
                           item.description.isNotEmpty
                               ? item.description
                               : 'Join this transformative accredited masterclass offering interactive practical training, deep clinical insights, and step-by-step guidance under revered mentors.',
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             fontSize: 13,
-                            color: const Color(0xFF334155),
+                            color: Color(0xFF334155),
                             height: 1.5,
                           ),
                         ),
@@ -373,12 +372,12 @@ class WorkshopDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 22),
 
                       // 4. LEARNING OUTCOMES & TAKEAWAYS
-                      Text(
+                      const Text(
                         'WHAT YOU WILL LEARN & RECEIVE',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF64748B),
+                          color: Color(0xFF64748B),
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -415,9 +414,9 @@ class WorkshopDetailScreen extends ConsumerWidget {
                                   Expanded(
                                     child: Text(
                                       takeaways[idx],
-                                      style: GoogleFonts.poppins(
+                                      style: const TextStyle(
                                         fontSize: 12.5,
-                                        color: const Color(0xFF1E293B),
+                                        color: Color(0xFF1E293B),
                                         fontWeight: FontWeight.w500,
                                         height: 1.4,
                                       ),
@@ -433,12 +432,12 @@ class WorkshopDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 22),
 
                       // 5. MASTERCLASS CURRICULUM AGENDA
-                      Text(
+                      const Text(
                         'CURRICULUM & MODULE AGENDA',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF64748B),
+                          color: Color(0xFF64748B),
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -468,37 +467,31 @@ class WorkshopDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 22),
 
                       // 6. DELIVERABLES & PERKS
-                      Text(
+                      const Text(
                         'INCLUDED DELIVERABLES',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF64748B),
+                          color: Color(0xFF64748B),
                           letterSpacing: 0.8,
                         ),
                       ),
                       const SizedBox(height: 10),
 
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          _buildDeliverableChip(Icons.verified_rounded, 'ISO Accredited Certificate', const Color(0xFF059669)),
-                          _buildDeliverableChip(Icons.video_library_rounded, 'Lifetime HD Recording Access', const Color(0xFF6366F1)),
-                          _buildDeliverableChip(Icons.picture_as_pdf_rounded, 'Downloadable PDF Handbooks', const Color(0xFFEC4899)),
-                          _buildDeliverableChip(Icons.forum_rounded, 'Private Mentor Q&A Access', const Color(0xFFD97706)),
-                        ],
-                      ),
+                      _buildDeliverableChip(Icons.verified_rounded, 'ISO Accredited Certificate', const Color(0xFF059669)),
+                      _buildDeliverableChip(Icons.video_library_rounded, 'Lifetime HD Recording Access', const Color(0xFF6366F1)),
+                      _buildDeliverableChip(Icons.picture_as_pdf_rounded, 'Downloadable PDF Handbooks', const Color(0xFFEC4899)),
+                      _buildDeliverableChip(Icons.forum_rounded, 'Private Mentor Q&A Access', const Color(0xFFD97706)),
 
                       const SizedBox(height: 22),
 
                       // 7. SCHEDULE & TIMINGS
-                      Text(
+                      const Text(
                         'SCHEDULE & SESSION TIMINGS',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF64748B),
+                          color: Color(0xFF64748B),
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -521,7 +514,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                                 Expanded(
                                   child: Text(
                                     sch,
-                                    style: GoogleFonts.poppins(
+                                    style: const TextStyle(
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.primary,
@@ -536,7 +529,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                                   ),
                                   child: Text(
                                     item.isLive ? 'LIVE BATCH' : 'ON DEMAND',
-                                    style: GoogleFonts.poppins(
+                                    style: const TextStyle(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w800,
                                       color: AppColors.primary,
@@ -583,7 +576,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                     if (item.discount > 0)
                       Text(
                         CurrencyUtils.formatINR(item.basePrice),
-                        style: GoogleFonts.poppins(
+                        style: const TextStyle(
                           fontSize: 11,
                           color: AppColors.textHint,
                           decoration: TextDecoration.lineThrough,
@@ -591,7 +584,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                       ),
                     Text(
                       CurrencyUtils.formatINR(item.finalPrice),
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
                         color: AppColors.primary,
@@ -616,7 +609,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                     item.isRegistered
                         ? '✓ Seat Confirmed'
                         : (item.isFull ? 'Capacity Full' : 'Book Masterclass'),
-                    style: GoogleFonts.poppins(
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -649,7 +642,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
             const SizedBox(width: 4),
             Text(
               value,
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
@@ -660,7 +653,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: GoogleFonts.poppins(fontSize: 10, color: AppColors.textSecondary),
+          style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
         ),
       ],
     );
@@ -698,7 +691,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
             ),
             child: Text(
               stepNumber,
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
                 color: AppColors.primary,
@@ -712,7 +705,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -721,7 +714,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 11.5,
                     color: AppColors.textSecondary,
                     height: 1.35,
@@ -750,7 +743,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
               color: color,
@@ -803,9 +796,9 @@ class WorkshopDetailScreen extends ConsumerWidget {
         children: [
           const Icon(Icons.sentiment_dissatisfied_rounded, size: 64, color: AppColors.textHint),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Masterclass Not Found',
-            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           ElevatedButton(
