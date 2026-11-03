@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import 'route_paths.dart';
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
   bool _isSplashFinished = false;
+  Timer? _splashSafetyTimer;
 
   RouterNotifier(this._ref) {
     debugPrint('[ROUTER] RouterNotifier constructed');
@@ -19,16 +21,32 @@ class RouterNotifier extends ChangeNotifier {
         notifyListeners();
       },
     );
+
+    // Safety fallback timer (1500ms max) ensuring router never hangs on splash
+    _splashSafetyTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (!_isSplashFinished) {
+        _isSplashFinished = true;
+        debugPrint('[ROUTER] Safety fallback timer forced splash finish.');
+        notifyListeners();
+      }
+    });
   }
 
   bool get isSplashFinished => _isSplashFinished;
 
   void markSplashFinished() {
+    _splashSafetyTimer?.cancel();
     if (!_isSplashFinished) {
       _isSplashFinished = true;
       debugPrint('[ROUTER] markSplashFinished() called.');
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _splashSafetyTimer?.cancel();
+    super.dispose();
   }
 
   String? redirect(BuildContext context, GoRouterState state) {
@@ -39,22 +57,29 @@ class RouterNotifier extends ChangeNotifier {
 
     debugPrint('[ROUTER] redirect eval: loc=$location, splashFinished=$_isSplashFinished, status=$status');
 
-    // While 2.5s Dart splash timer is active or Auth is loading, remain on splash
-    if (!_isSplashFinished || status == AuthStatus.loading) {
+    // While Dart splash display timer is active, remain on splash
+    if (!_isSplashFinished) {
       if (location == RoutePaths.splash) {
         return null;
       }
       return RoutePaths.splash;
     }
 
+    // Splash finished -> MUST transition away from /splash
     if (location == RoutePaths.splash) {
       if (status == AuthStatus.authenticated) {
+        debugPrint('[ROUTER] Redirecting /splash -> /home');
         return RoutePaths.home;
       }
-      if (status == AuthStatus.unauthenticated && !hasSeenOnboarding) {
-        return RoutePaths.onboarding;
+      if (status == AuthStatus.unauthenticated) {
+        final target = hasSeenOnboarding ? RoutePaths.login : RoutePaths.onboarding;
+        debugPrint('[ROUTER] Redirecting /splash -> $target');
+        return target;
       }
-      return RoutePaths.login;
+      // Safety fallback if status is still loading when splash timer finishes
+      final target = hasSeenOnboarding ? RoutePaths.login : RoutePaths.onboarding;
+      debugPrint('[ROUTER] Splash finished while Auth loading -> Safety fallback redirect to $target');
+      return target;
     }
 
     // 1) Unauthenticated State -> Auth Stack or Onboarding
