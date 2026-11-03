@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -95,10 +94,10 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                   ),
                   child: TextField(
                     controller: _searchController,
-                    style: GoogleFonts.poppins(fontSize: 13.5, color: AppColors.textPrimary),
+                    style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       hintText: 'Search channel videos, topics, guides...',
-                      hintStyle: GoogleFonts.poppins(color: AppColors.textHint, fontSize: 13),
+                      hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 13),
                       prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFFFF0000), size: 22),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
@@ -198,14 +197,14 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                   color: const Color(0xFFFF0000),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 16),
-                    const SizedBox(width: 4),
+                    Icon(Icons.play_arrow_rounded, color: Colors.white, size: 16),
+                    SizedBox(width: 4),
                     Text(
                       'OFFICIAL YOUTUBE CHANNEL',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
@@ -218,9 +217,9 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
               OutlinedButton.icon(
                 onPressed: _openYouTubeChannel,
                 icon: const Icon(Icons.subscriptions_rounded, size: 14, color: Colors.white),
-                label: Text(
+                label: const Text(
                   'Subscribe',
-                  style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFFFF0000), width: 1.2),
@@ -232,9 +231,9 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Bee Beyonnd Official (@beebeyonndofficial)',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w900,
               color: Colors.white,
@@ -242,11 +241,11 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
+          const Text(
             'Watch latest uploaded holistic healing lectures, Bach Flower Remedy diagnosis, and Vastu energy masterclasses directly inside the app.',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 11.5,
-              color: const Color(0xFFAAAAAA),
+              color: Color(0xFFAAAAAA),
               height: 1.4,
             ),
           ),
@@ -280,7 +279,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
             },
             selectedColor: const Color(0xFFFF0000),
             backgroundColor: Colors.white,
-            labelStyle: GoogleFonts.poppins(
+            labelStyle: TextStyle(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               color: isSelected ? Colors.white : AppColors.textSecondary,
@@ -371,7 +370,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                     ),
                     child: Text(
                       video.duration,
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
@@ -400,10 +399,10 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                       ),
                       child: Text(
                         video.category.toUpperCase(),
-                        style: GoogleFonts.poppins(
+                        style: const TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFFFF0000),
+                          color: Color(0xFFFF0000),
                         ),
                       ),
                     ),
@@ -413,7 +412,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                         const SizedBox(width: 4),
                         Text(
                           'Uploaded ${video.uploadDate}',
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textSecondary,
@@ -426,7 +425,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                 const SizedBox(height: 8),
                 Text(
                   video.title,
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -440,7 +439,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                     const SizedBox(width: 4),
                     Text(
                       video.instructor,
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -451,14 +450,14 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                     const SizedBox(width: 3),
                     Text(
                       '${video.views}',
-                      style: GoogleFonts.poppins(fontSize: 11, color: AppColors.textSecondary),
+                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                     ),
                     const SizedBox(width: 10),
                     const Icon(Icons.thumb_up_alt_outlined, size: 13, color: AppColors.textSecondary),
                     const SizedBox(width: 3),
                     Text(
                       '${video.likes}',
-                      style: GoogleFonts.poppins(fontSize: 11, color: AppColors.textSecondary),
+                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -467,7 +466,7 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                   video.description,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                     height: 1.35,
@@ -479,9 +478,9 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => _playVideo(video, playlist),
                     icon: const Icon(Icons.play_circle_filled_rounded, size: 16),
-                    label: Text(
+                    label: const Text(
                       'Play Video In-App',
-                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFF0000),
@@ -519,21 +518,21 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'No Videos Uploaded Yet',
-              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 6),
-            Text(
+            const Text(
               'Bee Beyonnd Official YouTube Channel (@beebeyonndofficial) has no public videos uploaded at the moment. New holistic health, Bach Flower, and Vastu lectures will appear here automatically as soon as they are published.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
             ),
             const SizedBox(height: 18),
             ElevatedButton.icon(
               onPressed: _openYouTubeChannel,
               icon: const Icon(Icons.subscriptions_rounded, size: 16),
-              label: Text('Visit @beebeyonndofficial on YouTube', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+              label: const Text('Visit @beebeyonndofficial on YouTube', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF0000),
                 foregroundColor: Colors.white,
@@ -566,21 +565,21 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Could not load videos',
-              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 6),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _openYouTubeChannel,
               icon: const Icon(Icons.subscriptions_rounded, size: 16),
-              label: Text('Visit YouTube Channel', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+              label: const Text('Visit YouTube Channel', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF0000),
                 foregroundColor: Colors.white,
