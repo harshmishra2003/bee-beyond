@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/onboarding_page_four.dart';
@@ -123,9 +122,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Single
                       // Top Skip Button
                       TextButton(
                         onPressed: _finishOnboarding,
-                        child: Text(
+                        child: const Text(
                           'SKIP',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.8,
@@ -175,9 +174,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Single
                       // Bottom Skip Button
                       GestureDetector(
                         onTap: _finishOnboarding,
-                        child: Text(
+                        child: const Text(
                           'Skip',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textSecondary,
@@ -228,7 +227,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Single
                                 children: [
                                   Text(
                                     _currentPage == _totalPages - 1 ? 'Get Started' : 'Next',
-                                    style: GoogleFonts.poppins(
+                                    style: const TextStyle(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
