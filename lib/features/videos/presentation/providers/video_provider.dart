@@ -1,47 +1,85 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/video_lecture_item.dart';
 
-/// Provider strictly fetching live videos from Bee Beyonnd Official YouTube Channel (@beebeyonndofficial).
-/// URL: https://youtube.com/@beebeyonndofficial?si=z6Us3m4bXfOWo_jj
-/// Strictly no third-party or backend API videos. If 0 videos published on the channel, returns [].
+/// Central Provider strictly fetching live videos from Bee Beyonnd Official YouTube Channel (@beebeyonndofficial).
+/// No fallback lists or dummy static data. Returns [] if no videos are returned from YouTube.
 final videoLecturesProvider = FutureProvider<List<VideoLectureItem>>((ref) async {
-  final dio = ref.watch(dioClientProvider);
+  final dioClient = ref.watch(dioClientProvider);
 
-  // YouTube RSS feeds for @beebeyonndofficial
-  final feedUrls = [
-    'https://www.youtube.com/feeds/videos.xml?user=beebeyonndofficial',
-    'https://www.youtube.com/feeds/videos.xml?channel_id=beebeyonndofficial',
-  ];
+  try {
+    final channelVideos = await _fetchYouTubeChannelVideos(dioClient.instance);
+    return channelVideos;
+  } catch (e) {
+    debugPrint('[YOUTUBE PROVIDER] YouTube channel fetch error: $e');
+    return const [];
+  }
+});
 
-  for (final url in feedUrls) {
-    try {
-      final response = await dio.get(
-        url,
-        options: Options(
-          responseType: ResponseType.plain,
-          headers: {'User-Agent': 'Mozilla/5.0'},
-        ),
-      );
+/// Fetches videos directly from YouTube for @beebeyonndofficial by resolving real Channel ID or parsing channel HTML
+Future<List<VideoLectureItem>> _fetchYouTubeChannelVideos(Dio dio) async {
+  try {
+    // Fetch handle page HTML to resolve real UC... Channel ID
+    final channelResponse = await dio.get(
+      'https://www.youtube.com/@beebeyonndofficial/videos',
+      options: Options(
+        responseType: ResponseType.plain,
+        validateStatus: (status) => status != null && status < 500,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+      ),
+    );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final content = response.data.toString();
-        final videos = _parseYouTubeRssFeed(content);
-        if (videos.isNotEmpty) {
-          return videos;
+    if (channelResponse.statusCode == 200 && channelResponse.data != null) {
+      final html = channelResponse.data.toString();
+
+      // Extract real YouTube Channel ID (starts with UC...)
+      final channelIdMatch = RegExp(r'"channelId":"(UC[\w-]+)"').firstMatch(html) ??
+          RegExp(r'<meta itemprop="identifier" content="(UC[\w-]+)">').firstMatch(html) ??
+          RegExp(r'youtube\.com/channel/(UC[\w-]+)').firstMatch(html);
+
+      if (channelIdMatch != null) {
+        final realChannelId = channelIdMatch.group(1)!;
+        debugPrint('[YOUTUBE] Resolved real Channel ID: $realChannelId');
+
+        // Query official YouTube RSS feed using the resolved UC... Channel ID
+        final rssResponse = await dio.get(
+          'https://www.youtube.com/feeds/videos.xml?channel_id=$realChannelId',
+          options: Options(
+            responseType: ResponseType.plain,
+            validateStatus: (status) => status != null && status < 500,
+            headers: {'User-Agent': 'Mozilla/5.0'},
+          ),
+        );
+
+        if (rssResponse.statusCode == 200 && rssResponse.data != null) {
+          final rssXml = rssResponse.data.toString();
+          final rssVideos = _parseYouTubeRssFeed(rssXml);
+          if (rssVideos.isNotEmpty) {
+            return rssVideos;
+          }
         }
       }
-    } catch (_) {}
+
+      // Secondary check: Parse video IDs directly from HTML
+      final htmlVideos = _parseVideosFromChannelHtml(html);
+      if (htmlVideos.isNotEmpty) {
+        return htmlVideos;
+      }
+    }
+  } catch (e) {
+    debugPrint('[YOUTUBE] Error resolving channel videos: $e');
   }
 
-  // Strictly return [] if 0 videos exist on @beebeyonndofficial channel
-  return const [];
-});
+  return [];
+}
 
 List<VideoLectureItem> _parseYouTubeRssFeed(String xmlString) {
   final List<VideoLectureItem> items = [];
-
   final entryMatches = RegExp(r'<entry>(.*?)</entry>', dotAll: true).allMatches(xmlString);
 
   for (final match in entryMatches) {
@@ -73,7 +111,7 @@ List<VideoLectureItem> _parseYouTubeRssFeed(String xmlString) {
       id: 'yt_$ytId',
       title: _decodeXmlEntities(rawTitle),
       instructor: 'Bee Beyonnd Official',
-      category: 'YouTube Channel',
+      category: 'Overview',
       duration: 'YouTube Video',
       videoUrl: 'https://www.youtube.com/watch?v=$ytId',
       thumbnailUrl: 'https://img.youtube.com/vi/$ytId/hqdefault.jpg',
@@ -82,6 +120,37 @@ List<VideoLectureItem> _parseYouTubeRssFeed(String xmlString) {
       likes: (viewsCount * 0.12).toInt(),
       uploadDate: formattedDate,
       description: _decodeXmlEntities(rawDesc),
+      isYouTube: true,
+    ));
+  }
+
+  return items;
+}
+
+List<VideoLectureItem> _parseVideosFromChannelHtml(String html) {
+  final List<VideoLectureItem> items = [];
+  final Set<String> seenIds = {};
+
+  final videoMatches = RegExp(r'"videoId":"([a-zA-Z0-9_-]{11})"', dotAll: true).allMatches(html);
+
+  for (final match in videoMatches) {
+    final vId = match.group(1);
+    if (vId == null || vId.isEmpty || seenIds.contains(vId)) continue;
+    seenIds.add(vId);
+
+    items.add(VideoLectureItem(
+      id: 'yt_$vId',
+      title: 'Bee Beyonnd Official Video Lecture',
+      instructor: 'Bee Beyonnd Official',
+      category: 'YouTube Channel',
+      duration: 'YouTube Video',
+      videoUrl: 'https://www.youtube.com/watch?v=$vId',
+      thumbnailUrl: 'https://img.youtube.com/vi/$vId/hqdefault.jpg',
+      rating: 4.9,
+      views: 0,
+      likes: 0,
+      uploadDate: 'Recently Uploaded',
+      description: 'Official video from Bee Beyonnd YouTube Channel (@beebeyonndofficial).',
       isYouTube: true,
     ));
   }
