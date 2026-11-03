@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:bee_beeyond/core/errors/failures.dart';
 import 'package:bee_beeyond/core/services/secure_storage_service.dart';
 import 'package:bee_beeyond/features/auth/domain/entities/user_entity.dart';
 import 'package:bee_beeyond/features/auth/domain/repositories/auth_repository.dart';
@@ -21,8 +22,11 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = await remoteDataSource.login(email, password);
       await secureStorage.saveUserData(jsonEncode(user.toJson()));
       return user;
+    } on AuthFailure {
+      // Re-throw authentication/validation errors directly to show alert dialog on UI
+      rethrow;
     } catch (e) {
-      debugPrint('[AUTH REPO] Remote login failed ($e), falling back to demo session');
+      debugPrint('[AUTH REPO] Remote connection failed ($e), falling back to demo session');
 
       final namePrefix = email.split('@').first.replaceAll(RegExp(r'[._-]'), ' ');
       final formattedName = namePrefix.isNotEmpty
@@ -64,6 +68,8 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       await secureStorage.saveUserData(jsonEncode(user.toJson()));
       return user;
+    } on AuthFailure {
+      rethrow;
     } catch (e) {
       debugPrint('[AUTH REPO] Remote registration failed ($e), falling back to demo registration');
 
@@ -95,6 +101,8 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> forgotPassword(String email) async {
     try {
       await remoteDataSource.forgotPassword(email);
+    } on AuthFailure {
+      rethrow;
     } catch (e) {
       debugPrint('[AUTH REPO] Remote forgotPassword failed ($e), assuming successful request');
     }
