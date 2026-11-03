@@ -1,4 +1,4 @@
-import '../entities/user_entity.dart';
+import 'package:bee_beeyond/features/auth/domain/entities/user_entity.dart';
 
 abstract class AuthRepository {
   Future<UserEntity> login(String email, String password);
@@ -14,4 +14,5 @@ abstract class AuthRepository {
   Future<void> forgotPassword(String email);
   Future<void> logout();
   Future<UserEntity?> getCurrentUser();
+  Future<void> updateUser(UserEntity updatedUser);
 }
