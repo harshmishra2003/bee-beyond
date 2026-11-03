@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 
 class OnboardingPageOne extends StatefulWidget {
@@ -151,25 +150,26 @@ class _OnboardingPageOneState extends State<OnboardingPageOne>
           const SizedBox(height: 4),
 
           // Cursive Script Brand Title
-          Text(
+          const Text(
             'Bee Beyonnd',
             textAlign: TextAlign.center,
-            style: GoogleFonts.greatVibes(
+            style: TextStyle(
               fontSize: 38,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF2B1B6D),
+              color: Color(0xFF2B1B6D),
+              fontFamily: 'serif',
             ),
           ),
 
           const SizedBox(height: 2),
 
-          Text(
+          const Text(
             'STEPS TOWARDS PHYSICAL AND MENTAL WELLBEING',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.w800,
-              color: const Color(0xFFE82574),
+              color: Color(0xFFE82574),
               letterSpacing: 1.0,
             ),
           ),
@@ -177,45 +177,45 @@ class _OnboardingPageOneState extends State<OnboardingPageOne>
           const SizedBox(height: 16),
 
           // Main Welcome Heading
-          RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
+          const Text.rich(
+            TextSpan(
               text: 'Welcome to ',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
+                color: Color(0xFF0F172A),
               ),
               children: [
                 TextSpan(
                   text: 'Bee ',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF6845C4),
+                    color: Color(0xFF6845C4),
                   ),
                 ),
                 TextSpan(
                   text: 'Beyonnd',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF006A37),
+                    color: Color(0xFF006A37),
                   ),
                 ),
               ],
             ),
+            textAlign: TextAlign.center,
           ),
 
           const SizedBox(height: 8),
 
           // Description Text
-          Text(
+          const Text(
             'Your trusted companion for holistic wellness, certified restorative courses, and natural drugless therapies.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 12.5,
-              color: const Color(0xFF64748B),
+              color: Color(0xFF64748B),
               height: 1.5,
             ),
           ),
@@ -291,12 +291,12 @@ class _OnboardingPageOneState extends State<OnboardingPageOne>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'Holistic Community',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0F172A),
+                              color: Color(0xFF0F172A),
                             ),
                           ),
                           Container(
@@ -308,23 +308,23 @@ class _OnboardingPageOneState extends State<OnboardingPageOne>
                               color: const Color(0xFFE6F4EA),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Text(
+                            child: const Text(
                               '12k+ Active',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF006A37),
+                                color: Color(0xFF006A37),
                               ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 2),
-                      Text(
+                      const Text(
                         'Guided sessions & doctor-certified natural paths.',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: const Color(0xFF64748B),
+                          color: Color(0xFF64748B),
                         ),
                       ),
                     ],
@@ -372,10 +372,10 @@ class _OnboardingPageOneState extends State<OnboardingPageOne>
           const SizedBox(width: 8),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
+              color: Color(0xFF1E293B),
             ),
           ),
         ],
