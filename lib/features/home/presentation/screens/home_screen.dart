@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -132,14 +131,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Image.asset(
               AssetPaths.beeBeyondImage1,
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Row(
+              errorBuilder: (context, error, stackTrace) => const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.spa_rounded, color: AppColors.primary, size: 32),
-                  const SizedBox(width: 6),
+                  Icon(Icons.spa_rounded, color: AppColors.primary, size: 32),
+                  SizedBox(width: 6),
                   Text(
                     'Bee Beyonnd',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       color: AppColors.primary,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
