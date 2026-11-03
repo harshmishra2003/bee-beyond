@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
@@ -302,13 +301,13 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(Icons.bookmark_remove_rounded, color: AppColors.primary, size: 24),
-            const SizedBox(width: 8),
+            Icon(Icons.bookmark_remove_rounded, color: AppColors.primary, size: 24),
+            SizedBox(width: 8),
             Text(
               'Sample Limit Reached',
-              style: GoogleFonts.poppins(color: const Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -318,7 +317,7 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
           children: [
             Text(
               'You have reached the end of the free sample ($sampleLimit pages) for "${widget.title}".',
-              style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
             ),
             const SizedBox(height: 12),
             Container(
@@ -330,13 +329,13 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Full E-Book Price:',
-                    style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 12),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                   Text(
                     CurrencyUtils.formatINR(widget.price),
-                    style: GoogleFonts.poppins(color: AppColors.primary, fontSize: 15, fontWeight: FontWeight.w900),
+                    style: const TextStyle(color: AppColors.primary, fontSize: 15, fontWeight: FontWeight.w900),
                   ),
                 ],
               ),
@@ -349,7 +348,7 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
               _isShowingSampleDialog = false;
               Navigator.pop(ctx);
             },
-            child: Text('Dismiss', style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 12)),
+            child: const Text('Dismiss', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -358,7 +357,7 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
               _triggerPurchase();
             },
             icon: const Icon(Icons.bolt_rounded, size: 16),
-            label: Text('BUY FULL E-BOOK', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
+            label: const Text('BUY FULL E-BOOK', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -464,8 +463,8 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
                           widget.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF0F172A),
+                          style: const TextStyle(
+                            color: Color(0xFF0F172A),
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -474,7 +473,7 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
                           widget.isSampleMode
                               ? 'Free Sample Preview Mode'
                               : (widget.subtitle ?? 'Official E-Book Reader'),
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             color: widget.isSampleMode ? Colors.amber.shade800 : AppColors.textSecondary,
                             fontSize: 11,
                           ),
@@ -515,7 +514,7 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
           const SizedBox(height: 16),
           Text(
             widget.isSampleMode ? 'Opening Free Sample Preview...' : 'Opening E-Book Reader...',
-            style: GoogleFonts.poppins(
+            style: const TextStyle(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
@@ -593,14 +592,14 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
                             widget.isSampleMode
                                 ? '${sampleLimit - currentPage} pages left in sample'
                                 : 'Page $currentPage of $totalPages',
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 11,
                             ),
                           ),
                           Text(
                             '$percent%',
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               color: Colors.amberAccent,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -631,13 +630,13 @@ class _AppPdfBookViewerState extends ConsumerState<AppPdfBookViewer> {
             Text(
               widget.title,
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(fontSize: 15.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 8),
             Text(
               _errorMessage ?? 'PDF document could not be rendered.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 12.5),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
