@@ -102,6 +102,22 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
     final rawId = widget.workshopData?['id'] ?? widget.workshopData?['workshop_id'];
     final int workshopId = int.tryParse(rawId?.toString() ?? '') ?? 0;
 
+    final bool isReg = widget.workshopData?['isRegistered'] == true ||
+        widget.workshopData?['is_registered'] == true ||
+        widget.workshopData?['is_registered'] == 1 ||
+        widget.workshopData?['is_registered'] == '1';
+
+    if (isReg) {
+      if (mounted) {
+        setState(() {
+          _viewState = WorkshopBookingViewState.success;
+          _confirmedBookingNumber = workshopId > 0 ? 'CONFIRMED-$workshopId' : 'CONFIRMED-VIP';
+          _statusMessage = 'You are already registered for this masterclass.';
+        });
+      }
+      return;
+    }
+
     if (workshopId <= 0) return;
 
     final pendingData = await _bookingStorage.getPendingBooking(workshopId);
