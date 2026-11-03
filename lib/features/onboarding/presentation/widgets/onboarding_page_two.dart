@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingPageTwo extends StatefulWidget {
   const OnboardingPageTwo({super.key});
@@ -66,22 +65,22 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                 ),
               ],
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.spa_rounded,
                   color: Color(0xFF059669),
                   size: 15,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Text(
                   'HOLISTIC WELLNESS ECOSYSTEM',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.2,
-                    color: const Color(0xFF047857),
+                    color: Color(0xFF047857),
                   ),
                 ),
               ],
@@ -91,19 +90,19 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
           const SizedBox(height: 12),
 
           // Main Headline
-          RichText(
-            text: TextSpan(
+          Text.rich(
+            TextSpan(
               text: 'Harmonize Your ',
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 23,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F172A),
+                color: Color(0xFF0F172A),
                 height: 1.25,
               ),
               children: [
                 TextSpan(
                   text: 'Mind & Energy',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 23,
                     fontWeight: FontWeight.w900,
                     foreground: Paint()
@@ -116,12 +115,12 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                       ).createShader(const Rect.fromLTWH(0, 0, 220, 20)),
                   ),
                 ),
-                TextSpan(
+                const TextSpan(
                   text: ' Balance',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 23,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
+                    color: Color(0xFF0F172A),
                   ),
                 ),
               ],
@@ -130,11 +129,11 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
 
           const SizedBox(height: 8),
 
-          Text(
+          const Text(
             'Comprehensive drugless therapies curated to restore inner equilibrium, clear emotional debris, and awaken personal vibrancy.',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 12.5,
-              color: const Color(0xFF475569),
+              color: Color(0xFF475569),
               height: 1.5,
             ),
           ),
@@ -142,30 +141,30 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
           const SizedBox(height: 20),
 
           // Therapeutic Approaches Header Row
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
                   Text(
                     'THERAPEUTIC APPROACHES',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF64748B),
+                      color: Color(0xFF64748B),
                       letterSpacing: 0.8,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const Text('✨', style: TextStyle(fontSize: 12)),
+                  SizedBox(width: 4),
+                  Text('✨', style: TextStyle(fontSize: 12)),
                 ],
               ),
               Text(
                 'Touch to explore',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF047857),
+                  color: Color(0xFF047857),
                 ),
               ),
             ],
@@ -238,7 +237,7 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                           Text(
                             t['title'] as String,
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: isSelected ? t['textColor'] as Color : const Color(0xFF334155),
@@ -261,12 +260,12 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
             children: [
               Row(
                 children: [
-                  Text(
+                  const Text(
                     'Prescribed Pathways',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF0F172A),
+                      color: Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -286,12 +285,12 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                   color: const Color(0xFFF3E8FF),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
+                child: const Text(
                   '3 Modules Available',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF7E22CE),
+                    color: Color(0xFF7E22CE),
                   ),
                 ),
               ),
@@ -376,33 +375,34 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          const Text('✨', style: TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
+                          Text('✨', style: TextStyle(fontSize: 12)),
+                          SizedBox(width: 4),
                           Text(
                             'MINDFUL INSIGHT',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFFBE123C),
+                              color: Color(0xFFBE123C),
                               letterSpacing: 0.8,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         '"Healing begins when thoughts settle, frequencies align, and nature guides the pulse."',
-                        style: GoogleFonts.playfairDisplay(
+                        style: TextStyle(
                           fontSize: 12.5,
                           fontStyle: FontStyle.italic,
+                          fontFamily: 'serif',
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF334155),
+                          color: Color(0xFF334155),
                           height: 1.4,
                         ),
                       ),
@@ -476,10 +476,10 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                     Expanded(
                       child: Text(
                         title,
-                        style: GoogleFonts.poppins(
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF0F172A),
+                          color: Color(0xFF0F172A),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -493,7 +493,7 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                       ),
                       child: Text(
                         badgeText,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.bold,
                           color: badgeColor,
@@ -505,9 +505,9 @@ class _OnboardingPageTwoState extends State<OnboardingPageTwo> {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 11.5,
-                    color: const Color(0xFF64748B),
+                    color: Color(0xFF64748B),
                     height: 1.4,
                   ),
                   maxLines: 2,
