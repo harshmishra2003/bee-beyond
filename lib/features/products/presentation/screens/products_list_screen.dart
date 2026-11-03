@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -259,17 +258,17 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
             },
           ),
           const SizedBox(width: 4),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'BEE BEYONND',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF6E4F9A),
+                    color: Color(0xFF6E4F9A),
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -277,10 +276,10 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                   'Wellness And Healing Store',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.epilogue(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: Color(0xFF0F172A),
                   ),
                 ),
               ],
@@ -335,8 +334,6 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
     );
   }
 
-
-
   Widget _buildSearchBar() {
     final currentHint = _rotatingRecommendations[_recommendationIndex];
 
@@ -380,16 +377,16 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
               onChanged: (val) {
                 setState(() => _searchQuery = val.trim());
               },
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 13.0,
-                color: const Color(0xFF0F172A),
+                color: Color(0xFF0F172A),
                 fontWeight: FontWeight.w600,
               ),
               decoration: InputDecoration(
                 hintText: currentHint,
-                hintStyle: GoogleFonts.poppins(
+                hintStyle: const TextStyle(
                   fontSize: 12.5,
-                  color: const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                   fontWeight: FontWeight.w500,
                 ),
                 border: InputBorder.none,
@@ -486,10 +483,6 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
       ),
     );
   }
-
-
-
-
 
   Widget _buildProductsLottieLoadingOverlay() {
     return Container(
@@ -622,10 +615,10 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Text(
+                                  const Text(
                                     'Curated Offerings',
-                                    style: GoogleFonts.epilogue(
-                                      color: const Color(0xFF0F172A),
+                                    style: TextStyle(
+                                      color: Color(0xFF0F172A),
                                       fontWeight: FontWeight.bold,
                                       fontSize: 17,
                                     ),
@@ -813,15 +806,15 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                                     );
                                   },
                                 )
-                              : Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 40),
+                              : const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 40),
                                   child: Center(
                                     child: Column(
                                       children: [
-                                        const Icon(Icons.inventory_2_outlined,
+                                        Icon(Icons.inventory_2_outlined,
                                             size: 48, color: AppColors.textHint),
-                                        const SizedBox(height: 12),
-                                        const Text(
+                                        SizedBox(height: 12),
+                                        Text(
                                           'No healing products found matching your search.',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
@@ -872,8 +865,8 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                 color: AppColors.primary,
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'No Healing Products Available Yet',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -882,8 +875,8 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8),
+            Text(
               'Our store team is stocking organic Bach flower drops, Ayurvedic herbal teas, and Vastu tools. Check back soon!',
               textAlign: TextAlign.center,
               style: TextStyle(
