@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/services/expiry_manager_service.dart';
@@ -174,33 +173,33 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
             ),
           ),
           const SizedBox(width: 14),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'NO ACTIVE VIP MEMBERSHIP',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF94A3B8),
+                    color: Color(0xFF94A3B8),
                     letterSpacing: 0.8,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   'Unlock VIP Passes Below',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF0F172A),
+                    color: Color(0xFF0F172A),
                   ),
                 ),
                 Text(
                   'Choose a pass below to get flat discounts & VIP access.',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: const Color(0xFF64748B),
+                    color: Color(0xFF64748B),
                   ),
                 ),
               ],
@@ -472,13 +471,13 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                 ),
               ),
               const SizedBox(height: 18),
-              Text(
+              const Text(
                 'Plan Already Active!',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0F172A),
+                  color: Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 8),
@@ -493,39 +492,39 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                   children: [
                     Text(
                       pass.passName.toUpperCase(),
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF047857),
+                        color: Color(0xFF047857),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Valid until: ${DateFormat('dd MMM yyyy, hh:mm a').format(pass.expiresAt)}',
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF065F46),
+                        color: Color(0xFF065F46),
                       ),
                     ),
                     Text(
                       'Time Remaining: ${pass.formattedLiveCountdown}',
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF059669),
+                        color: Color(0xFF059669),
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 14),
-              Text(
+              const Text(
                 'You already hold an active subscription for this membership pass. You do not need to purchase it again while active.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 12,
-                  color: const Color(0xFF64748B),
+                  color: Color(0xFF64748B),
                   height: 1.45,
                 ),
               ),
@@ -542,11 +541,11 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                         ),
                       ),
                       onPressed: () => Navigator.of(ctx).pop(),
-                      child: Text(
+                      child: const Text(
                         'Back / Close',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF475569),
+                          color: Color(0xFF475569),
                           fontSize: 13,
                         ),
                       ),
@@ -567,9 +566,9 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                         Navigator.of(ctx).pop();
                         context.push(RoutePaths.myMemberships);
                       },
-                      child: Text(
+                      child: const Text(
                         'My Passes',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           fontSize: 13,
@@ -686,7 +685,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                           const SizedBox(width: 4),
                           Text(
                             plan.displayBadgeText,
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -718,16 +717,16 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                       children: [
                         _DigitalClockRollCounter(
                           targetAmount: plan.price,
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Text(
+                        const Text(
                           'INR',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -749,7 +748,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                       ),
                       child: Text(
                         plan.durationLabel,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           color: plan.cardThemeColor,
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
@@ -790,7 +789,7 @@ class _MembershipScreenState extends ConsumerState<MembershipScreen>
                         Expanded(
                           child: Text(
                             feature,
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 12.5,
                               fontWeight: FontWeight.w500,
@@ -884,7 +883,7 @@ class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
                 fit: BoxFit.contain,
               ),
               const SizedBox(width: 14),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -892,30 +891,30 @@ class _AnimatedHeaderBannerState extends State<_AnimatedHeaderBanner>
                       children: [
                         Text(
                           'BEE BEYONND VIP MEMBERSHIP',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             color: Colors.amberAccent,
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.0,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 12),
+                        SizedBox(width: 4),
+                        Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 12),
                       ],
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
                     Text(
                       'Choose Your Healing Pass',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       'Unlock discounts, live webinars & 1-on-1 doctor guidance.',
-                      style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11, height: 1.2),
+                      style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.2),
                     ),
                   ],
                 ),
@@ -1056,7 +1055,7 @@ class _ShiningPulsingSubscribeButtonState extends State<_ShiningPulsingSubscribe
                           children: [
                             Text(
                               buttonText,
-                              style: GoogleFonts.poppins(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                                 letterSpacing: 0.6,
