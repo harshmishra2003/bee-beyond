@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../routing/route_paths.dart';
@@ -593,12 +594,24 @@ class WorkshopDetailScreen extends ConsumerWidget {
                   ],
                 ),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    context.push(
-                      RoutePaths.workshopBooking,
-                      extra: item.toJson(),
-                    );
-                  },
+                  onPressed: item.isRegistered
+                      ? null
+                      : () {
+                          if (item.isFull) {
+                            AppAlertManager.showFloatingToast(
+                              context,
+                              title: 'Capacity Full',
+                              message: 'This masterclass is currently at full capacity.',
+                              icon: Icons.event_seat_rounded,
+                              accentColor: const Color(0xFFF59E0B),
+                            );
+                          } else {
+                            context.push(
+                              RoutePaths.workshopBooking,
+                              extra: item.toJson(),
+                            );
+                          }
+                        },
                   icon: Icon(
                     item.isRegistered
                         ? Icons.check_circle_rounded
@@ -618,10 +631,12 @@ class WorkshopDetailScreen extends ConsumerWidget {
                     backgroundColor: item.isRegistered
                         ? const Color(0xFF10B981)
                         : (item.isFull ? const Color(0xFF94A3B8) : AppColors.primary),
+                    disabledBackgroundColor: const Color(0xFF10B981),
+                    disabledForegroundColor: Colors.white,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 2,
+                    elevation: item.isRegistered ? 0 : 2,
                   ),
                 ),
               ],
