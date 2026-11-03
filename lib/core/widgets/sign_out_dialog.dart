@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_alert_manager.dart';
 
 void showSignOutConfirmationDialog(
   BuildContext context, {
@@ -10,7 +11,7 @@ void showSignOutConfirmationDialog(
 }) {
   showDialog(
     context: context,
-    builder: (ctx) => Dialog(
+    builder: (dialogContext) => Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 0,
       backgroundColor: Colors.transparent,
@@ -76,7 +77,7 @@ void showSignOutConfirmationDialog(
                       ),
                       side: const BorderSide(color: AppColors.borderSubtle, width: 1.5),
                     ),
-                    onPressed: () => Navigator.pop(ctx),
+                    onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(),
                     child: const Text(
                       'Cancel',
                       style: TextStyle(
@@ -98,19 +99,34 @@ void showSignOutConfirmationDialog(
                       elevation: 0,
                     ),
                     onPressed: () async {
-                      // 1. Dismiss the dialog box
-                      Navigator.of(ctx, rootNavigator: true).pop();
+                      // 1. Dismiss confirmation dialog
+                      Navigator.of(dialogContext, rootNavigator: true).pop();
 
+                      // 2. Play App Loading Animation before logging out
+                      if (context.mounted) {
+                        AppAlertManager.showLoading(
+                          context,
+                          message: "Signing out safely...",
+                        );
+                      }
+
+                      // 3. Network or local cleanup delay for loading animation
+                      await Future.delayed(const Duration(milliseconds: 1100));
+
+                      // 4. Perform logout action
                       if (onConfirm != null) {
                         onConfirm();
-                      } else {
-                        // 2. Clear Riverpod Auth State and Secure Storage Tokens
-                        // Stack switching is triggered purely by the AuthState update
-                        if (ref != null) {
-                          try {
-                            await ref.read(authStateProvider.notifier).logout();
-                          } catch (_) {}
-                        }
+                      } else if (ref != null) {
+                        try {
+                          await ref.read(authStateProvider.notifier).logout();
+                        } catch (_) {}
+                      }
+
+                      // 5. Dismiss loading dialog if still mounted
+                      if (context.mounted) {
+                        try {
+                          Navigator.of(context, rootNavigator: true).pop();
+                        } catch (_) {}
                       }
                     },
                     child: const Text(
