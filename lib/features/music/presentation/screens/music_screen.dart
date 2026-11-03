@@ -1,7 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -105,11 +104,11 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
 
                     const SizedBox(height: 20),
 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'Healing Frequencies & Binaural Tracks',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
@@ -169,7 +168,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
                                   track.title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.poppins(
+                                  style: const TextStyle(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.textPrimary,
@@ -177,7 +176,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
                                 ),
                                 subtitle: Text(
                                   '${track.category} • ${track.frequencyHz.toInt()}Hz • ${track.duration}',
-                                  style: GoogleFonts.poppins(
+                                  style: const TextStyle(
                                     fontSize: 11,
                                     color: AppColors.textSecondary,
                                   ),
@@ -236,9 +235,9 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
               color: Colors.pinkAccent,
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(
+            child: const Text(
               'HEALING FREQUENCIES PORTAL',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 9.5,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
@@ -247,9 +246,9 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Solfeggio & Binaural Sound Audio',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w900,
               color: Colors.white,
@@ -257,11 +256,11 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
+          const Text(
             'Listen to 528Hz, 432Hz theta brainwave audio tracks and sacred Vedic chants.',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 12,
-              color: const Color(0xFFE0E7FF),
+              color: Color(0xFFE0E7FF),
               height: 1.4,
             ),
           ),
@@ -300,7 +299,7 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
                         _currentTrack!.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -308,8 +307,8 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
                       ),
                       Text(
                         '${_formatDuration(_position)} / ${_formatDuration(_duration)}',
-                        style: GoogleFonts.poppins(
-                          color: const Color(0xFF94A3B8),
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
                           fontSize: 11,
                         ),
                       ),
@@ -327,8 +326,8 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
               ],
             ),
             SliderTheme(
-              data: SliderThemeData(
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+              data: const SliderThemeData(
+                thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
                 trackHeight: 3,
                 activeTrackColor: Colors.amber,
                 inactiveTrackColor: Colors.white24,
@@ -349,16 +348,16 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.music_off_rounded, size: 56, color: AppColors.textHint),
-            const SizedBox(height: 12),
+            Icon(Icons.music_off_rounded, size: 56, color: AppColors.textHint),
+            SizedBox(height: 12),
             Text(
               'No Audio Tracks Found',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
           ],
         ),
@@ -374,9 +373,9 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
           children: [
             const Icon(Icons.error_outline_rounded, size: 56, color: AppColors.error),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Failed to load audio tracks',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 12),
             ElevatedButton(
