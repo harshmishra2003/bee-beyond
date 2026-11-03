@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -536,9 +535,9 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                       children: [
                         _buildWorkshopSummaryCard(title, instructor, image),
                         const SizedBox(height: 20),
-                        Text(
+                        const Text(
                           'Attendee Information',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
@@ -619,13 +618,13 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                               const SizedBox(width: 12),
                               Text(
                                 _processingMessage,
-                                style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                               ),
                             ],
                           )
                         : Text(
                             'Proceed to Pay ${CurrencyUtils.formatINR(_finalAmount)}',
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
@@ -701,7 +700,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                   title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -710,7 +709,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Mentor: $instructor',
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 11.5,
                     color: AppColors.textSecondary,
                   ),
@@ -737,7 +736,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
       keyboardType: keyboardType,
       maxLines: maxLines,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textPrimary),
+      style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -769,9 +768,9 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Payment Summary',
-            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 10),
           _buildSummaryLine('Base Tuition Fee', CurrencyUtils.formatINR(_basePrice)),
@@ -788,20 +787,20 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Total Payable Amount',
-                    style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   if (_authoritativePayableAmount != null)
-                    Text(
+                    const Text(
                       'Verified by backend order',
-                      style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF10B981), fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 10, color: Color(0xFF10B981), fontWeight: FontWeight.w600),
                     ),
                 ],
               ),
               Text(
                 CurrencyUtils.formatINR(_finalAmount),
-                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary),
               ),
             ],
           ),
@@ -814,10 +813,10 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary)),
+        Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         Text(
           value,
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: isDiscount ? const Color(0xFF10B981) : AppColors.textPrimary,
@@ -847,10 +846,10 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 child: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 72),
               ),
               const SizedBox(height: 20),
-              Text(
+              const Text(
                 'Masterclass Seat Confirmed!',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 16),
 
@@ -866,9 +865,9 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Booking & Order Details',
-                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 12),
                     if (_currentWorkshopOrderId != null)
@@ -886,10 +885,10 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
               ),
 
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Thank you for enrolling. Access instructions and calendar invite have been dispatched to your email.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
@@ -902,7 +901,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: Text('Back to Home', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold)),
+                child: const Text('Back to Home', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -917,12 +916,12 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary)),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
                 color: isHighlight ? const Color(0xFF10B981) : AppColors.textPrimary,
@@ -953,23 +952,23 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 72),
               ),
               const SizedBox(height: 20),
-              Text(
+              const Text(
                 'Payment Verification Pending',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
               ),
               if (_currentWorkshopOrderId != null && _currentWorkshopOrderId! > 0) ...[
                 const SizedBox(height: 8),
                 Text(
                   'Order ID: #$_currentWorkshopOrderId',
-                  style: GoogleFonts.poppins(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
                 ),
               ],
               if (_paymentId != null && _paymentId!.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
                   'Payment ID: $_paymentId',
-                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                 ),
               ],
               const SizedBox(height: 16),
@@ -977,7 +976,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 _statusMessage ??
                     'Your payment was processed, but server verification is taking longer than expected. Tap Retry Verification to check the latest status.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 32),
               ElevatedButton.icon(
@@ -997,7 +996,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                     : const Icon(Icons.refresh_rounded, size: 20),
                 label: Text(
                   _isProcessing ? _processingMessage : 'Retry Verification',
-                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1011,14 +1010,14 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: Text('Contact Support', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+                child: const Text('Contact Support', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () {
                   context.go(RoutePaths.home);
                 },
-                child: Text('Back to Home', style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary)),
+                child: const Text('Back to Home', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
               ),
             ],
           ),
@@ -1046,23 +1045,23 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 child: const Icon(Icons.info_outline_rounded, color: Color(0xFF3B82F6), size: 72),
               ),
               const SizedBox(height: 20),
-              Text(
+              const Text(
                 'Payment Under Review',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
               ),
               if (_currentWorkshopOrderId != null && _currentWorkshopOrderId! > 0) ...[
                 const SizedBox(height: 8),
                 Text(
                   'Order ID: #$_currentWorkshopOrderId',
-                  style: GoogleFonts.poppins(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
                 ),
               ],
               if (_paymentId != null && _paymentId!.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
                   'Payment ID: $_paymentId',
-                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                 ),
               ],
               const SizedBox(height: 16),
@@ -1070,7 +1069,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 _statusMessage ??
                     'Your payment was received, but the registration is under manual review or refund processing. Please contact support before starting another booking.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 32),
               ElevatedButton.icon(
@@ -1084,7 +1083,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 icon: const Icon(Icons.support_agent_rounded, size: 20),
-                label: Text('Contact Support Team', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold)),
+                label: const Text('Contact Support Team', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 12),
               OutlinedButton(
@@ -1097,7 +1096,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: Text('Back to Home', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+                child: const Text('Back to Home', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
             ],
           ),
@@ -1125,16 +1124,16 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 child: const Icon(Icons.cancel_outlined, color: AppColors.error, size: 72),
               ),
               const SizedBox(height: 20),
-              Text(
+              const Text(
                 'Booking Unsuccessful',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
               ),
               if (_currentWorkshopOrderId != null && _currentWorkshopOrderId! > 0) ...[
                 const SizedBox(height: 8),
                 Text(
                   'Order ID: #$_currentWorkshopOrderId',
-                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                 ),
               ],
               const SizedBox(height: 16),
@@ -1142,7 +1141,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                 _statusMessage ??
                     'Payment was cancelled or failed permanently. You may attempt a new booking.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 32),
               ElevatedButton.icon(
@@ -1154,7 +1153,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 icon: const Icon(Icons.refresh_rounded, size: 20),
-                label: Text('Start New Booking', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold)),
+                label: const Text('Start New Booking', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 12),
               OutlinedButton(
@@ -1167,7 +1166,7 @@ class _WorkshopBookingScreenState extends ConsumerState<WorkshopBookingScreen> {
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: Text('Back to Home', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+                child: const Text('Back to Home', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
             ],
           ),
