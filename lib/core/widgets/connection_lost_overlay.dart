@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import '../constants/asset_paths.dart';
 import '../network/network_provider.dart';
@@ -132,10 +131,10 @@ class _ConnectionLostOverlayState extends ConsumerState<ConnectionLostOverlay> {
                             const SizedBox(height: 24),
 
                             // Title
-                            Text(
+                            const Text(
                               'Connection Lost',
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
@@ -145,10 +144,10 @@ class _ConnectionLostOverlayState extends ConsumerState<ConnectionLostOverlay> {
                             const SizedBox(height: 10),
 
                             // Subtitle Description
-                            Text(
+                            const Text(
                               'It looks like you are offline. Bee Beeyond requires an active internet connection (Wi-Fi or Mobile Data) to continue.',
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 13.5,
                                 color: AppColors.textSecondary,
                                 height: 1.5,
@@ -228,18 +227,18 @@ class _ConnectionLostOverlayState extends ConsumerState<ConnectionLostOverlay> {
                             const SizedBox(height: 14),
 
                             // Footer Auto-Reconnect Indicator
-                            Row(
+                            const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.sync_rounded,
                                   size: 14,
                                   color: AppColors.textHint,
                                 ),
-                                const SizedBox(width: 6),
+                                SizedBox(width: 6),
                                 Text(
                                   'Auto-resumes when back online',
-                                  style: GoogleFonts.poppins(
+                                  style: TextStyle(
                                     fontSize: 11.5,
                                     color: AppColors.textHint,
                                     fontWeight: FontWeight.w500,
@@ -296,11 +295,11 @@ class _ConnectionLostOverlayState extends ConsumerState<ConnectionLostOverlay> {
                         child: const Icon(Icons.wifi_rounded, color: Colors.white, size: 16),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
+                      const Expanded(
                         child: Text(
                           'Internet Connection Restored',
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF065F46),
+                          style: TextStyle(
+                            color: Color(0xFF065F46),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -406,10 +405,10 @@ class _LightOfflinePulsingBadgeState extends State<_LightOfflinePulsingBadge>
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
+              const Text(
                 'OFFLINE • NO INTERNET',
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF991B1B),
+                style: TextStyle(
+                  color: Color(0xFF991B1B),
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
