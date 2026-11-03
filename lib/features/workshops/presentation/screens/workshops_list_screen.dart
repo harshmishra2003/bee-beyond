@@ -359,28 +359,29 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // THUMBNAIL (FULL-WIDTH BEAUTIFUL COVER IMAGE WITHOUT TEXT OVERLAYS)
+              // THUMBNAIL (UNCROPPED FULL IMAGE CONTAINED SEAMLESSLY)
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: SizedBox(
-                  height: 180,
+                child: Container(
+                  height: 195,
                   width: double.infinity,
+                  color: Colors.white,
                   child: item.thumbnailUrl.startsWith('http')
                       ? CachedNetworkImage(
                           imageUrl: item.thumbnailUrl,
-                          height: 180,
+                          height: 195,
                           width: double.infinity,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                           alignment: Alignment.center,
                           placeholder: (context, url) => Container(
-                            height: 180,
-                            color: const Color(0xFFF1F5F9),
+                            height: 195,
+                            color: const Color(0xFFF8FAFC),
                             child: const Center(
                               child: CircularProgressIndicator(color: AppColors.primary),
                             ),
                           ),
                           errorWidget: (context, url, error) => Container(
-                            height: 180,
+                            height: 195,
                             color: const Color(0xFF1E1B4B),
                             child: const Icon(
                               Icons.workspace_premium_rounded,
@@ -390,7 +391,7 @@ class _WorkshopsListScreenState extends ConsumerState<WorkshopsListScreen> {
                           ),
                         )
                       : Container(
-                          height: 180,
+                          height: 195,
                           color: const Color(0xFF1E1B4B),
                           child: const Icon(
                             Icons.workspace_premium_rounded,
