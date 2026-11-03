@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/status_dialog.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -291,7 +292,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
 
     setState(() => _isSaving = true);
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final currentUser = ref.read(authStateProvider).user;
+    final updatedUser = UserEntity(
+      id: currentUser?.id ?? 'usr_${DateTime.now().millisecondsSinceEpoch}',
+      name: _fullNameController.text.trim(),
+      email: _emailController.text.trim(),
+      phone: _phoneController.text.trim(),
+      studentId: currentUser?.studentId ?? 'BB-1001',
+      avatarUrl: currentUser?.avatarUrl,
+    );
+
+    await ref.read(authStateProvider.notifier).updateUser(updatedUser);
 
     if (mounted) {
       setState(() => _isSaving = false);
