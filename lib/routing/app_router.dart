@@ -15,9 +15,7 @@ import '../features/courses/presentation/screens/course_material_screen.dart';
 import '../features/courses/presentation/screens/courses_list_screen.dart';
 import '../features/courses/presentation/screens/joined_courses_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
-import '../features/workshops/domain/entities/workshop_item.dart';
 import '../features/workshops/presentation/screens/workshops_list_screen.dart';
-import '../features/workshops/presentation/screens/workshop_detail_screen.dart';
 import '../features/workshops/presentation/screens/workshop_booking_screen.dart';
 import '../features/books/presentation/screens/material_screen.dart';
 import '../features/music/presentation/screens/music_screen.dart';
@@ -414,25 +412,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: const WorkshopsListScreen(),
           type: AppTransitionType.slideRight,
         ),
-      ),
-      GoRoute(
-        path: RoutePaths.workshopDetail,
-        name: RouteNames.workshopDetail,
-        pageBuilder: (context, state) {
-          final id = state.uri.queryParameters['id'] ?? 'ws_101';
-          final initialItem = state.extra is WorkshopItem
-              ? state.extra as WorkshopItem
-              : null;
-          return buildCustomTransitionPage(
-            context: context,
-            state: state,
-            child: WorkshopDetailScreen(
-              workshopId: id,
-              initialItem: initialItem,
-            ),
-            type: AppTransitionType.slideUp,
-          );
-        },
       ),
       GoRoute(
         path: RoutePaths.workshopBooking,
