@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -104,8 +103,8 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             child: Text(
                               'Search Results (${activeList.length})',
-                              style: GoogleFonts.poppins(
-                                color: const Color(0xFF0F172A),
+                              style: const TextStyle(
+                                color: Color(0xFF0F172A),
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -177,10 +176,10 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
             Expanded(
               child: TextField(
                 controller: _searchController,
-                style: GoogleFonts.poppins(color: AppColors.textPrimary, fontSize: 13.5),
-                decoration: InputDecoration(
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 13.5),
+                decoration: const InputDecoration(
                   hintText: 'Search Books & Handbooks',
-                  hintStyle: GoogleFonts.poppins(color: AppColors.textHint, fontSize: 13.5),
+                  hintStyle: TextStyle(color: AppColors.textHint, fontSize: 13.5),
                   border: InputBorder.none,
                 ),
                 onChanged: (val) {
@@ -247,7 +246,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
             },
             selectedColor: AppColors.primary,
             backgroundColor: Colors.white,
-            labelStyle: GoogleFonts.poppins(
+            labelStyle: TextStyle(
               fontSize: 11.5,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               color: isSelected ? Colors.white : AppColors.textSecondary,
@@ -283,8 +282,8 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
               Expanded(
                 child: Text(
                   title,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF0F172A),
+                  style: const TextStyle(
+                    color: Color(0xFF0F172A),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.2,
@@ -407,8 +406,8 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
               book.title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF0F172A),
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
                 height: 1.2,
@@ -424,7 +423,7 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                   !book.isPaid
                       ? 'Free'
                       : (book.isPurchased ? 'Owned' : CurrencyUtils.formatINR(book.price)),
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     color: AppColors.primary,
                     fontSize: 10.5,
                     fontWeight: FontWeight.bold,
@@ -437,8 +436,8 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                       CurrencyUtils.formatINR(book.mrp),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        color: const Color(0xFF94A3B8),
+                      style: const TextStyle(
+                        color: Color(0xFF94A3B8),
                         fontSize: 9.5,
                         decoration: TextDecoration.lineThrough,
                       ),
@@ -490,12 +489,12 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                     book.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(color: const Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${book.author} • ${book.pages} Pages',
-                    style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 11),
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                   ),
                   const SizedBox(height: 6),
                   Row(
@@ -504,13 +503,13 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
                         !book.isPaid
                             ? 'Free'
                             : (book.isPurchased ? 'Owned' : CurrencyUtils.formatINR(book.price)),
-                        style: GoogleFonts.poppins(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                       if (book.isPaid && !book.isPurchased && book.mrp > book.price) ...[
                         const SizedBox(width: 6),
                         Text(
                           CurrencyUtils.formatINR(book.mrp),
-                          style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 10, decoration: TextDecoration.lineThrough),
+                          style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 10, decoration: TextDecoration.lineThrough),
                         ),
                       ],
                     ],
@@ -525,21 +524,21 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.auto_stories_rounded, size: 56, color: AppColors.textHint),
-            const SizedBox(height: 12),
+            Icon(Icons.auto_stories_rounded, size: 56, color: AppColors.textHint),
+            SizedBox(height: 12),
             Text(
               'No Books Found',
-              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               'Try adjusting your search query or genre filters.',
-              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -556,14 +555,14 @@ class _MaterialScreenState extends ConsumerState<MaterialScreen> {
           children: [
             const Icon(Icons.error_outline_rounded, size: 56, color: AppColors.error),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Failed to load books',
-              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 4),
             Text(
               message,
-              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
