@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_background_wrapper.dart';
@@ -106,25 +105,25 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               const SizedBox(height: 16),
 
               // Title
-              Text(
+              const Text(
                 'Forgot Password?',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2E1C59),
+                  color: Color(0xFF2E1C59),
                 ),
               ),
 
               const SizedBox(height: 6),
 
               // Subtitle
-              Text(
+              const Text(
                 "No worries! Enter your email address\nand we'll send you a reset link.",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF757295),
+                  color: Color(0xFF757295),
                   height: 1.35,
                 ),
               ),
@@ -156,21 +155,21 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               const SizedBox(height: 20),
 
               // OR Divider
-              Row(
+              const Row(
                 children: [
-                  const Expanded(child: Divider(color: Color(0xFFE2E0EE))),
+                  Expanded(child: Divider(color: Color(0xFFE2E0EE))),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: EdgeInsets.symmetric(horizontal: 12.0),
                     child: Text(
                       'OR',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF9E9BBD),
+                        color: Color(0xFF9E9BBD),
                       ),
                     ),
                   ),
-                  const Expanded(child: Divider(color: Color(0xFFE2E0EE))),
+                  Expanded(child: Divider(color: Color(0xFFE2E0EE))),
                 ],
               ),
 
@@ -179,21 +178,21 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               // Back to Login Link
               GestureDetector(
                 onTap: () => context.pop(),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.arrow_back,
                       size: 16,
                       color: Color(0xFF673AB7),
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       'Back to Login',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF673AB7),
+                        color: Color(0xFF673AB7),
                       ),
                     ),
                   ],
@@ -226,12 +225,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
+                      const Expanded(
                         child: Text(
                           'Check your inbox. The reset link will be sent shortly to your email address.',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 11.5,
-                            color: const Color(0xFF5E5A80),
+                            color: Color(0xFF5E5A80),
                             height: 1.35,
                           ),
                         ),
@@ -258,10 +257,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 13.5, color: const Color(0xFF2E1C59)),
+      style: const TextStyle(fontSize: 13.5, color: Color(0xFF2E1C59)),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF9E9BBD)),
+        hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9E9BBD)),
         prefixIcon: Icon(prefixIcon, color: const Color(0xFF7B61FF), size: 20),
         filled: true,
         fillColor: const Color(0xFFF7F6FF),
@@ -318,7 +317,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             children: [
               Text(
                 text,
-                style: GoogleFonts.poppins(
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
