@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/utils/app_alert_manager.dart';
 import '../../../../routing/route_paths.dart';
@@ -144,25 +143,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: Column(
             children: [
               // Title
-              Text(
+              const Text(
                 'Create Account',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2E1C59),
+                  color: Color(0xFF2E1C59),
                 ),
               ),
 
               const SizedBox(height: 6),
 
               // Subtitle
-              Text(
+              const Text(
                 'Join Bee Beyonnd and take the first step\ntowards a healthier and happier you.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF757295),
+                  color: Color(0xFF757295),
                   height: 1.35,
                 ),
               ),
@@ -272,7 +271,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 initialValue: _selectedGender,
                 decoration: InputDecoration(
                   hintText: 'Select Gender (Optional)',
-                  hintStyle: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF9E9BBD)),
+                  hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9E9BBD)),
                   prefixIcon: const Icon(Icons.location_on_outlined, color: Color(0xFF7B61FF), size: 20),
                   filled: true,
                   fillColor: const Color(0xFFF7F6FF),
@@ -290,7 +289,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 items: _genderOptions
                     .map((g) => DropdownMenuItem(
                           value: g,
-                          child: Text(g, style: GoogleFonts.poppins(fontSize: 13.5, color: const Color(0xFF2E1C59))),
+                          child: Text(g, style: const TextStyle(fontSize: 13.5, color: Color(0xFF2E1C59))),
                         ))
                     .toList(),
                 onChanged: (val) {
@@ -321,20 +320,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: RichText(
-                      text: TextSpan(
-                        style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF5E5A80)),
+                  const Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        style: TextStyle(fontSize: 11, color: Color(0xFF5E5A80)),
                         children: [
-                          const TextSpan(text: 'I agree to the '),
+                          TextSpan(text: 'I agree to the '),
                           TextSpan(
                             text: 'Terms & Conditions',
-                            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF673AB7)),
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF673AB7)),
                           ),
-                          const TextSpan(text: ' and '),
+                          TextSpan(text: ' and '),
                           TextSpan(
                             text: 'Privacy Policy',
-                            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF673AB7)),
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF673AB7)),
                           ),
                         ],
                       ),
@@ -354,21 +353,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const SizedBox(height: 18),
 
               // OR Divider
-              Row(
+              const Row(
                 children: [
-                  const Expanded(child: Divider(color: Color(0xFFE2E0EE))),
+                  Expanded(child: Divider(color: Color(0xFFE2E0EE))),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: EdgeInsets.symmetric(horizontal: 12.0),
                     child: Text(
                       'OR',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF9E9BBD),
+                        color: Color(0xFF9E9BBD),
                       ),
                     ),
                   ),
-                  const Expanded(child: Divider(color: Color(0xFFE2E0EE))),
+                  Expanded(child: Divider(color: Color(0xFFE2E0EE))),
                 ],
               ),
 
@@ -378,26 +377,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     "Already have an account? ",
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 12.5,
-                      color: const Color(0xFF5E5A80),
+                      color: Color(0xFF5E5A80),
                     ),
                   ),
                   GestureDetector(
                     onTap: () => context.push(RoutePaths.login),
-                    child: Row(
+                    child: const Row(
                       children: [
                         Text(
                           'Login ',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF673AB7),
+                            color: Color(0xFF673AB7),
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.arrow_forward,
                           size: 14,
                           color: Color(0xFF673AB7),
@@ -428,10 +427,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 13.5, color: const Color(0xFF2E1C59)),
+      style: const TextStyle(fontSize: 13.5, color: Color(0xFF2E1C59)),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF9E9BBD)),
+        hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9E9BBD)),
         prefixIcon: Icon(prefixIcon, color: const Color(0xFF7B61FF), size: 20),
         suffixIcon: suffixIcon,
         filled: true,
@@ -489,7 +488,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             children: [
               Text(
                 text,
-                style: GoogleFonts.poppins(
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
