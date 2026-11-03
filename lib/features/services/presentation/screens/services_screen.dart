@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -419,9 +418,9 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                 child: const Icon(Icons.support_agent_rounded, color: Colors.amberAccent, size: 24),
                               ),
                               const SizedBox(width: 10),
-                              Text(
+                              const Text(
                                 'Expert Practitioner Sessions',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   color: Colors.amberAccent,
                                   fontWeight: FontWeight.w900,
                                   fontSize: 15,
@@ -433,7 +432,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                           const SizedBox(height: 12),
                           Text(
                             'Book 1-on-1 private consultations with certified Ayurvedic doctors, Vastu masters, Bach therapists, and mind-body experts.',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 12,
                               height: 1.45,
@@ -579,9 +578,9 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Center(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -598,8 +597,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 color: AppColors.primary,
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'No Wellness Services Available Yet',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -608,8 +607,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8),
+            Text(
               'Our team of certified practitioners and doctors will publish consultation schedules shortly. Pull down to refresh!',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -707,15 +706,15 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Flexible(
+                          const Flexible(
                             child: Text(
                               'Today\'s Slot Availability',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF64748B),
+                                color: Color(0xFF64748B),
                               ),
                             ),
                           ),
@@ -727,7 +726,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       hasSlotsData
                           ? '$remainingSlots Available | $totalSlots Total'
                           : 'Open for Booking Today',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: hasSlotsData && remainingSlots > 0
@@ -830,7 +829,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                               Expanded(
                                 child: Text(
                                   srv.serviceName,
-                                  style: GoogleFonts.epilogue(
+                                  style: const TextStyle(
                                     color: AppColors.primary,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -861,8 +860,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                 ),
                                 child: Text(
                                   srv.category.toUpperCase(),
-                                  style: GoogleFonts.poppins(
-                                    color: const Color(0xFF64748B),
+                                  style: const TextStyle(
+                                    color: Color(0xFF64748B),
                                     fontSize: 8.5,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 0.4,
@@ -882,7 +881,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                     const SizedBox(width: 3),
                                     Text(
                                       srv.duration,
-                                      style: GoogleFonts.poppins(
+                                      style: const TextStyle(
                                         color: AppColors.primary,
                                         fontSize: 9.5,
                                         fontWeight: FontWeight.bold,
@@ -903,8 +902,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   srv.description,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF475569),
+                  style: const TextStyle(
+                    color: Color(0xFF475569),
                     fontSize: 11.5,
                     height: 1.35,
                   ),
@@ -915,11 +914,11 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   const SizedBox(height: 10),
                   GestureDetector(
                     onTap: () => _showDescriptionImageModal(srv.descriptionImageUrl, srv.serviceName),
-                    child: Row(
+                    child: const Row(
                       children: [
-                        const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primary),
-                        const SizedBox(width: 4),
-                        const Text(
+                        Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primary),
+                        SizedBox(width: 4),
+                        Text(
                           'View Session Details & Infographic →',
                           style: TextStyle(
                             fontSize: 12,
@@ -1174,7 +1173,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                     srv.category.toUpperCase(),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.poppins(
+                                    style: const TextStyle(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w900,
                                       color: Colors.black,
@@ -1197,7 +1196,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                           srv.duration,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: GoogleFonts.poppins(
+                                          style: const TextStyle(
                                             fontSize: 9,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.white,
@@ -1214,7 +1213,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                               srv.serviceName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -1242,17 +1241,17 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Select Day & Date',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF0F172A),
+                            color: Color(0xFF0F172A),
                           ),
                         ),
                         Text(
                           weekOffset == 0 ? 'This Week • $weekRangeStr' : 'Week Range • $weekRangeStr',
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.textSecondary,
                           ),
@@ -1310,14 +1309,14 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             ),
                           ],
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 16),
-                            const SizedBox(width: 5),
+                            Icon(Icons.calendar_month_rounded, color: Colors.white, size: 16),
+                            SizedBox(width: 5),
                             Text(
                               'Pick Date',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -1358,7 +1357,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             ),
                             Text(
                               'Prev Week',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color: weekOffset > 0 ? AppColors.primary : Colors.grey.shade400,
@@ -1371,7 +1370,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 
                     Text(
                       weekOffset == 0 ? 'CURRENT WEEK' : 'WEEK +$weekOffset',
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.6,
@@ -1388,19 +1387,19 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         });
                       },
                       borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                         child: Row(
                           children: [
                             Text(
                               'Next Week',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.primary,
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.chevron_right_rounded,
                               size: 18,
                               color: AppColors.primary,
@@ -1474,7 +1473,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             children: [
                               Text(
                                 isToday ? 'TODAY' : DateFormat('EEE').format(dayDate).toUpperCase(),
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
                                   color: isSelected
@@ -1485,7 +1484,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 DateFormat('d').format(dayDate),
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w900,
                                   color: isSelected
@@ -1495,7 +1494,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                               ),
                               Text(
                                 DateFormat('MMM').format(dayDate),
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 9,
                                   color: isSelected
                                       ? Colors.white70
@@ -1533,12 +1532,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
+                            const Text(
                               'Available Time Slots',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF0F172A),
+                                color: Color(0xFF0F172A),
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -1550,10 +1549,10 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                               ),
                               child: Text(
                                 '${availableSlots.length} Available',
-                                style: GoogleFonts.poppins(
+                                style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF065F46),
+                                  color: Color(0xFF065F46),
                                 ),
                               ),
                             ),
@@ -1604,7 +1603,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                       const SizedBox(width: 6),
                                       Text(
                                         slot.timeLabel,
-                                        style: GoogleFonts.poppins(
+                                        style: TextStyle(
                                           color: isSelected ? Colors.white : const Color(0xFF065F46),
                                           fontWeight: FontWeight.bold,
                                           fontSize: 12,
@@ -1621,7 +1620,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Text(
                               "No available slots for this selected date.",
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 color: Colors.red.shade400,
                                 fontSize: 12.5,
                                 fontStyle: FontStyle.italic,
@@ -1633,16 +1632,16 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 
                         // BOOKED SLOTS SECTION (GREY)
                         if (bookedSlots.isNotEmpty) ...[
-                          Row(
+                          const Row(
                             children: [
-                              const Icon(Icons.lock_rounded, size: 14, color: Color(0xFF64748B)),
-                              const SizedBox(width: 6),
+                              Icon(Icons.lock_rounded, size: 14, color: Color(0xFF64748B)),
+                              SizedBox(width: 6),
                               Text(
                                 'Booked Time Slots',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF64748B),
+                                  color: Color(0xFF64748B),
                                 ),
                               ),
                             ],
@@ -1669,8 +1668,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                     const SizedBox(width: 5),
                                     Text(
                                       slot.timeLabel,
-                                      style: GoogleFonts.poppins(
-                                        color: const Color(0xFF94A3B8),
+                                      style: const TextStyle(
+                                        color: Color(0xFF94A3B8),
                                         fontWeight: FontWeight.w600,
                                         fontSize: 11.5,
                                         decoration: TextDecoration.lineThrough,
@@ -1707,7 +1706,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         Expanded(
                           child: Text(
                             'Selected: ${DateFormat('EEE, dd MMM').format(selectedDate)} • ${selectedSlot!.timeLabel}',
-                            style: GoogleFonts.poppins(
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,
@@ -1735,16 +1734,16 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Total Consultation Fee',
-                            style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF64748B)),
+                            style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
                           ),
                           const SizedBox(height: 2),
                           Row(
                             children: [
                               Text(
                                 CurrencyUtils.formatINR(srv.serviceCharge),
-                                style: GoogleFonts.poppins(
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
                                   color: AppColors.primary,
@@ -1754,9 +1753,9 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                 const SizedBox(width: 6),
                                 Text(
                                   CurrencyUtils.formatINR(srv.offerPrice),
-                                  style: GoogleFonts.poppins(
+                                  style: const TextStyle(
                                     decoration: TextDecoration.lineThrough,
-                                    color: const Color(0xFF94A3B8),
+                                    color: Color(0xFF94A3B8),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -1781,7 +1780,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         icon: const Icon(Icons.bolt_rounded, color: Colors.amberAccent, size: 18),
                         label: Text(
                           selectedSlot != null ? 'PAY & CONFIRM' : 'SELECT A SLOT',
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12.5,
                             fontWeight: FontWeight.w900,
