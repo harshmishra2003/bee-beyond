@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingPageThree extends StatelessWidget {
   const OnboardingPageThree({super.key});
@@ -32,26 +31,26 @@ class OnboardingPageThree extends StatelessWidget {
                 ),
               ],
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.school_rounded,
                   color: Color(0xFF006A37),
                   size: 15,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Text(
                   'CERTIFIED LEARNING & WORKSHOPS',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.2,
-                    color: const Color(0xFF005229),
+                    color: Color(0xFF005229),
                   ),
                 ),
-                const SizedBox(width: 4),
-                const Text('✨', style: TextStyle(fontSize: 10)),
+                SizedBox(width: 4),
+                Text('✨', style: TextStyle(fontSize: 10)),
               ],
             ),
           ),
@@ -59,22 +58,23 @@ class OnboardingPageThree extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Main Headline
-          RichText(
-            text: TextSpan(
+          Text.rich(
+            TextSpan(
               text: 'Master ',
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 23,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F172A),
+                color: Color(0xFF0F172A),
                 height: 1.25,
               ),
               children: [
                 TextSpan(
                   text: 'Health & Wellness',
-                  style: GoogleFonts.playfairDisplay(
+                  style: TextStyle(
                     fontSize: 23,
                     fontWeight: FontWeight.bold,
                     fontStyle: FontStyle.italic,
+                    fontFamily: 'serif',
                     foreground: Paint()
                       ..shader = const LinearGradient(
                         colors: [
@@ -85,12 +85,12 @@ class OnboardingPageThree extends StatelessWidget {
                       ).createShader(const Rect.fromLTWH(0, 0, 220, 20)),
                   ),
                 ),
-                TextSpan(
+                const TextSpan(
                   text: '\nWith Certified Courses',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 23,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
+                    color: Color(0xFF0F172A),
                   ),
                 ),
               ],
@@ -107,11 +107,11 @@ class OnboardingPageThree extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: const Color(0xFFEEE7D8), width: 1.2),
             ),
-            child: Text(
+            child: const Text(
               'Explore 120+ accredited holistic modules, live interactive mentor workshops, and lifelong certification tracks designed for complete physical & mental rejuvenation.',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 12.5,
-                color: const Color(0xFF475569),
+                color: Color(0xFF475569),
                 height: 1.5,
               ),
             ),
@@ -200,12 +200,12 @@ class OnboardingPageThree extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Text(
+                  const Text(
                     'WHAT YOU WILL DISCOVER',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF1E293B),
+                      color: Color(0xFF1E293B),
                       letterSpacing: 0.8,
                     ),
                   ),
@@ -218,20 +218,20 @@ class OnboardingPageThree extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFB6E8C0)),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.verified_rounded,
                       color: Color(0xFF006A37),
                       size: 13,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       'Accredited',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF006A37),
+                        color: Color(0xFF006A37),
                       ),
                     ),
                   ],
@@ -331,7 +331,7 @@ class OnboardingPageThree extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -339,25 +339,26 @@ class OnboardingPageThree extends StatelessWidget {
                         children: [
                           Text(
                             'WISDOM EMBODIED',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF9C3E00),
+                              color: Color(0xFF9C3E00),
                               letterSpacing: 0.8,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Text('✦', style: TextStyle(color: Color(0xFFD4982A), fontSize: 10)),
+                          SizedBox(width: 4),
+                          Text('✦', style: TextStyle(color: Color(0xFFD4982A), fontSize: 10)),
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         '"Learning to heal yourself is the first step toward illuminating the world around you."',
-                        style: GoogleFonts.playfairDisplay(
+                        style: TextStyle(
                           fontSize: 12.5,
                           fontStyle: FontStyle.italic,
+                          fontFamily: 'serif',
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF2C303A),
+                          color: Color(0xFF2C303A),
                           height: 1.4,
                         ),
                       ),
@@ -417,15 +418,15 @@ class OnboardingPageThree extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: const TextStyle(
               fontSize: 10.5,
-              color: const Color(0xFF64748B),
+              color: Color(0xFF64748B),
             ),
           ),
           const SizedBox(height: 1),
           Text(
             value,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.bold,
               color: iconColor,
@@ -440,7 +441,7 @@ class OnboardingPageThree extends StatelessWidget {
             ),
             child: Text(
               badgeText,
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 9.5,
                 fontWeight: FontWeight.bold,
                 color: badgeColor,
@@ -539,10 +540,10 @@ class OnboardingPageThree extends StatelessWidget {
                     Expanded(
                       child: Text(
                         title,
-                        style: GoogleFonts.poppins(
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF0F172A),
+                          color: Color(0xFF0F172A),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -556,7 +557,7 @@ class OnboardingPageThree extends StatelessWidget {
                       ),
                       child: Text(
                         badgeText,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.bold,
                           color: badgeColor,
@@ -568,9 +569,9 @@ class OnboardingPageThree extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: GoogleFonts.poppins(
+                  style: const TextStyle(
                     fontSize: 11.5,
-                    color: const Color(0xFF64748B),
+                    color: Color(0xFF64748B),
                     height: 1.4,
                   ),
                   maxLines: 2,
