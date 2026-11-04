@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/sign_out_dialog.dart';
+import '../../../../core/widgets/powered_by_tagline.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../membership/presentation/providers/expiry_provider.dart';
@@ -308,20 +308,6 @@ class HomeDrawer extends ConsumerWidget {
                     context.push(RoutePaths.changePassword);
                   },
                 ),
-                _DrawerTile(
-                  icon: Icons.logout_rounded,
-                  iconColor: const Color(0xFFEF4444),
-                  title: 'Logout',
-                  textColor: const Color(0xFFEF4444),
-                  onTap: () {
-                    Navigator.pop(context);
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (context.mounted) {
-                        showSignOutConfirmationDialog(context, ref: ref);
-                      }
-                    });
-                  },
-                ),
               ],
             ),
           ),
@@ -330,21 +316,50 @@ class HomeDrawer extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             color: Colors.white,
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.info_outline_rounded,
-                  color: AppColors.primary,
-                  size: 20,
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: AppColors.primary,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Bee Beyonnd App v2.5.0',
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Bee Beyonnd App v2.5.0',
-                  style: TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                  ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: PoweredByTagline.getDailyColor(),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Powered by Metricsmart Infoline Pvt Ltd.',
+                      style: TextStyle(
+                        color: PoweredByTagline.getDailyColor(),
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -412,14 +427,12 @@ class _DrawerTile extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String title;
-  final Color? textColor;
   final VoidCallback onTap;
 
   const _DrawerTile({
     required this.icon,
     required this.iconColor,
     required this.title,
-    this.textColor,
     required this.onTap,
   });
 
@@ -439,8 +452,8 @@ class _DrawerTile extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: TextStyle(
-          color: textColor ?? const Color(0xFF1E293B),
+        style: const TextStyle(
+          color: Color(0xFF1E293B),
           fontSize: 13,
           fontWeight: FontWeight.w700,
         ),
