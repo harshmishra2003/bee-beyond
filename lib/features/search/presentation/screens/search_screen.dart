@@ -381,28 +381,33 @@ class _SearchScreenState extends State<SearchScreen> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppColors.borderSubtle, width: 1.2),
               ),
-              child: ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _recentSearches.length,
-                separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.divider),
-                itemBuilder: (context, index) {
-                  final searchItem = _recentSearches[index];
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-                    dense: true,
-                    leading: const Icon(Icons.north_west_rounded, size: 16, color: AppColors.textHint),
-                    title: Text(
-                      searchItem,
-                      style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.textHint),
-                      onPressed: () => _removeRecentSearch(searchItem),
-                    ),
-                    onTap: () => _onSelectRecentQuery(searchItem),
-                  );
-                },
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                clipBehavior: Clip.antiAlias,
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _recentSearches.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.divider),
+                  itemBuilder: (context, index) {
+                    final searchItem = _recentSearches[index];
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                      dense: true,
+                      leading: const Icon(Icons.north_west_rounded, size: 16, color: AppColors.textHint),
+                      title: Text(
+                        searchItem,
+                        style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.textHint),
+                        onPressed: () => _removeRecentSearch(searchItem),
+                      ),
+                      onTap: () => _onSelectRecentQuery(searchItem),
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 24),
