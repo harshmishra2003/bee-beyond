@@ -113,26 +113,35 @@ class CourseCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: isEnrolled ? const Color(0xFFF0FDF4) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isEnrolled ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0),
-          width: isEnrolled ? 1.6 : 1.2,
+          color: isEnrolled 
+              ? const Color(0xFFA7F3D0) 
+              : AppColors.primary.withValues(alpha: 0.20),
+          width: isEnrolled ? 1.6 : 1.35,
         ),
         boxShadow: [
           BoxShadow(
-            color: isEnrolled ? const Color(0x15059669) : const Color(0x0C4B489B),
+            color: isEnrolled 
+                ? const Color(0x1A059669) 
+                : AppColors.primary.withValues(alpha: 0.12),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.05),
             blurRadius: 8,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -141,14 +150,21 @@ class CourseCard extends StatelessWidget {
                   width: 115,
                   height: 110,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFF8FAFC), Color(0xFFEEF2F6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      width: 1.2,
+                    ),
                   ),
                   child: Stack(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(16),
                         child: Center(
                           child: _buildCourseImage(imageUrl),
                         ),
@@ -197,10 +213,19 @@ class CourseCard extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                               decoration: BoxDecoration(
-                                color: isEnrolled ? const Color(0xFF059669) : AppColors.primary,
+                                gradient: isEnrolled
+                                    ? const LinearGradient(colors: [Color(0xFF059669), Color(0xFF10B981)])
+                                    : AppColors.primaryGradient,
                                 borderRadius: BorderRadius.circular(6),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isEnrolled ? const Color(0xFF059669) : AppColors.primary).withValues(alpha: 0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: Text(
                                 isEnrolled ? 'ENROLLED ✓' : category.toUpperCase(),
@@ -210,7 +235,7 @@ class CourseCard extends StatelessWidget {
                                   color: Colors.white,
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.4,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ),
@@ -219,14 +244,14 @@ class CourseCard extends StatelessWidget {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                              const Icon(Icons.star_rounded, size: 15, color: Colors.amber),
                               const SizedBox(width: 2),
                               Text(
                                 rating.toStringAsFixed(1),
                                 style: const TextStyle(
                                   color: AppColors.textPrimary,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
                             ],
