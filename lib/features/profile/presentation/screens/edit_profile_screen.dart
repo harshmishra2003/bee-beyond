@@ -145,21 +145,32 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           children: [
             const Text('Update Profile Picture', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
-              title: const Text('Take Photo via Camera'),
-              onTap: () {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Camera opened! Photo updated.')));
-              },
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+                title: const Text('Take Photo via Camera'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Camera opened! Photo updated.')));
+                },
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
-              title: const Text('Choose from Gallery'),
-              onTap: () {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gallery opened! Photo updated.')));
-              },
+            const SizedBox(height: 8),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                leading: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
+                title: const Text('Choose from Gallery'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gallery opened! Photo updated.')));
+                },
+              ),
             ),
           ],
         ),
