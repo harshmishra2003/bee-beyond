@@ -29,6 +29,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   cached_network_image: ^3.3.1
   shimmer: ^3.0.0
+  image_picker: ^1.1.2
 
   # Helper Utilities
   lottie: ^3.1.2
