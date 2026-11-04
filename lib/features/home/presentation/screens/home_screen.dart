@@ -6,6 +6,7 @@ import '../../../../core/constants/asset_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/expiry_alert_banner.dart';
+import '../../../../core/widgets/powered_by_tagline.dart';
 import '../../../../core/widgets/shining_view_all_button.dart';
 import '../../../../routing/route_paths.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -438,6 +439,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               OurCoursesSection(
                 onViewAllTap: () => context.go(RoutePaths.courses),
                 onCourseTap: (courseId) => context.push('${RoutePaths.courseDetail}?id=$courseId'),
+              ),
+              const SizedBox(height: 24),
+
+              // Simple Dynamic Per-Day Color Changing Tagline at the bottom of Home Screen
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 24.0),
+                child: Center(
+                  child: Text(
+                    'Powered by Metricsmart Infoline Pvt Ltd.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: PoweredByTagline.getDailyColor(),
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500, // Average and beautiful, not thick or bold
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 90),
             ],
