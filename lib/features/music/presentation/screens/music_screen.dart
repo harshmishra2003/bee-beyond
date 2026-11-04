@@ -149,46 +149,51 @@ class _MusicScreenState extends ConsumerState<MusicScreen> {
                                   ),
                                 ],
                               ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                                leading: Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEEF2FF),
-                                    borderRadius: BorderRadius.circular(10),
+                              child: Material(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(14),
+                                clipBehavior: Clip.antiAlias,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                                  leading: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEEF2FF),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(
+                                      isThisPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
+                                      color: AppColors.primary,
+                                      size: 32,
+                                    ),
                                   ),
-                                  child: Icon(
-                                    isThisPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                                    color: AppColors.primary,
-                                    size: 32,
+                                  title: Text(
+                                    track.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
                                   ),
+                                  subtitle: Text(
+                                    '${track.category} • ${track.frequencyHz.toInt()}Hz • ${track.duration}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  trailing: IconButton(
+                                    icon: Icon(
+                                      isThisPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                      color: AppColors.primary,
+                                    ),
+                                    onPressed: () => _playTrack(track),
+                                  ),
+                                  onTap: () => _playTrack(track),
                                 ),
-                                title: Text(
-                                  track.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  '${track.category} • ${track.frequencyHz.toInt()}Hz • ${track.duration}',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                                trailing: IconButton(
-                                  icon: Icon(
-                                    isThisPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                                    color: AppColors.primary,
-                                  ),
-                                  onPressed: () => _playTrack(track),
-                                ),
-                                onTap: () => _playTrack(track),
                               ),
                             );
                           },
